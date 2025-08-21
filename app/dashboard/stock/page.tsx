@@ -904,8 +904,8 @@ export default function StockManagementPage() {
               <Package className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Stock Management</h1>
-              <p className="text-sm sm:text-base text-gray-600">Comprehensive inventory control and monitoring</p>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{t("stockManagement")}</h1>
+              <p className="text-sm sm:text-base text-gray-600">{t("inventory")}</p>
               <p className="text-xs text-blue-600 mt-1">Integrated with Inventory System • Real-time stock tracking</p>
             </div>
           </div>
@@ -946,7 +946,7 @@ export default function StockManagementPage() {
             disabled={isLoading || loadingStates.isRefreshing}
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${(isLoading || loadingStates.isRefreshing) ? 'animate-spin' : ''}`} />
-            <span className="hidden sm:inline">Refresh</span>
+            <span className="hidden sm:inline">{t("refresh")}</span>
           </Button>
           
 
@@ -999,7 +999,7 @@ export default function StockManagementPage() {
                 <Package className={`${uiPreferences.compactMode ? 'h-4 w-4' : 'h-5 w-5'} text-white`} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className={`${uiPreferences.compactMode ? 'text-xs' : 'text-sm'} font-medium text-blue-700 truncate`}>Total Stocks</p>
+                <p className={`${uiPreferences.compactMode ? 'text-xs' : 'text-sm'} font-medium text-blue-700 truncate`}>{t("totalStocks")}</p>
                 <p className={`${uiPreferences.compactMode ? 'text-xl' : 'text-2xl'} font-bold text-blue-900`}>{stats.total_products}</p>
               </div>
             </div>
@@ -1015,7 +1015,7 @@ export default function StockManagementPage() {
                 <XCircle className={`${uiPreferences.compactMode ? 'h-4 w-4' : 'h-5 w-5'} text-white`} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className={`${uiPreferences.compactMode ? 'text-xs' : 'text-sm'} font-medium text-red-700 truncate`}>Out of Stock</p>
+                <p className={`${uiPreferences.compactMode ? 'text-xs' : 'text-sm'} font-medium text-red-700 truncate`}>{t("outOfStock")}</p>
                 <p className={`${uiPreferences.compactMode ? 'text-xl' : 'text-2xl'} font-bold text-red-900`}>{stats.out_of_stock_items}</p>
               </div>
             </div>
@@ -1031,7 +1031,7 @@ export default function StockManagementPage() {
                 <AlertTriangle className={`${uiPreferences.compactMode ? 'h-4 w-4' : 'h-5 w-5'} text-white`} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className={`${uiPreferences.compactMode ? 'text-xs' : 'text-sm'} font-medium text-yellow-700 truncate`}>Low Stock</p>
+                <p className={`${uiPreferences.compactMode ? 'text-xs' : 'text-sm'} font-medium text-yellow-700 truncate`}>{t("lowStock")}</p>
                 <p className={`${uiPreferences.compactMode ? 'text-xl' : 'text-2xl'} font-bold text-yellow-900`}>{stats.low_stock_items}</p>
               </div>
             </div>
@@ -1060,12 +1060,12 @@ export default function StockManagementPage() {
       {/* Main Content */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="overview">{t("overview")}</TabsTrigger>
           <TabsTrigger value="operations">Operations</TabsTrigger>
-          <TabsTrigger value="alerts">Alerts</TabsTrigger>
-          <TabsTrigger value="history">History</TabsTrigger>
-          <TabsTrigger value="analytics">Inventory Analytics</TabsTrigger>
-          <TabsTrigger value="settings">Settings</TabsTrigger>
+          <TabsTrigger value="alerts">{t("alerts")}</TabsTrigger>
+          <TabsTrigger value="history">{t("history")}</TabsTrigger>
+          <TabsTrigger value="analytics">{t("inventoryAnalytics")}</TabsTrigger>
+          <TabsTrigger value="settings">{t("settings")}</TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
@@ -1077,16 +1077,16 @@ export default function StockManagementPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
                     <Package className="h-5 w-5 text-pink-500" />
-                    <span>Stock Overview</span>
+                    <span>{t("stockOverview")}</span>
                   </CardTitle>
-                  <CardDescription>Current inventory levels across all branches</CardDescription>
+                  <CardDescription>{t("inventoryLevelsAcrossBranches")}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   {/* Filters */}
                   <div className="flex items-center space-x-4 mb-4">
                     <div className="flex-1">
                       <Input
-                        placeholder="Search products..."
+                        placeholder={`${t("search")}...`}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="max-w-sm"
@@ -1094,10 +1094,10 @@ export default function StockManagementPage() {
                     </div>
                     <Select value={selectedCategory} onValueChange={setSelectedCategory}>
                       <SelectTrigger className="w-40">
-                        <SelectValue placeholder="Category" />
+                        <SelectValue placeholder={t("category")} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">All Categories</SelectItem>
+                        <SelectItem value="all">{t("allCategories")}</SelectItem>
                         {categories.map(category => (
                           <SelectItem key={category} value={category}>{category}</SelectItem>
                         ))}
@@ -1105,13 +1105,13 @@ export default function StockManagementPage() {
                     </Select>
                     <Select value={selectedStatus} onValueChange={setSelectedStatus}>
                       <SelectTrigger className="w-40">
-                        <SelectValue placeholder="Status" />
+                        <SelectValue placeholder={t("status")} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">All Status</SelectItem>
-                        <SelectItem value="in_stock">In Stock</SelectItem>
-                        <SelectItem value="low_stock">Low Stock</SelectItem>
-                        <SelectItem value="out_of_stock">Out of Stock</SelectItem>
+                        <SelectItem value="all">{t("allStatus")}</SelectItem>
+                        <SelectItem value="in_stock">{t("inStock")}</SelectItem>
+                        <SelectItem value="low_stock">{t("lowStock")}</SelectItem>
+                        <SelectItem value="out_of_stock">{t("outOfStock")}</SelectItem>
                         <SelectItem value="overstock">Overstock</SelectItem>
                       </SelectContent>
                     </Select>
@@ -1866,7 +1866,7 @@ export default function StockManagementPage() {
                                     size="sm"
                                     variant="secondary"
                                     className="bg-green-500 hover:bg-green-600 text-white"
-                                    onClick={() => handleQuickAction('add', alert.product_id, 5)}
+                                    onClick={() => alert.product_id && handleQuickAction('add', alert.product_id, 5)}
                                     disabled={isSubmitting}
                                   >
                                     <Plus className="h-3 w-3" />

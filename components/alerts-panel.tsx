@@ -106,7 +106,7 @@ export function AlertsPanel() {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <Bell className="h-5 w-5 text-orange-500" />
-              <CardTitle>Performance & Budget Alerts</CardTitle>
+              <CardTitle>{t("alerts")}</CardTitle>
               {unreadCount > 0 && (
                 <Badge className="bg-red-500 text-white rounded-full px-2 py-1 text-xs">{unreadCount}</Badge>
               )}
@@ -120,14 +120,14 @@ export function AlertsPanel() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuLabel>Filter by Type</DropdownMenuLabel>
+                  <DropdownMenuLabel>{t("filter")}</DropdownMenuLabel>
                   <DropdownMenuItem onClick={() => setFilterType("all")}>All Types</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setFilterType("performance")}>Performance</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setFilterType("budget")}>Budget</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setFilterType("inventory")}>Inventory</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setFilterType("sales")}>Sales</DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuLabel>Filter by Severity</DropdownMenuLabel>
+                  <DropdownMenuLabel>{t("status")}</DropdownMenuLabel>
                   <DropdownMenuItem onClick={() => setFilterSeverity("all")}>All Levels</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setFilterSeverity("critical")}>Critical</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setFilterSeverity("high")}>High</DropdownMenuItem>
@@ -138,12 +138,12 @@ export function AlertsPanel() {
               {unreadCount > 0 && (
                 <Button variant="outline" size="sm" onClick={markAllAsRead} className="rounded-xl bg-transparent">
                   <CheckCircle className="h-4 w-4 mr-2" />
-                  Mark All Read
+                  {t("save")}
                 </Button>
               )}
             </div>
           </div>
-          <CardDescription>Real-time monitoring of business performance and budget thresholds</CardDescription>
+          <CardDescription>{t("inventoryAnalytics" as any)}</CardDescription>
         </CardHeader>
         <CardContent>
           {/* Critical Alerts Banner */}
@@ -151,7 +151,7 @@ export function AlertsPanel() {
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
               <div className="flex items-center space-x-2 mb-2">
                 <AlertTriangle className="h-5 w-5 text-red-600" />
-                <h4 className="font-semibold text-red-800">Critical Alerts Require Immediate Attention</h4>
+                <h4 className="font-semibold text-red-800">{t("lowStockAlerts")}</h4>
               </div>
               <div className="space-y-2">
                 {criticalAlerts.map((alert) => (
@@ -165,14 +165,14 @@ export function AlertsPanel() {
 
           <Tabs defaultValue="all" className="space-y-4">
             <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="all">All ({filteredAlerts.length})</TabsTrigger>
+              <TabsTrigger value="all">{t("allBranches")} ({filteredAlerts.length})</TabsTrigger>
               <TabsTrigger value="critical">
                 Critical ({alerts.filter((a) => a.severity === "critical").length})
               </TabsTrigger>
               <TabsTrigger value="performance">
                 Performance ({alerts.filter((a) => a.type === "performance").length})
               </TabsTrigger>
-              <TabsTrigger value="budget">Budget ({alerts.filter((a) => a.type === "budget").length})</TabsTrigger>
+              <TabsTrigger value="budget">{t("reports")} ({alerts.filter((a) => a.type === "budget").length})</TabsTrigger>
               <TabsTrigger value="unread">Unread ({unreadCount})</TabsTrigger>
             </TabsList>
 
@@ -180,7 +180,7 @@ export function AlertsPanel() {
               {filteredAlerts.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
                   <Bell className="h-12 w-12 mx-auto mb-2 text-gray-300" />
-                  <p>No alerts match your current filters</p>
+                  <p>{t("filter")}</p>
                 </div>
               ) : (
                 filteredAlerts.map((alert) => (
@@ -219,7 +219,7 @@ export function AlertsPanel() {
                             {alert.branch && alert.branch !== "all" && (
                               <span className="flex items-center space-x-1">
                                 <Building2 className="h-3 w-3" />
-                                <span>{alert.branch === "branch1" ? "Branch 1" : "Branch 2"}</span>
+                                <span>{alert.branch === "branch1" ? t("branch1") : t("branch2")}</span>
                               </span>
                             )}
                             <Badge className={`text-xs ${getSeverityColor(alert.severity)}`}>
@@ -356,29 +356,29 @@ export function AlertsPanel() {
                 </Badge>
               )}
             </DialogTitle>
-            <DialogDescription>Alert details and recommended actions</DialogDescription>
+            <DialogDescription>{t("inventoryAnalytics" as any)}</DialogDescription>
           </DialogHeader>
 
           {selectedAlert && (
             <div className="space-y-4">
               <div>
-                <h4 className="font-medium text-gray-900 mb-2">Description</h4>
+                <h4 className="font-medium text-gray-900 mb-2">{t("descriptionLabel" as any)}</h4>
                 <p className="text-sm text-gray-600">{selectedAlert.message}</p>
               </div>
 
               {selectedAlert.threshold && selectedAlert.currentValue && (
                 <div>
-                  <h4 className="font-medium text-gray-900 mb-2">Performance Metrics</h4>
+                  <h4 className="font-medium text-gray-900 mb-2">{t("inventoryAnalytics" as any)}</h4>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="p-3 bg-gray-50 rounded-lg">
-                      <p className="text-xs text-gray-500 mb-1">Current Value</p>
+                      <p className="text-xs text-gray-500 mb-1">{t("status")}</p>
                       <p className="font-semibold text-gray-900">
                         {selectedAlert.currentValue.toLocaleString()}
                         {selectedAlert.type === "budget" || selectedAlert.type === "performance" ? " Birr" : ""}
                       </p>
                     </div>
                     <div className="p-3 bg-gray-50 rounded-lg">
-                      <p className="text-xs text-gray-500 mb-1">Target/Budget</p>
+                      <p className="text-xs text-gray-500 mb-1">{t("price")}</p>
                       <p className="font-semibold text-gray-900">
                         {selectedAlert.threshold.toLocaleString()}
                         {selectedAlert.type === "budget" || selectedAlert.type === "performance" ? " Birr" : ""}
@@ -389,7 +389,7 @@ export function AlertsPanel() {
               )}
 
               <div>
-                <h4 className="font-medium text-gray-900 mb-2">Alert Information</h4>
+                <h4 className="font-medium text-gray-900 mb-2">{t("alerts")}</h4>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-500">Type:</span>
@@ -400,7 +400,7 @@ export function AlertsPanel() {
                     <span className="capitalize">{selectedAlert.severity}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Branch:</span>
+                    <span className="text-gray-500">{t("switchBranch")}</span>
                     <span>
                       {selectedAlert.branch === "all"
                         ? "All Branches"
@@ -410,12 +410,12 @@ export function AlertsPanel() {
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Time:</span>
+                    <span className="text-gray-500">{t("today")}</span>
                     <span>{selectedAlert.timestamp.toLocaleString()}</span>
                   </div>
                   {selectedAlert.category && (
                     <div className="flex justify-between">
-                      <span className="text-gray-500">Category:</span>
+                      <span className="text-gray-500">{t("category")}</span>
                       <span>{selectedAlert.category}</span>
                     </div>
                   )}
@@ -424,7 +424,7 @@ export function AlertsPanel() {
 
               {selectedAlert.actionRequired && (
                 <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <h4 className="font-medium text-yellow-800 mb-1">Action Required</h4>
+                  <h4 className="font-medium text-yellow-800 mb-1">{t("actions")}</h4>
                   <p className="text-sm text-yellow-700">
                     This alert requires immediate attention and action to resolve the issue.
                   </p>
@@ -435,18 +435,18 @@ export function AlertsPanel() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setSelectedAlert(null)}>
-              Close
+              {t("cancel")}
             </Button>
             {selectedAlert?.actionRequired && (
               <Button
                 className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white"
                 onClick={() => {
                   // In a real app, this would navigate to the relevant page or open an action dialog
-                  alert("Navigating to resolution page...")
+                  alert("...")
                   setSelectedAlert(null)
                 }}
               >
-                Take Action
+                {t("save")}
               </Button>
             )}
           </DialogFooter>

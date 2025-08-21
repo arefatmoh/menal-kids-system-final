@@ -28,8 +28,8 @@ export default function LoginPage() {
 
     if (!email || !password) {
       toast({
-        title: "🚨 Error",
-        description: "Please fill in all fields",
+        title: `🚨 ${t("error")}`,
+        description: t("fillAllFields"),
         variant: "destructive",
       })
       return
@@ -47,8 +47,8 @@ export default function LoginPage() {
         localStorage.setItem("userName", data.user.full_name)
 
         toast({
-          title: "🎉 Welcome back!",
-          description: "Login successful!",
+          title: `🎉 ${t("loginSuccessfulTitle")}`,
+          description: t("loginSuccessfulDesc"),
         })
 
         // Use full reload to ensure context/providers pick up new branch assignment immediately
@@ -59,15 +59,15 @@ export default function LoginPage() {
         }
       } else {
         toast({
-          title: "❌ Login Failed",
-          description: response.error || "Invalid credentials",
+          title: `❌ ${t("loginFailedTitle")}`,
+          description: response.error || t("invalidCredentials"),
           variant: "destructive",
         })
       }
     } catch (error: any) {
       toast({
-        title: "😵 Error",
-        description: error.message || "Login failed. Please try again.",
+        title: `😵 ${t("error")}`,
+        description: error.message || t("loginErrorDesc"),
         variant: "destructive",
       })
     } finally {
@@ -160,7 +160,7 @@ export default function LoginPage() {
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Signing in...
+                    {t("signingIn")}
                   </>
                 ) : (
                   t("signIn")

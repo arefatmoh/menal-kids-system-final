@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Package, AlertTriangle, TrendingUp, TrendingDown, Calendar, Activity, ShoppingBag, Loader2, BarChart3, Trophy, Settings, Target, Users, Truck, ChevronLeft, ChevronRight } from "lucide-react"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 import apiClient from "@/lib/api-client"
+import { useLanguage } from "@/lib/language-context"
 import { useToast } from "@/hooks/use-toast"
 import { useBranch } from "@/lib/branch-context"
 import { formatCurrency } from "@/lib/utils"
@@ -32,6 +33,7 @@ interface RecentActivity {
 }
 
 export default function Dashboard() {
+  const { t } = useLanguage()
   const today = new Date()
   const todayStr = today.toISOString().split("T")[0]
   const [userRole, setUserRole] = useState<string | null>(null)
@@ -169,7 +171,9 @@ export default function Dashboard() {
           if (currentBranch !== "all") { salesParams.branch_id = currentBranch }
           const salesResponse = await apiClient.getSalesTotal(salesParams)
           if (salesResponse.success && salesResponse.data) {
-            setSalesSummary(Number(salesResponse.data.total_sales || 0))
+            type SalesTotalResponse = { total_sales?: number }
+            const data = salesResponse.data as unknown as SalesTotalResponse
+            setSalesSummary(Number(data?.total_sales ?? 0))
           }
         }
 
@@ -178,7 +182,9 @@ export default function Dashboard() {
         if (currentBranch !== "all") { topSellingTodayParams.branch_id = currentBranch }
         const topSellingTodayResponse = await apiClient.getTopSellingToday(topSellingTodayParams)
         if (topSellingTodayResponse.success && topSellingTodayResponse.data) {
-          setTopSellingToday(topSellingTodayResponse.data)
+          type TopSelling = { product_name: string; quantity_sold: number; total_amount: number; variation_info: string }
+          const items = (topSellingTodayResponse.data as unknown) as TopSelling[]
+          setTopSellingToday(Array.isArray(items) ? items : [])
         }
 
         // Fetch top selling products for this week
@@ -186,7 +192,9 @@ export default function Dashboard() {
         if (currentBranch !== "all") { topSellingWeekParams.branch_id = currentBranch }
         const topSellingWeekResponse = await apiClient.getTopSellingWeek(topSellingWeekParams)
         if (topSellingWeekResponse.success && topSellingWeekResponse.data) {
-          setTopSellingWeek(topSellingWeekResponse.data)
+          type TopSelling = { product_name: string; quantity_sold: number; total_amount: number; variation_info: string }
+          const items = (topSellingWeekResponse.data as unknown) as TopSelling[]
+          setTopSellingWeek(Array.isArray(items) ? items : [])
         }
 
         // Fetch low stock products
@@ -194,7 +202,9 @@ export default function Dashboard() {
         if (currentBranch !== "all") { lowStockParams.branch_id = currentBranch }
         const lowStockResponse = await apiClient.getLowStockProducts(lowStockParams)
         if (lowStockResponse.success && lowStockResponse.data) {
-          setLowStockProducts(lowStockResponse.data)
+          type LowStock = { product_name: string; current_quantity: number; variation_info: string; category_info: string; days_since_restock: number }
+          const items = (lowStockResponse.data as unknown) as LowStock[]
+          setLowStockProducts(Array.isArray(items) ? items : [])
         }
 
         // Fetch recent product updates instead of high value inventory
@@ -202,7 +212,9 @@ export default function Dashboard() {
         if (currentBranch !== "all") { recentUpdatesParams.branch_id = currentBranch }
         const recentUpdatesResponse = await apiClient.getRecentProductUpdates(recentUpdatesParams)
         if (recentUpdatesResponse.success && recentUpdatesResponse.data) {
-          setRecentProductUpdates(recentUpdatesResponse.data)
+          type RecentUpdate = { product_name: string; update_type: string; updated_at: string; variation_info: string; category_info: string; change_details: string }
+          const items = (recentUpdatesResponse.data as unknown) as RecentUpdate[]
+          setRecentProductUpdates(Array.isArray(items) ? items : [])
         }
 
         // (Removed) Critical alerts fetch
@@ -240,68 +252,68 @@ export default function Dashboard() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600 mt-1">Welcome back! Here's what's happening at Menal Kids Shop today.</p>
+        <h1 className="text-3xl font-bold text-gray-900">{t("dashboard")}</h1>
+        <p className="text-gray-600 mt-1">{t("welcomeMessage")}</p>
       </div>
 
       {/* Sales Summary Card and Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
         <Card className="border-0 shadow-lg bg-gradient-to-br from-pink-50 to-pink-100 hover:shadow-xl transition-shadow duration-200">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-pink-700">Sales Today</CardTitle>
+            <CardTitle className="text-sm font-medium text-pink-700">{t("today") + " " + t("transfer")}</CardTitle>
             <BarChart3 className="h-4 w-4 text-pink-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-pink-900">{salesSummary !== null ? formatCurrency(Math.round(Number(salesSummary) || 0)) : "-"}</div>
             <p className="text-xs text-pink-600 mt-1">
-              {userRole === "owner" ? "All branches" : "Your branch"} sales today
+              {userRole === "owner" ? t("allBranches") : t("branch1")} {t("today")}
             </p>
           </CardContent>
         </Card>
         {/* Summary Cards */}
         <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 to-blue-100 hover:shadow-xl transition-shadow duration-200">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-blue-700">Total Products</CardTitle>
+            <CardTitle className="text-sm font-medium text-blue-700">{t("totalProducts")}</CardTitle>
             <Package className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-900">{stats?.total_products || 0}</div>
             <p className="text-xs text-blue-600 mt-1">
               <TrendingUp className="inline h-3 w-3 mr-1" />
-              Active products in inventory
+              {t("inventory")}
             </p>
           </CardContent>
         </Card>
 
         <Card className="border-0 shadow-lg bg-gradient-to-br from-orange-50 to-orange-100 hover:shadow-xl transition-shadow duration-200">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-orange-700">Low Stock Alerts</CardTitle>
+            <CardTitle className="text-sm font-medium text-orange-700">{t("lowStockAlerts")}</CardTitle>
             <AlertTriangle className="h-4 w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-orange-900">{stats?.low_stock_alerts || 0}</div>
-            <p className="text-xs text-orange-600 mt-1">Items need restocking</p>
+            <p className="text-xs text-orange-600 mt-1">{t("itemsNeedRestocking")}</p>
           </CardContent>
         </Card>
 
         <Card className="border-0 shadow-lg bg-gradient-to-br from-green-50 to-green-100 hover:shadow-xl transition-shadow duration-200">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-green-700">Stock In Today</CardTitle>
+            <CardTitle className="text-sm font-medium text-green-700">{t("stockInToday")}</CardTitle>
             <TrendingUp className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-900">{stats?.stock_in_today || 0}</div>
-            <p className="text-xs text-green-600 mt-1">Units added today</p>
+            <p className="text-xs text-green-600 mt-1">{t("unitsAddedToday")}</p>
           </CardContent>
         </Card>
         <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-50 to-purple-100 hover:shadow-xl transition-shadow duration-200">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-purple-700">Stock Out Today</CardTitle>
+            <CardTitle className="text-sm font-medium text-purple-700">{t("stockOutToday")}</CardTitle>
             <TrendingDown className="h-4 w-4 text-purple-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-900">{stats?.stock_out_today || 0}</div>
-            <p className="text-xs text-purple-600 mt-1">Units sold today</p>
+            <p className="text-xs text-purple-600 mt-1">{t("unitsSoldToday")}</p>
           </CardContent>
         </Card>
       </div>
@@ -312,9 +324,9 @@ export default function Dashboard() {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Activity className="h-5 w-5 text-pink-500" />
-              <span>Stock Trend (This Week)</span>
+              <span>{t("stockTrend")}</span>
             </CardTitle>
-            <CardDescription>Daily net stock changes</CardDescription>
+            <CardDescription>{t("dailyStockLevels")}</CardDescription>
           </CardHeader>
           <CardContent>
             {stockTrend.length > 0 ? (
@@ -359,8 +371,8 @@ export default function Dashboard() {
               <div className="flex items-center justify-center h-64 text-gray-500">
                 <div className="text-center">
                   <Activity className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                  <p className="text-lg font-medium mb-2">No Stock Activity</p>
-                  <p className="text-sm">No stock movements recorded in the last 7 days</p>
+                  <p className="text-lg font-medium mb-2">{t("recentActivity")}</p>
+                  <p className="text-sm">{t("latestStockMovements")}</p>
                 </div>
               </div>
             )}
@@ -372,9 +384,9 @@ export default function Dashboard() {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Calendar className="h-5 w-5 text-purple-500" />
-              <span>Recent Activity</span>
+              <span>{t("recentActivity")}</span>
             </CardTitle>
-            <CardDescription>Latest stock movements</CardDescription>
+            <CardDescription>{t("latestStockMovements")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">

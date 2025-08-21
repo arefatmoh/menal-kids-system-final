@@ -694,22 +694,22 @@ export default function InventoryPage() {
 
       if (response.success) {
         toast({
-          title: "Success",
-          description: "Product deleted successfully",
+          title: t("save"),
+          description: t("delete"),
         })
         fetchInventory(pagination.page, searchTerm, selectedStatus, selectedCategory)
       } else {
         toast({
-          title: "Error",
-          description: response.error || "Failed to delete product",
+          title: t("cancel"),
+          description: response.error || t("delete"),
           variant: "destructive",
         })
       }
     } catch (error: any) {
       console.error("Delete product error:", error)
       toast({
-        title: "Error",
-        description: error.message || "Failed to delete product",
+        title: t("cancel"),
+        description: error.message || t("delete"),
         variant: "destructive",
       })
     }
@@ -732,22 +732,22 @@ export default function InventoryPage() {
 
       if (response.success) {
         toast({
-          title: "Success",
-          description: "Inventory record deleted successfully",
+          title: t("save"),
+          description: t("delete"),
         })
         fetchInventory(pagination.page, searchTerm, selectedStatus, selectedCategory)
       } else {
         toast({
-          title: "Error",
-          description: response.error || "Failed to delete inventory record",
+          title: t("cancel"),
+          description: response.error || t("delete"),
           variant: "destructive",
         })
       }
     } catch (error: any) {
       console.error("Delete inventory error:", error)
       toast({
-        title: "Error",
-        description: error.message || "Failed to delete inventory record",
+        title: t("cancel"),
+        description: error.message || t("delete"),
         variant: "destructive",
       })
     }
@@ -1092,7 +1092,7 @@ export default function InventoryPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <h1 className="text-2xl font-bold text-gray-900 flex items-center">
-            Product & Inventory Management
+            {t("products")} & {t("inventory")}
             <span className="ml-3 px-2 py-1 rounded-full bg-blue-50 text-blue-700 text-sm font-semibold border border-blue-200 shadow-sm">
               {pagination.total} items
             </span>
@@ -1103,7 +1103,7 @@ export default function InventoryPage() {
           className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white"
         >
           <Plus className="h-4 w-4 mr-2" />
-          Add Product
+          {t("addProduct")}
         </Button>
       </div>
 
@@ -1654,18 +1654,18 @@ export default function InventoryPage() {
               <Package className="h-5 w-5 text-pink-500" />
               <span>
                 {isCrossBranchSearch 
-                  ? `Search Results in ${getBranchDisplayName(getOtherBranch())} Branch`
-                  : `Inventory in ${getBranchDisplayName(currentBranch || "branch1")} Branch`
+                  ? `${t("search")} ${t("inStock")} ${getBranchDisplayName(getOtherBranch())}`
+                  : `${t("inventory")} ${getBranchDisplayName(currentBranch || "branch1")}`
                 }
               </span>
               {isCrossBranchSearch && (
                 <Badge variant="outline" className="text-xs bg-blue-50 text-blue-600 border-blue-200">
-                  Cross-Branch Search
+                  {t("crossBranchSearch")}
                 </Badge>
               )}
             </CardTitle>
             <div className="text-sm text-gray-500">
-              {pagination.total} items found
+              {pagination.total} {t("products")}
             </div>
           </div>
         </CardHeader>
@@ -2146,11 +2146,11 @@ export default function InventoryPage() {
                     <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center">
                       <Package className="h-12 w-12 text-gray-400" />
                     </div>
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">No products found</h3>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">{t("noProductsFoundTitle" as any)}</h3>
                     <p className="text-gray-500 mb-6">
                       {searchTerm || selectedStatus !== "all" || selectedCategory !== "all" 
-                        ? "No products match your current search criteria. Try adjusting your filters or search terms."
-                        : "No products have been added to the inventory yet."
+                        ? t("noProductsMatchFilters" as any)
+                        : t("noProductsAddedYet" as any)
                       }
                     </p>
                     <div className="flex flex-col sm:flex-row items-center justify-center space-y-2 sm:space-y-0 sm:space-x-4">
@@ -2161,7 +2161,7 @@ export default function InventoryPage() {
                           className="border-pink-200 text-pink-600 hover:bg-pink-50"
                         >
                           <FilterX className="h-4 w-4 mr-2" />
-                          Clear Filters
+                          {t("filter")}
                         </Button>
                       )}
                       <Button 
@@ -2169,7 +2169,7 @@ export default function InventoryPage() {
                         className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white"
                       >
                         <Plus className="h-4 w-4 mr-2" />
-                        Add Your First Product
+                        {t("addProduct")}
                       </Button>
                     </div>
                   </div>

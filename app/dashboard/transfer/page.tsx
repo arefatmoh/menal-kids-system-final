@@ -1221,10 +1221,10 @@ export default function TransferPage() {
                 {isOwner ? (
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="fromBranch">From Branch *</Label>
+                      <Label htmlFor="fromBranch">{t("fromBranch")} *</Label>
                       <Select value={fromBranch} onValueChange={setFromBranch} required>
                         <SelectTrigger className="rounded-xl border-gray-200 focus:border-pink-300 focus:ring-pink-200">
-                          <SelectValue placeholder="Select source" />
+                          <SelectValue placeholder={t("fromBranch")} />
                         </SelectTrigger>
                         <SelectContent>
                           {branches.map((branch) => (
@@ -1237,10 +1237,10 @@ export default function TransferPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="toBranch">To Branch *</Label>
+                      <Label htmlFor="toBranch">{t("toBranch")} *</Label>
                       <Select value={toBranch} onValueChange={setToBranch} required>
                         <SelectTrigger className="rounded-xl border-gray-200 focus:border-pink-300 focus:ring-pink-200">
-                          <SelectValue placeholder="Select destination" />
+                          <SelectValue placeholder={t("toBranch")} />
                         </SelectTrigger>
                         <SelectContent>
                           {branches.map((branch) => (
@@ -1262,18 +1262,18 @@ export default function TransferPage() {
                           <Building2 className="h-5 w-5 text-white" />
                         </div>
                         <div>
-                          <p className="text-sm font-medium text-blue-800">Transferring from:</p>
+                          <p className="text-sm font-medium text-blue-800">{t("fromBranch")}</p>
                           <p className="text-lg font-bold text-blue-900">{getBranchName(userBranch!)}</p>
-                          <p className="text-xs text-blue-600">Your current branch</p>
+                          <p className="text-xs text-blue-600">{t("branch1")}</p>
                         </div>
                       </div>
                     </div>
                     
                     <div className="space-y-2">
-                      <Label htmlFor="toBranch">To Branch *</Label>
+                      <Label htmlFor="toBranch">{t("toBranch")} *</Label>
                       <Select value={toBranch} onValueChange={setToBranch} required>
                         <SelectTrigger className="rounded-xl border-gray-200 focus:border-pink-300 focus:ring-pink-200">
-                          <SelectValue placeholder="Select destination branch" />
+                          <SelectValue placeholder={t("toBranch")} />
                         </SelectTrigger>
                         <SelectContent>
                           {branches

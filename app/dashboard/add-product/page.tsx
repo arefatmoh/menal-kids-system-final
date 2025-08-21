@@ -836,7 +836,7 @@ export default function AddProductPage() {
                   className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-lg rounded-xl"
                 >
                   <Package className="h-4 w-4 mr-2" />
-                  View Inventory
+                  {t("viewInventory" as any)}
                 </Button>
                 <Button 
                   variant="destructive"
@@ -844,19 +844,19 @@ export default function AddProductPage() {
                   className="w-full bg-red-600 hover:bg-red-700 text-white shadow-lg rounded-xl"
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
-                  Delete Product
+                  {t("deleteProduct" as any)}
                 </Button>
                 <Button 
                   variant="outline" 
                   onClick={() => setLastAddedProduct(null)}
                   className="w-full border-emerald-300 text-emerald-700 hover:bg-emerald-50 rounded-xl"
                 >
-                  Dismiss
+                  {t("dismiss" as any)}
                 </Button>
                 <div className="text-center">
                   <div className="flex items-center justify-center space-x-1 text-emerald-600 text-xs">
                     <CheckCircle className="h-3 w-3" />
-                    <span>Ready for management</span>
+                    <span>{t("readyForManagement" as any)}</span>
                   </div>
                 </div>
               </div>
@@ -868,9 +868,9 @@ export default function AddProductPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
-            Add New Product
+            {t("addNewProductTitle" as any)}
           </h1>
-          <p className="text-gray-600 mt-1">Add a new product to your inventory system</p>
+          <p className="text-gray-600 mt-1">{t("addNewProductSubtitle" as any)}</p>
         </div>
         <Button 
           variant="outline"
@@ -878,7 +878,7 @@ export default function AddProductPage() {
           className="border-gray-200 hover:bg-gray-50 shadow-sm"
         >
           <Package className="h-4 w-4 mr-2" />
-          View Inventory
+          {t("viewInventory" as any)}
         </Button>
       </div>
 
@@ -888,10 +888,10 @@ export default function AddProductPage() {
             <div className="w-10 h-10 bg-gradient-to-r from-pink-500 to-purple-500 rounded-lg flex items-center justify-center">
               <Plus className="h-5 w-5 text-white" />
             </div>
-            <span>Product Information</span>
+            <span>{t("productInformation" as any)}</span>
           </CardTitle>
           <CardDescription className="text-gray-600">
-            Fill in the details for your new product. This will be added to your inventory system.
+            {t("productInformationDesc" as any)}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -935,10 +935,10 @@ export default function AddProductPage() {
                 <div className="space-y-4">
                   {/* Product Search Input */}
                   <div className="space-y-2">
-                    <Label htmlFor="existing-product-search">Search for existing variation product</Label>
+                    <Label htmlFor="existing-product-search">{t("searchExistingVariationProduct" as any)}</Label>
                     <Input
                       id="existing-product-search"
-                      placeholder="Type product name to search (auto-searches as you type)..."
+                      placeholder={t("typeToSearch" as any)}
                       value={existingProductSearch}
                       onChange={(e) => setExistingProductSearch(e.target.value)}
                       className="rounded-xl border-blue-200 focus:border-blue-400 focus:ring-blue-200"
@@ -946,7 +946,7 @@ export default function AddProductPage() {
                     {isSearchingProducts && (
                       <div className="flex items-center space-x-2 text-sm text-blue-600">
                         <Loader2 className="h-4 w-4 animate-spin" />
-                        <span>Searching...</span>
+                        <span>{t("searching" as any)}</span>
                       </div>
                     )}
                   </div>
@@ -954,7 +954,7 @@ export default function AddProductPage() {
                   {/* Search Results */}
                   {existingProducts.length > 0 && (
                     <div className="space-y-2">
-                      <Label className="text-sm font-medium text-blue-700">Select a product:</Label>
+                      <Label className="text-sm font-medium text-blue-700">{t("selectAProduct" as any)}</Label>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-60 overflow-y-auto">
                         {existingProducts.map((product) => (
                           <Card
@@ -975,10 +975,10 @@ export default function AddProductPage() {
                                   <h4 className="font-semibold text-gray-800 mb-1">{product.name}</h4>
                                   <div className="flex items-center space-x-2 text-sm text-gray-600">
                                     <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">
-                                      {product.category_name || "No Category"}
+                                      {product.category_name || t("noCategory" as any)}
                                     </span>
                                     <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs">
-                                      {product.variations_count || 0} variations
+                                      {product.variations_count || 0} {t("variationsLabel" as any)}
                                     </span>
                                   </div>
                                   {product.description && (
@@ -1004,7 +1004,7 @@ export default function AddProductPage() {
                   {selectedExistingProduct && (
                     <div className="p-4 bg-white rounded-lg border border-blue-200">
                       <div className="flex items-center justify-between mb-3">
-                        <h4 className="font-semibold text-gray-800">Selected Product</h4>
+                        <h4 className="font-semibold text-gray-800">{t("selectedProduct" as any)}</h4>
                         <Button
                           type="button"
                           variant="ghost"
@@ -1012,23 +1012,23 @@ export default function AddProductPage() {
                           onClick={() => setSelectedExistingProduct(null)}
                           className="text-blue-600 hover:text-blue-700"
                         >
-                          Change
+                          {t("change" as any)}
                         </Button>
                       </div>
                       <div className="space-y-3">
                         <div className="flex items-center space-x-2">
                           <span className="font-medium text-gray-700">{selectedExistingProduct.name}</span>
                           <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">
-                            Ready for variations
+                            {t("readyForVariations" as any)}
                           </span>
                         </div>
                         <div className="flex items-center space-x-2 text-sm text-gray-600">
-                          <span>Category: {selectedExistingProduct.category_name || "No Category"}</span>
+                          <span>{t("category")}: {selectedExistingProduct.category_name || t("noCategory" as any)}</span>
                           <span>•</span>
-                          <span>{selectedExistingProduct.variations_count || 0} existing variations</span>
+                          <span>{selectedExistingProduct.variations_count || 0} {t("variationsLabel" as any)}</span>
                         </div>
                         <p className="text-sm text-gray-600">
-                          You can now add new variations to this product below.
+                          {t("addVariationsToProduct" as any)}
                         </p>
                       </div>
                     </div>
@@ -1038,11 +1038,11 @@ export default function AddProductPage() {
                   {selectedExistingProduct && existingVariations.length > 0 && (
                     <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
                       <div className="flex items-center justify-between mb-3">
-                        <h4 className="font-semibold text-gray-800">Existing Variations</h4>
+                        <h4 className="font-semibold text-gray-800">{t("variationsLabel" as any)}</h4>
                         {isLoadingVariations && (
                           <div className="flex items-center space-x-2 text-sm text-gray-600">
                             <Loader2 className="h-4 w-4 animate-spin" />
-                            <span>Loading...</span>
+                            <span>{t("loading" as any)}</span>
                           </div>
                         )}
                       </div>
@@ -1079,7 +1079,7 @@ export default function AddProductPage() {
                       {existingVariations.length > 6 && (
                         <div className="mt-2 text-center">
                           <span className="text-sm text-gray-600">
-                            +{existingVariations.length - 6} more variations
+                            +{existingVariations.length - 6} {t("more" as any)} {t("variationsLabel" as any)}
                           </span>
                         </div>
                       )}
@@ -1091,10 +1091,10 @@ export default function AddProductPage() {
                     <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                       <div className="flex items-center space-x-2 text-yellow-800">
                         <AlertTriangle className="h-4 w-4" />
-                        <span className="text-sm font-medium">No products found</span>
+                        <span className="text-sm font-medium">{t("noProductsFound" as any)}</span>
                       </div>
                       <p className="text-sm text-yellow-700 mt-1">
-                        Try a different search term or check if the product exists in your inventory.
+                        {t("noProductsFoundHelp" as any)}
                       </p>
                     </div>
                   )}

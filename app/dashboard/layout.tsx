@@ -115,7 +115,7 @@ export default function DashboardLayout({
                 <h1 className="text-lg font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
                   Menal Kids
                 </h1>
-                <p className="text-xs text-gray-500 capitalize">{userRole} Panel</p>
+                <p className="text-xs text-gray-500 capitalize">{userRole} {t("dashboard")}</p>
               </div>
             </div>
             <Button variant="ghost" size="sm" className="lg:hidden" onClick={() => setSidebarOpen(false)}>
@@ -202,18 +202,18 @@ export default function DashboardLayout({
       <Dialog open={showAdminDialog} onOpenChange={setShowAdminDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Enter Admin Passcode</DialogTitle>
+            <DialogTitle>{t("edit")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <Input
               type="password"
               value={adminPasscode}
               onChange={(e) => setAdminPasscode(e.target.value)}
-              placeholder="Passcode"
+              placeholder={t("password")}
             />
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setShowAdminDialog(false)}>
-                Cancel
+                {t("cancel")}
               </Button>
               <Button
                 onClick={async () => {
@@ -229,7 +229,7 @@ export default function DashboardLayout({
                   }
                 }}
               >
-                Unlock
+                {t("save")}
               </Button>
             </div>
           </div>

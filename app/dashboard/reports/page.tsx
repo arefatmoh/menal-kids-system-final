@@ -39,7 +39,7 @@ import {
   ArrowDownRight,
   Loader2,
 } from "lucide-react"
-// import { useLanguage } from "@/lib/language-context"
+import { useLanguage } from "@/lib/language-context"
 import { AlertsPanel } from "@/components/alerts-panel"
 import apiClient from "@/lib/api-client"
 import type { ExpenseReport as ExpenseReportType, SalesReport as SalesReportType } from "@/lib/types"
@@ -50,6 +50,7 @@ type SalesReport = SalesReportType
 type ExpenseReport = ExpenseReportType
 
 export default function ReportsPage() {
+  const { t } = useLanguage()
   const [userRole, setUserRole] = useState<string | null>(null)
   const [timeRange, setTimeRange] = useState("daily")
   const [customDateFrom, setCustomDateFrom] = useState("")
@@ -265,8 +266,8 @@ export default function ReportsPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Financial Reports</h1>
-          <p className="text-gray-600 mt-1">Financial analytics, sales, and expense overview</p>
+          <h1 className="text-3xl font-bold text-gray-900">{t("reports")}</h1>
+          <p className="text-gray-600 mt-1">{t("financialOverview" as any)}</p>
         </div>
         <div className="flex items-center space-x-3">
           <Select value={timeRange} onValueChange={setTimeRange}>
@@ -285,7 +286,7 @@ export default function ReportsPage() {
             className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white rounded-xl"
           >
             <Download className="h-4 w-4 mr-2" />
-            Export Report
+            {t("downloadCompleteReport" as any)}
           </Button>
         </div>
       </div>
@@ -336,7 +337,7 @@ export default function ReportsPage() {
       {!isLoading && (
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:grid-cols-3">
-            <TabsTrigger value="overview">Financial Overview</TabsTrigger>
+            <TabsTrigger value="overview">{t("financialOverview" as any)}</TabsTrigger>
             <TabsTrigger value="finance">Finance & Budget</TabsTrigger>
             <TabsTrigger value="comparison">Branch Comparison</TabsTrigger>
           </TabsList>
@@ -347,7 +348,7 @@ export default function ReportsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 to-blue-100">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-blue-700">Total Sales</CardTitle>
+                  <CardTitle className="text-sm font-medium text-blue-700">{t("totalSales" as any)}</CardTitle>
                   <DollarSign className="h-4 w-4 text-blue-600" />
                 </CardHeader>
                 <CardContent>
@@ -356,14 +357,14 @@ export default function ReportsPage() {
                   </div>
                   <p className="text-xs text-blue-600 mt-1">
                     <TrendingUp className="inline h-3 w-3 mr-1" />
-                    Real-time data
+                    {t("salesTransactions" as any)}
                   </p>
                 </CardContent>
               </Card>
 
               <Card className="border-0 shadow-lg bg-gradient-to-br from-green-50 to-green-100">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-green-700">Total Transactions</CardTitle>
+                  <CardTitle className="text-sm font-medium text-green-700">{t("salesTransactions" as any)}</CardTitle>
                   <Package className="h-4 w-4 text-green-600" />
                 </CardHeader>
                 <CardContent>
@@ -410,7 +411,7 @@ export default function ReportsPage() {
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <BarChart className="h-5 w-5 text-pink-500" />
-                  <span>Sales Performance by Branch</span>
+                  <span>{t("salesPerformanceByBranch" as any)}</span>
                 </CardTitle>
                 <CardDescription>Compare sales performance across branches over time</CardDescription>
               </CardHeader>
@@ -450,7 +451,7 @@ export default function ReportsPage() {
                 ) : (
                   <div className="text-center py-8">
                     <BarChart className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No Sales Data</h3>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">{t("noSalesData" as any)}</h3>
                     <p className="text-gray-500">No sales data available for visualization</p>
                   </div>
                 )}

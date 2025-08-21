@@ -44,6 +44,7 @@ export const translations = {
     // Common
     search: "Search",
     filter: "Filter",
+    refresh: "Refresh",
     category: "Category",
     size: "Size",
     color: "Color",
@@ -51,6 +52,8 @@ export const translations = {
     stock: "Stock",
     quantity: "Quantity",
     status: "Status",
+    allCategories: "All Categories",
+    allStatus: "All Status",
     actions: "Actions",
     save: "Save",
     cancel: "Cancel",
@@ -63,6 +66,7 @@ export const translations = {
     inStock: "In Stock",
     lowStock: "Low Stock",
     outOfStock: "Out of Stock",
+    overstock: "Overstock",
 
     // Time
     today: "Today",
@@ -82,6 +86,16 @@ export const translations = {
     reasonForTransfer: "Reason for Transfer",
     submitTransferRequest: "Submit Transfer Request",
     stockOverview: "Stock Overview",
+    // Tabs / Sections
+    overview: "Overview",
+    operations: "Operations",
+    alerts: "Alerts",
+    history: "History",
+    inventoryAnalytics: "Inventory Analytics",
+    settings: "Settings",
+    // Stock Page
+    totalStocks: "Total Stocks",
+    inventoryLevelsAcrossBranches: "Current inventory levels across all branches",
   },
   am: {
     // Login
@@ -94,26 +108,26 @@ export const translations = {
     // Navigation
     dashboard: "ዳሽቦርድ",
     products: "ምርቶች",
-    inventory: "አክሲዮን",
+    inventory: "ስቶክ",
     addProduct: "ምርት ጨምር",
     sellProducts: "ምርት ሽጥ",
-    stockManagement: "የአክሲዮን አስተዳደር",
+    stockManagement: "የስቶክ አስተዳደር",
     reports: "ሪፖርቶች",
     signOut: "ውጣ",
 
     // Dashboard
     welcomeMessage: "እንኳን ደህና መጡ! ዛሬ በመናል ኪድስ ሱቅ ውስጥ የሚከሰተው ነገር ይህ ነው።",
     totalProducts: "ጠቅላላ ምርቶች",
-    lowStockAlerts: "ዝቅተኛ አክሲዮን ማንቂያዎች",
-    stockInToday: "ዛሬ የገባ አክሲዮን",
-    stockOutToday: "ዛሬ የወጣ አክሲዮን",
+    lowStockAlerts: "ዝቅተኛ ስቶክ ማንቂያዎች",
+    stockInToday: "ዛሬ የገባ ስቶክ",
+    stockOutToday: "ዛሬ የወጣ ስቶክ",
     itemsNeedRestocking: "እቃዎች እንደገና መሞላት ያስፈልጋቸዋል",
     unitsAddedToday: "ዛሬ የተጨመሩ ክፍሎች",
     unitsSoldToday: "ዛሬ የተሸጡ ክፍሎች",
-    stockTrend: "የአክሲዮን አዝማሚያ (በዚህ ሳምንት)",
+    stockTrend: "የስቶክ አዝማሚያ (በዚህ ሳምንት)",
     recentActivity: "የቅርብ ጊዜ እንቅስቃሴ",
-    dailyStockLevels: "የዕለት ተዕለት የአክሲዮን ደረጃዎች ዕይታ",
-    latestStockMovements: "የቅርብ ጊዜ የአክሲዮን እንቅስቃሴዎች",
+    dailyStockLevels: "የዕለት ተዕለት የስቶክ ደረጃዎች ዕይታ",
+    latestStockMovements: "የቅርብ ጊዜ የስቶክ እንቅስቃሴዎች",
 
     // Branch
     branch1: "ፍራንኮ (ዋና)",
@@ -128,13 +142,16 @@ export const translations = {
     // Common
     search: "ፈልግ",
     filter: "ማጣሪያ",
+    refresh: "አድስ",
     category: "ምድብ",
     size: "መጠን",
     color: "ቀለም",
     price: "ዋጋ",
-    stock: "አክሲዮን",
+    stock: "ስቶክ",
     quantity: "መጠን",
     status: "ሁኔታ",
+    allCategories: "ሁሉም ምድቦች",
+    allStatus: "ሁሉም ሁኔታ",
     actions: "እርምጃዎች",
     save: "አስቀምጥ",
     cancel: "ሰርዝ",
@@ -144,9 +161,10 @@ export const translations = {
     remove: "አስወግድ",
 
     // Stock Status
-    inStock: "በአክሲዮን ውስጥ",
-    lowStock: "ዝቅተኛ አክሲዮን",
-    outOfStock: "ከአክሲዮን ውጭ",
+    inStock: "በስቶክ ውስጥ",
+    lowStock: "ዝቅተኛ ስቶክ",
+    outOfStock: "ከስቶክ ውጭ",
+    overstock: "በላይ የተጠናቀቀ",
 
     // Time
     today: "ዛሬ",
@@ -165,7 +183,17 @@ export const translations = {
     toBranch: "ወደ ቅርንጫፍ",
     reasonForTransfer: "የማስተላለፊያ ምክንያት",
     submitTransferRequest: "የማስተላለፊያ ጥያቄ አስገባ",
-    stockOverview: "የአክሲዮን ዕይታ",
+    stockOverview: "የስቶክ ዕይታ",
+    // Tabs / Sections
+    overview: "አጠቃላይ እይታ",
+    operations: "ክዋኔዎች",
+    alerts: "ማንቂያዎች",
+    history: "ታሪክ",
+    inventoryAnalytics: "የስቶክ ትንታኔ",
+    settings: "ቅንብሮች",
+    // Stock Page
+    totalStocks: "ጠቅላላ ስቶክ",
+    inventoryLevelsAcrossBranches: "በሁሉም ቅርንጫፎች ያሉ የስቶክ ደረጃዎች",
   },
 }
 

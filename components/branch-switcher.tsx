@@ -25,7 +25,7 @@ export function BranchSwitcher() {
 
   if (userRole === "employee") {
     // Employees see their branch name but can't switch
-    const branchName = currentBranch === "branch1" ? "Franko (Main)" : "Mebrathayl"
+    const branchName = currentBranch === "branch1" ? t("branch1") : t("branch2")
     return (
       <div className="flex items-center space-x-2 px-3 py-2 bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-xl">
         <Building2 className="h-4 w-4 text-blue-600" />

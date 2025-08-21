@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { createContext, useContext, useState, useEffect } from "react"
-import { translations, type Language, type TranslationKey } from "./translations"
+import { translations, type Language, type TranslationKey } from "./i18n"
 
 interface LanguageContextType {
   language: Language
@@ -13,7 +13,7 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined)
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguage] = useState<Language>("en")
+  const [language, setLanguage] = useState<Language>("am")
 
   useEffect(() => {
     const savedLanguage = localStorage.getItem("language") as Language
@@ -21,6 +21,12 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
       setLanguage(savedLanguage)
     }
   }, [])
+
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      document.documentElement.lang = language
+    }
+  }, [language])
 
   const handleSetLanguage = (lang: Language) => {
     setLanguage(lang)

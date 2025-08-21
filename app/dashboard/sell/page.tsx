@@ -49,6 +49,7 @@ import {
 } from "lucide-react"
 import apiClient from "@/lib/api-client"
 import { useToast } from "@/hooks/use-toast"
+import { useLanguage } from "@/lib/language-context"
 import { useBranch } from "@/lib/branch-context"
 import { useSearchParams } from "next/navigation"
 import { useDebounce } from "@/hooks/use-debounce"
@@ -134,6 +135,7 @@ interface CartItem {
 }
 
 export default function SellProductsPage() {
+  const { t } = useLanguage()
   // removed unused userRole
   const [products, setProducts] = useState<Product[]>([])
   const [productsWithVariations, setProductsWithVariations] = useState<ProductWithVariations[]>([])
@@ -1115,7 +1117,7 @@ export default function SellProductsPage() {
       console.error("Sale completion error:", error)
       toast({
         title: "Error",
-        description: error.message || "Failed to complete sale",
+        description: (error as Error)?.message || "Failed to complete sale",
         variant: "destructive",
       })
     } finally {
@@ -1308,7 +1310,7 @@ export default function SellProductsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
-            Sell Products
+            {t("sellProductsTitle" as any)}
           </h1>
           <p className="text-gray-600 mt-1">Process sales and manage transactions</p>
         </div>
@@ -1319,7 +1321,7 @@ export default function SellProductsPage() {
             className="border-gray-200 hover:bg-gray-50 shadow-sm"
           >
             <Package className="h-4 w-4 mr-2" />
-            View Inventory
+            {t("viewInventory" as any)}
           </Button>
           <Button 
             variant="outline"
@@ -1327,7 +1329,7 @@ export default function SellProductsPage() {
             className="border-gray-200 hover:bg-gray-50 shadow-sm"
           >
             <BarChart3 className="h-4 w-4 mr-2" />
-            View Reports
+            {t("viewReports" as any)}
           </Button>
         </div>
       </div>
@@ -1344,7 +1346,7 @@ export default function SellProductsPage() {
                 <div className="w-8 h-8 bg-gradient-to-r from-pink-500 to-purple-500 rounded-lg flex items-center justify-center">
                   <Search className="h-4 w-4 text-white" />
                 </div>
-                <span>Find Products</span>
+                <span>{t("findProducts" as any)}</span>
               </CardTitle>
               <CardDescription className="text-gray-600">
                 {lastUpdate && (
@@ -1360,7 +1362,7 @@ export default function SellProductsPage() {
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                   <Input
-                    placeholder="Search products by name, SKU, brand, or category..."
+                    placeholder={t("searchProductsPlaceholder" as any)}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     onFocus={() => setIsSearchFocused(true)}
@@ -1672,7 +1674,7 @@ export default function SellProductsPage() {
                 <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
                   <Package className="h-4 w-4 text-white" />
                 </div>
-                <span>Available Products ({processedProducts.length})</span>
+                <span>{t("availableProducts" as any)} ({processedProducts.length})</span>
               </CardTitle>
               <CardDescription className="text-gray-600">
                 Click on products to quickly add them to cart
@@ -2029,8 +2031,8 @@ export default function SellProductsPage() {
                   <div className="w-16 h-16 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
                     <ShoppingBag className="h-8 w-8 text-gray-400" />
                   </div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Cart is empty</h3>
-                  <p className="text-gray-500">Add products to start a sale</p>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">{t("cartIsEmpty" as any)}</h3>
+                  <p className="text-gray-500">{t("addProductsToStartSale" as any)}</p>
                 </div>
               </div>
             ) : (
@@ -2323,8 +2325,8 @@ export default function SellProductsPage() {
                     <div className="w-16 h-16 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
                       <ShoppingBag className="h-8 w-8 text-gray-400" />
                     </div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">Cart is empty</h3>
-                    <p className="text-gray-500">Add products to start a sale</p>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">{t("cartIsEmpty" as any)}</h3>
+                    <p className="text-gray-500">{t("addProductsToStartSale" as any)}</p>
                   </div>
                 </div>
               ) : (
@@ -2502,7 +2504,7 @@ export default function SellProductsPage() {
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center space-x-2">
                   <Search className="h-4 w-4 text-blue-500" />
-                  <span className="text-sm font-medium">Focus Search</span>
+                  <span className="text-sm font-medium">{t("focusSearch" as any)}</span>
                 </div>
                 <kbd className="px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-200 border border-gray-300 rounded">
                   Ctrl + K
@@ -2522,7 +2524,7 @@ export default function SellProductsPage() {
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center space-x-2">
                   <RefreshCw className="h-4 w-4 text-blue-500" />
-                  <span className="text-sm font-medium">Refresh Products</span>
+                  <span className="text-sm font-medium">{t("refreshProducts" as any)}</span>
                 </div>
                 <kbd className="px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-200 border border-gray-300 rounded">
                   Ctrl + R
@@ -2532,7 +2534,7 @@ export default function SellProductsPage() {
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center space-x-2">
                   <XCircle className="h-4 w-4 text-red-500" />
-                  <span className="text-sm font-medium">Clear Search</span>
+                  <span className="text-sm font-medium">{t("clearSearch" as any)}</span>
                 </div>
                 <kbd className="px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-200 border border-gray-300 rounded">
                   Escape
