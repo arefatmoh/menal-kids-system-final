@@ -135,8 +135,9 @@ export default function Dashboard() {
         // Fetch recent activities (50 total, we'll paginate on frontend)
         const activitiesResponse = await apiClient.getRecentActivities(currentBranch === "all" ? undefined : currentBranch, 50)
         if (activitiesResponse.success) {
-          setRecentActivities(activitiesResponse.data as RecentActivity[])
-          setTotalActivities(activitiesResponse.data.length) // Set total activities for pagination
+          const items = (activitiesResponse.data as unknown as RecentActivity[]) || []
+          setRecentActivities(items)
+          setTotalActivities(items.length)
         }
 
         // Fetch stock trend data for the last 7 days

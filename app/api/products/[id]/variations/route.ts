@@ -86,8 +86,8 @@ export async function GET(
       created_at: result.rows[0].created_at,
       updated_at: result.rows[0].updated_at,
       variations: result.rows
-        .filter(row => row.variation_id)
-        .map(row => ({
+        .filter((row: any) => row.variation_id)
+        .map((row: any) => ({
           id: row.variation_id,
           sku: row.variation_sku,
           color: row.color,

@@ -1,9 +1,31 @@
 import { Pool, type PoolClient } from "pg"
 
+// Decide whether to use SSL based on URL and env
+function resolveSsl(): false | { rejectUnauthorized: boolean } {
+  const explicit = process.env.DB_SSL?.toLowerCase()
+  if (explicit === "true") return { rejectUnauthorized: false }
+  if (explicit === "false") return false
+
+  const urlStr = process.env.DATABASE_URL
+  if (!urlStr) return false
+  try {
+    const url = new URL(urlStr)
+    const sslmode = url.searchParams.get("sslmode")?.toLowerCase()
+    if (sslmode === "require") return { rejectUnauthorized: false }
+    if (sslmode === "disable") return false
+    // Default: disable SSL for localhost, enable for remote in production
+    const isLocalHost = ["localhost", "127.0.0.1", "::1"].includes(url.hostname)
+    if (isLocalHost) return false
+    return process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false
+  } catch {
+    return process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false
+  }
+}
+
 // Database connection pool
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
+  ssl: resolveSsl(),
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,

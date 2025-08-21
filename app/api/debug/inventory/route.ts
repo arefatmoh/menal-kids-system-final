@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 import { type NextRequest, NextResponse } from "next/server"
 import { getUserFromRequest, isOwner } from "@/lib/auth"
 import { query } from "@/lib/db"

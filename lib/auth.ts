@@ -119,7 +119,9 @@ export async function getUserFromRequest(request: Request): Promise<User | null>
     const authHeader = request.headers.get("authorization") || request.headers.get("Authorization")
     
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      console.log('getUserFromRequest: No valid Authorization header found')
+      if (process.env.NODE_ENV !== "production") {
+        console.log('getUserFromRequest: No valid Authorization header found')
+      }
       return null
     }
 
@@ -129,27 +131,33 @@ export async function getUserFromRequest(request: Request): Promise<User | null>
       const decoded = verifyToken(token)
       const user = await getUserById(decoded.id)
       
-      if (user) {
-        console.log(`getUserFromRequest: Successfully authenticated user ${user.email} (${user.role})`)
-      } else {
-        console.log('getUserFromRequest: User not found in database')
+      if (process.env.NODE_ENV !== "production") {
+        if (user) {
+          console.log(`getUserFromRequest: Successfully authenticated user ${user.email} (${user.role})`)
+        } else {
+          console.log('getUserFromRequest: User not found in database')
+        }
       }
       
       return user
     } catch (tokenError) {
       if (tokenError instanceof Error) {
-        if (tokenError.message === "Token expired") {
-          console.log('getUserFromRequest: Token expired')
-        } else if (tokenError.message === "Invalid token") {
-          console.log('getUserFromRequest: Invalid token format')
-        } else {
-          console.log('getUserFromRequest: Token verification failed:', tokenError.message)
+        if (process.env.NODE_ENV !== "production") {
+          if (tokenError.message === "Token expired") {
+            console.log('getUserFromRequest: Token expired')
+          } else if (tokenError.message === "Invalid token") {
+            console.log('getUserFromRequest: Invalid token format')
+          } else {
+            console.log('getUserFromRequest: Token verification failed:', tokenError.message)
+          }
         }
       }
       return null
     }
   } catch (error) {
-    console.log('getUserFromRequest: Authentication failed:', error)
+    if (process.env.NODE_ENV !== "production") {
+      console.log('getUserFromRequest: Authentication failed:', error)
+    }
     return null
   }
 }
