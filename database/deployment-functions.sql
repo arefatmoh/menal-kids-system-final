@@ -12,11 +12,11 @@
 -- Function to update inventory quantity
 CREATE OR REPLACE FUNCTION update_inventory_quantity(
     p_product_id UUID,
-    p_variation_id UUID DEFAULT NULL,
     p_branch_id VARCHAR(50),
     p_quantity_change INTEGER,
     p_movement_type VARCHAR(20),
     p_user_id UUID,
+    p_variation_id UUID DEFAULT NULL,
     p_reference_type VARCHAR(50) DEFAULT NULL,
     p_reference_id UUID DEFAULT NULL,
     p_notes TEXT DEFAULT NULL
@@ -149,11 +149,11 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION create_sale(
     p_branch_id VARCHAR(50),
     p_user_id UUID,
+    p_items JSON,
     p_customer_name VARCHAR(255) DEFAULT NULL,
     p_customer_phone VARCHAR(20) DEFAULT NULL,
     p_customer_email VARCHAR(255) DEFAULT NULL,
-    p_payment_method VARCHAR(50) DEFAULT 'cash',
-    p_items JSON
+    p_payment_method VARCHAR(50) DEFAULT 'cash'
 )
 RETURNS UUID AS $$
 DECLARE
@@ -193,9 +193,15 @@ BEGIN
         
         -- Update inventory (reduce stock)
         PERFORM update_inventory_quantity(
-            v_product_id, v_variation_id, p_branch_id, 
-            -v_quantity, 'out', p_user_id, 'sale', v_sale_id,
-            'Sale transaction'
+            p_product_id := v_product_id,
+            p_branch_id := p_branch_id,
+            p_quantity_change := -v_quantity,
+            p_movement_type := 'out',
+            p_user_id := p_user_id,
+            p_variation_id := v_variation_id,
+            p_reference_type := 'sale',
+            p_reference_id := v_sale_id,
+            p_notes := 'Sale transaction'
         );
         
         v_total_amount := v_total_amount + v_item_total;
@@ -298,16 +304,28 @@ BEGIN
         
         -- Update source branch inventory (reduce stock)
         PERFORM update_inventory_quantity(
-            v_product_id, v_variation_id, p_from_branch_id, 
-            -v_quantity, 'transfer', p_user_id, 'transfer', v_transfer_id,
-            'Transfer out'
+            p_product_id := v_product_id,
+            p_branch_id := p_from_branch_id,
+            p_quantity_change := -v_quantity,
+            p_movement_type := 'transfer',
+            p_user_id := p_user_id,
+            p_variation_id := v_variation_id,
+            p_reference_type := 'transfer',
+            p_reference_id := v_transfer_id,
+            p_notes := 'Transfer out'
         );
         
         -- Update destination branch inventory (add stock)
         PERFORM update_inventory_quantity(
-            v_product_id, v_variation_id, p_to_branch_id, 
-            v_quantity, 'transfer', p_user_id, 'transfer', v_transfer_id,
-            'Transfer in'
+            p_product_id := v_product_id,
+            p_branch_id := p_to_branch_id,
+            p_quantity_change := v_quantity,
+            p_movement_type := 'transfer',
+            p_user_id := p_user_id,
+            p_variation_id := v_variation_id,
+            p_reference_type := 'transfer',
+            p_reference_id := v_transfer_id,
+            p_notes := 'Transfer in'
         );
     END LOOP;
     
