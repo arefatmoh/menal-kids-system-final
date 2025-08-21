@@ -1,5 +1,22 @@
 import { Pool, type PoolClient } from "pg"
 
+// Validate DATABASE_URL for production to avoid accidental local connections
+const databaseUrl = process.env.DATABASE_URL
+if (process.env.NODE_ENV === "production") {
+  if (!databaseUrl) {
+    throw new Error("DATABASE_URL is required in production")
+  }
+  try {
+    const u = new URL(databaseUrl)
+    if (["localhost", "127.0.0.1", "::1"].includes(u.hostname)) {
+      throw new Error("DATABASE_URL must not point to localhost in production")
+    }
+  } catch (e) {
+    // If URL parsing fails, surface the error
+    throw e
+  }
+}
+
 // Decide whether to use SSL based on URL and env
 function resolveSsl(): false | { rejectUnauthorized: boolean } {
   const explicit = process.env.DB_SSL?.toLowerCase()
@@ -24,7 +41,7 @@ function resolveSsl(): false | { rejectUnauthorized: boolean } {
 
 // Database connection pool
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: databaseUrl,
   ssl: resolveSsl(),
   max: 20,
   idleTimeoutMillis: 30000,
