@@ -55,8 +55,7 @@
     "lucide-react": "^0.454.0",
     "next": "14.2.16",
     "next-themes": "^0.4.4",
-    "pg": "latest",
-    "pg-native": "latest",
+    "pg": "^8.11.3",
     "react": "^18",
     "react-day-picker": "9.8.0",
     "react-dom": "^18",
@@ -68,6 +67,9 @@
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^0.9.6",
     "zod": "^3.24.1"
+  },
+  "engines": {
+    "node": "20.x"
   },
   "devDependencies": {
     "@types/node": "^22",
