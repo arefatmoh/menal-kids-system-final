@@ -115,7 +115,7 @@ export default function DashboardLayout({
                 <h1 className="text-lg font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
                   Menal Kids
                 </h1>
-                <p className="text-xs text-gray-500 capitalize">{userRole} {t("dashboard")}</p>
+                <p className="text-xs text-gray-500 capitalize">{t(userRole as any) || userRole} {t("dashboard")}</p>
               </div>
             </div>
             <Button variant="ghost" size="sm" className="lg:hidden" onClick={() => setSidebarOpen(false)}>
@@ -155,7 +155,7 @@ export default function DashboardLayout({
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-900 truncate">{userEmail}</p>
-                <p className="text-xs text-gray-500 capitalize">{userRole}</p>
+                <p className="text-xs text-gray-500 capitalize">{t(userRole as any) || userRole}</p>
               </div>
             </div>
             <Button

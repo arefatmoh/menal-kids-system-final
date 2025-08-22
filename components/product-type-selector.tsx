@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useLanguage } from "@/lib/language-context"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -12,11 +13,12 @@ interface ProductTypeSelectorProps {
 }
 
 export function ProductTypeSelector({ selectedType, onTypeChange }: ProductTypeSelectorProps) {
+  const { t } = useLanguage()
   return (
     <div className="space-y-4">
       <div className="flex items-center space-x-2">
         <Info className="h-4 w-4 text-blue-500" />
-        <span className="text-sm font-medium text-gray-700">Select Product Type</span>
+        <span className="text-sm font-medium text-gray-700">{t("selectProductType" as any) || "Select Product Type"}</span>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -40,9 +42,9 @@ export function ProductTypeSelector({ selectedType, onTypeChange }: ProductTypeS
                   <Package className="h-5 w-5" />
                 </div>
                 <div>
-                  <CardTitle className="text-lg">Uniform Product</CardTitle>
+                  <CardTitle className="text-lg">{t("uniformProduct" as any) || "Uniform Product"}</CardTitle>
                   <Badge variant={selectedType === "uniform" ? "default" : "secondary"}>
-                    Single Variation
+                    {t("singleVariation" as any) || "Single Variation"}
                   </Badge>
                 </div>
               </div>
@@ -55,7 +57,7 @@ export function ProductTypeSelector({ selectedType, onTypeChange }: ProductTypeS
           </CardHeader>
           <CardContent>
             <CardDescription className="text-sm">
-              Perfect for products with single attributes - one color, one size, one price.
+              {t("uniformProductDesc" as any) || "Perfect for products with single attributes - one color, one size, one price."}
               <br />
             </CardDescription>
           </CardContent>
@@ -81,9 +83,9 @@ export function ProductTypeSelector({ selectedType, onTypeChange }: ProductTypeS
                   <Layers className="h-5 w-5" />
                 </div>
                 <div>
-                  <CardTitle className="text-lg">Variation Product</CardTitle>
+                  <CardTitle className="text-lg">{t("variationProduct" as any) || "Variation Product"}</CardTitle>
                   <Badge variant={selectedType === "variation" ? "default" : "secondary"}>
-                    Multiple Variations
+                    {t("multipleVariations" as any) || "Multiple Variations"}
                   </Badge>
                 </div>
               </div>
@@ -96,7 +98,7 @@ export function ProductTypeSelector({ selectedType, onTypeChange }: ProductTypeS
           </CardHeader>
           <CardContent>
             <CardDescription className="text-sm">
-              Ideal for products with multiple combinations - different colors, sizes, prices.
+              {t("variationProductDesc" as any) || "Ideal for products with multiple combinations - different colors, sizes, prices."}
               <br />
             </CardDescription>
           </CardContent>
@@ -122,9 +124,9 @@ export function ProductTypeSelector({ selectedType, onTypeChange }: ProductTypeS
                   <Search className="h-5 w-5" />
                 </div>
                 <div>
-                  <CardTitle className="text-lg">Add to Existing</CardTitle>
+                  <CardTitle className="text-lg">{t("addToExisting" as any) || "Add to Existing"}</CardTitle>
                   <Badge variant={selectedType === "existing-variation" ? "default" : "secondary"}>
-                    New Variation
+                    {t("newVariation" as any) || "New Variation"}
                   </Badge>
                 </div>
               </div>
@@ -137,7 +139,7 @@ export function ProductTypeSelector({ selectedType, onTypeChange }: ProductTypeS
           </CardHeader>
           <CardContent>
             <CardDescription className="text-sm">
-              Add new variations to an existing product - expand your product line.
+              {t("addToExistingDesc" as any) || "Add new variations to an existing product - expand your product line."}
               <br />
             </CardDescription>
           </CardContent>

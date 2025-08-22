@@ -24,20 +24,19 @@ export async function GET(request: NextRequest) {
         t.from_branch_id,
         t.to_branch_id,
         t.status,
-        t.reason,
-        t.requested_at,
-        t.completed_at,
-        t.requested_by,
-        t.approved_by,
+        t.notes as reason,
+        t.transfer_date as requested_at,
+        t.transfer_date as completed_at,
+        t.user_id as requested_by,
+        t.user_id as approved_by,
         fb.name as from_branch_name,
         tb.name as to_branch_name,
         u1.full_name as requested_by_name,
-        u2.full_name as approved_by_name
+        u1.full_name as approved_by_name
       FROM transfers t
       LEFT JOIN branches fb ON t.from_branch_id = fb.id
       LEFT JOIN branches tb ON t.to_branch_id = tb.id
-      LEFT JOIN users u1 ON t.requested_by = u1.id
-      LEFT JOIN users u2 ON t.approved_by = u2.id
+      LEFT JOIN users u1 ON t.user_id = u1.id
       WHERE 1=1
     `
     const params: any[] = []
@@ -174,7 +173,7 @@ export async function POST(request: NextRequest) {
 
       // Create transfer record
       const transferResult = await query(`
-        INSERT INTO transfers (from_branch_id, to_branch_id, reason, status, requested_by, approved_by, completed_at)
+        INSERT INTO transfers (from_branch_id, to_branch_id, reason, status, user_id, approved_by, transfer_date)
         VALUES ($1, $2, $3, 'completed', $4, $4, NOW())
         RETURNING id
       `, [validatedData.from_branch_id, validatedData.to_branch_id, validatedData.reason, user.id])

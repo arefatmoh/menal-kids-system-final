@@ -226,21 +226,40 @@ export default function TransferPage() {
   const transferStats = useMemo((): TransferStats => {
     const total = transfers.length
     const completed = transfers.filter(t => t.status === 'completed').length
+    const pending = transfers.filter(t => t.status === 'pending').length
     const totalItems = transfers.reduce((sum, t) => 
       sum + t.items.reduce((itemSum, item) => itemSum + item.quantity, 0), 0
     )
-    const totalValue = transfers.reduce((sum, t) => 
-      sum + t.items.reduce((itemSum, item) => itemSum + (item.quantity * 0), 0), 0
-    ) // TODO: Add price calculation
+    
+    // Calculate total value based on product prices
+    const totalValue = transfers.reduce((sum, t) => {
+      return sum + t.items.reduce((itemSum, item) => {
+        // Find the product to get its price
+        const product = products.find(p => p.id === item.product_id)
+        const variationProduct = productsWithVariations.find(p => p.product_id === item.product_id)
+        
+        let price = 0
+        if (item.variation_id && variationProduct) {
+          // For variations, find the specific variation price
+          const variation = variationProduct.variations.find(v => v.variation_id === item.variation_id)
+          price = variation?.price || 0
+        } else if (product) {
+          // For uniform products, use the product price
+          price = product.price || 0
+        }
+        
+        return itemSum + (item.quantity * price)
+      }, 0)
+    }, 0)
 
     return {
       total_transfers: total,
       completed_transfers: completed,
-      pending_transfers: 0, // No pending transfers - all are instant
+      pending_transfers: pending,
       total_items_transferred: totalItems,
       total_value_transferred: totalValue
     }
-  }, [transfers])
+  }, [transfers, products, productsWithVariations])
 
   // Filter and sort transfers
   const processedTransfers = useMemo(() => {
@@ -609,77 +628,70 @@ export default function TransferPage() {
       const branchesResponse = await apiClient.getBranches()
       if (branchesResponse.success && branchesResponse.data) {
         setBranches(branchesResponse.data as Branch[])
+      } else {
+        console.error("Failed to fetch branches:", branchesResponse.error)
+        toast({
+          title: "Error",
+          description: "Failed to load branches",
+          variant: "destructive",
+        })
       }
 
       // Fetch transfers
       try {
-        const transfersResponse = await apiClient.getTransfers()
+        const transfersResponse = await apiClient.getTransfers({
+          page: 1,
+          limit: 100,
+          // Add branch filtering if needed
+          ...(currentBranch !== "all" && { from_branch_id: currentBranch })
+        })
+        
         if (transfersResponse.success && transfersResponse.data) {
           // Handle both array and paginated response
           const transfersData = Array.isArray(transfersResponse.data) 
             ? transfersResponse.data 
             : transfersResponse.data.data || []
-          setTransfers(transfersData as Transfer[])
+          
+          // Transform the API response to match our interface
+          const transformedTransfers: Transfer[] = (transfersData as any[]).map((transfer: any) => ({
+            id: transfer.id as string,
+            from_branch_id: transfer.from_branch_id as string,
+            to_branch_id: transfer.to_branch_id as string,
+            status: transfer.status as string,
+            reason: transfer.reason as string,
+            requested_at: transfer.requested_at as string,
+            completed_at: transfer.completed_at as string | undefined,
+            from_branch_name: transfer.from_branch_name as string | undefined,
+            to_branch_name: transfer.to_branch_name as string | undefined,
+            requested_by_name: transfer.requested_by_name as string | undefined,
+            approved_by_name: transfer.approved_by_name as string | undefined,
+            items: (transfer.items || []) as TransferItem[]
+          }))
+          
+          setTransfers(transformedTransfers)
+        } else {
+          console.error("Failed to fetch transfers:", transfersResponse.error)
+          setTransfers([])
+          toast({
+            title: "Warning",
+            description: "No transfer history found",
+            variant: "default",
+          })
         }
       } catch (error) {
-        console.log("Transfers API not implemented yet, using mock data")
-        // Use mock data for now
-        setTransfers([
-          {
-            id: "1",
-            from_branch_id: "branch1",
-            to_branch_id: "branch2",
-            status: "completed",
-            reason: "High demand in Branch 2",
-            requested_at: "2024-01-15T10:00:00Z",
-            completed_at: "2024-01-15T14:00:00Z",
-            from_branch_name: "Franko (Main)",
-            to_branch_name: "Mebrathayl",
-            requested_by_name: "Admin User",
-            approved_by_name: "Admin User",
-            items: [
-              { id: "1", product_id: "1", product_name: "Rainbow Unicorn Dress", quantity: 5, sku: "UNI001" }
-            ]
-          },
-          {
-            id: "2",
-            from_branch_id: "branch2",
-            to_branch_id: "branch1",
-            status: "completed",
-            reason: "Rebalancing inventory",
-            requested_at: "2024-01-14T09:00:00Z",
-            completed_at: "2024-01-14T13:00:00Z",
-            from_branch_name: "Mebrathayl",
-            to_branch_name: "Franko (Main)",
-            requested_by_name: "Admin User",
-            approved_by_name: "Admin User",
-            items: [
-              { id: "2", product_id: "2", product_name: "Superhero Cape T-Shirt", quantity: 10, sku: "HER001" }
-            ]
-          },
-          {
-            id: "3",
-            from_branch_id: "branch1",
-            to_branch_id: "branch2",
-            status: "completed",
-            reason: "Customer request",
-            requested_at: "2024-01-13T11:00:00Z",
-            completed_at: "2024-01-13T11:00:00Z",
-            from_branch_name: "Franko (Main)",
-            to_branch_name: "Mebrathayl",
-            requested_by_name: "Admin User",
-            approved_by_name: "Admin User",
-            items: [
-              { id: "3", product_id: "3", product_name: "Sparkle Princess Shoes", quantity: 3, sku: "PRN001" }
-            ]
-          }
-        ])
+        console.error("Failed to fetch transfers:", error)
+        setTransfers([])
+        toast({
+          title: "Error",
+          description: "Failed to load transfer history",
+          variant: "destructive",
+        })
       }
     } catch (error: any) {
       console.error("Data fetch error:", error)
       toast({
         title: "Error",
-        description: "Failed to load data",
+        description: error.message || "Failed to load data",
         variant: "destructive",
       })
     } finally {
@@ -790,7 +802,7 @@ export default function TransferPage() {
             description: `Items have been transferred from ${isOwner ? getBranchName(fromBranch) : getBranchName(userBranch!)} to ${getBranchName(toBranch)}`,
           })
           
-          setLastTransfer(response.data as Transfer)
+          setLastTransfer(response.data as unknown as Transfer)
 
           // Optimistically update source branch quantities in the UI
           const productQuantityMap = new Map<string, number>()
@@ -991,12 +1003,12 @@ export default function TransferPage() {
         {isCompleted ? (
           <>
             <CheckCircle className="h-3 w-3 mr-1" />
-            Completed
+            {t("completed")}
           </>
         ) : (
           <>
             <Clock className="h-3 w-3 mr-1" />
-            Pending
+            {t("pending")}
           </>
         )}
       </Badge>
@@ -1212,7 +1224,7 @@ export default function TransferPage() {
                 <div className="w-10 h-10 bg-gradient-to-r from-pink-500 to-purple-500 rounded-lg flex items-center justify-center">
                   <Building2 className="h-5 w-5 text-white" />
                 </div>
-                <span>Branch Selection</span>
+                <span>{t("branchSelection")}</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="p-6">
@@ -1298,8 +1310,8 @@ export default function TransferPage() {
                         <CheckCircle className="h-5 w-5 text-white" />
                       </div>
                       <div>
-                        <h4 className="font-medium text-green-800">Selected Items</h4>
-                        <p className="text-sm text-green-600">Ready to transfer</p>
+                        <h4 className="font-medium text-green-800">{t("selectedItems")}</h4>
+                        <p className="text-sm text-green-600">{t("readyToTransfer")}</p>
                       </div>
                     </div>
                     <div className="space-y-2 max-h-48 overflow-y-auto">
@@ -1399,10 +1411,10 @@ export default function TransferPage() {
 
                 {/* Reason */}
                 <div className="space-y-2">
-                  <Label htmlFor="reason">Reason for Transfer (Optional)</Label>
+                  <Label htmlFor="reason">{t("reason")}</Label>
                   <Textarea
                     id="reason"
-                    placeholder="e.g., High demand in destination branch, Rebalancing inventory..."
+                    placeholder={t("transferReason")}
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}
                     className="rounded-xl border-gray-200 focus:border-pink-300 focus:ring-pink-200"
@@ -1413,41 +1425,18 @@ export default function TransferPage() {
                 {/* Execute Transfer Button */}
                 <Button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white rounded-xl py-3 font-medium transition-all duration-200 shadow-lg"
-                  disabled={
-                    // Branch validation
-                    (isOwner ? (!fromBranch || !toBranch) : !toBranch) || 
-                    // Ensure at least one product or variation is selected
-                    (Object.keys(productQuantities).filter(key => productQuantities[key] && Number.parseInt(productQuantities[key]) > 0).length === 0 && 
-                     Object.keys(variationQuantities).filter(key => variationQuantities[key] && Number.parseInt(variationQuantities[key]) > 0).length === 0) || 
-                    // Validate product quantities
-                    Object.keys(productQuantities).some(key => {
-                      const quantity = Number.parseInt(productQuantities[key] || "0")
-                      const product = products.find(p => p.id === key)
-                      return quantity > 0 && product && quantity > product.total_stock
-                    }) ||
-                    // Validate variation quantities
-                    Object.keys(variationQuantities).some(key => {
-                      const quantity = Number.parseInt(variationQuantities[key] || "0")
-                      // Find the product that contains this variation
-                      const product = products.find(p => 
-                        p.variations?.some(v => v.variation_id === key)
-                      )
-                      const variation = product?.variations?.find(v => v.variation_id === key)
-                      return quantity > 0 && variation && quantity > variation.quantity
-                    }) ||
-                    isSubmitting
-                  }
+                  disabled={isSubmitting || !toBranch || (Object.keys(productQuantities).filter(key => productQuantities[key] && Number.parseInt(productQuantities[key]) > 0).length === 0 && Object.keys(variationQuantities).filter(key => variationQuantities[key] && Number.parseInt(variationQuantities[key]) > 0).length === 0)}
+                  className="w-full bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white font-semibold py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Processing Transfer...
+                      {t("submitting")}
                     </>
                   ) : (
                     <>
-                      <ArrowRightLeft className="h-4 w-4 mr-2" />
-                      Execute Transfer
+                      <ArrowRightLeft className="mr-2 h-4 w-4" />
+                      {t("submitTransfer")}
                     </>
                   )}
                 </Button>
@@ -1461,13 +1450,13 @@ export default function TransferPage() {
           <Card className="border-0 shadow-xl bg-gradient-to-br from-white to-gray-50">
             <CardHeader className="bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-indigo-100">
               <CardTitle className="flex items-center space-x-2 text-gray-800">
-                <div className="w-10 h-10 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center">
+                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
                   <Package className="h-5 w-5 text-white" />
                 </div>
-                <span>Product Selection</span>
+                <span>{t("productSelection")}</span>
               </CardTitle>
               <CardDescription className="text-gray-600">
-                Select products to transfer from available inventory
+                {t("selectProductsToTransfer")}
               </CardDescription>
             </CardHeader>
             <CardContent className="p-6">

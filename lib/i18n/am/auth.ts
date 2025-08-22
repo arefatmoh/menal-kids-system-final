@@ -8,7 +8,7 @@ export default {
   signingIn: "በመግባት ላይ...",
   error: "ስህተት",
   fillAllFields: "እባክዎ ሁሉንም መስኮች ይሙሉ",
-  loginSuccessfulTitle: "እንኳን ደህና መለሳችሁ!",
+  loginSuccessfulTitle: "እንኳን ደህና ተመለሳችሁ!",
   loginSuccessfulDesc: "መግቢያ ተሳክቷል!",
   loginFailedTitle: "መግቢያ አልተሳካም",
   invalidCredentials: "የተሳሳቱ መረጃዎች",

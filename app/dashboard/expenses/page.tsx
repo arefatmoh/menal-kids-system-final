@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Badge } from "@/components/ui/badge";
 import { useBranch } from "@/lib/branch-context";
 import apiClient from "@/lib/api-client";
+import { useLanguage } from "@/lib/language-context";
 
 const CATEGORIES = [
   "Rent",
@@ -38,6 +39,7 @@ interface Expense {
 }
 
 export default function ExpensesPage() {
+  const { t } = useLanguage();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filterBranch, setFilterBranch] = useState("all");
@@ -132,19 +134,19 @@ export default function ExpensesPage() {
     <div className="max-w-5xl mx-auto mt-10 space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Expenses</CardTitle>
+          <CardTitle>{t("expenses" as any) || "Expenses"}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col md:flex-row gap-4 mb-6">
             {isOwner ? (
               <div className="flex-1">
-                <Label>Branch</Label>
+                <Label>{t("branch") || "Branch"}</Label>
                 <Select value={filterBranch} onValueChange={value => { setFilterBranch(value); setTimeout(fetchExpenses, 0); }}>
                   <SelectTrigger>
-                    <SelectValue placeholder="All Branches" />
+                    <SelectValue placeholder={t("allBranches") || "All Branches"} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Branches</SelectItem>
+                    <SelectItem value="all">{t("allBranches") || "All Branches"}</SelectItem>
                     {BRANCHES.map(b => (
                       <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
                     ))}
@@ -153,18 +155,18 @@ export default function ExpensesPage() {
               </div>
             ) : (
               <div className="flex-1">
-                <Label>Branch</Label>
+                <Label>{t("branch") || "Branch"}</Label>
                 <Input value={BRANCHES.find(b => b.id === currentBranch)?.name || ''} disabled readOnly />
               </div>
             )}
             <div className="flex-1">
-              <Label>Category</Label>
+              <Label>{t("category")}</Label>
               <Select value={filterCategory} onValueChange={value => { setFilterCategory(value); setTimeout(fetchExpenses, 0); }}>
                 <SelectTrigger>
-                  <SelectValue placeholder="All Categories" />
+                  <SelectValue placeholder={t("allCategories") || "All Categories"} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
+                  <SelectItem value="all">{t("allCategories") || "All Categories"}</SelectItem>
                   {CATEGORIES.map(cat => (
                     <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                   ))}
@@ -172,37 +174,37 @@ export default function ExpensesPage() {
               </Select>
             </div>
             <div className="flex items-end gap-2">
-              <Button onClick={() => router.push("/dashboard/expenses/add")}>Add Expense</Button>
-              <Button variant="outline" onClick={fetchExpenses}>Refresh</Button>
+              <Button onClick={() => router.push("/dashboard/expenses/add")}>{t("addExpense" as any) || "Add Expense"}</Button>
+              <Button variant="outline" onClick={fetchExpenses}>{t("refresh")}</Button>
             </div>
           </div>
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Branch</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead>{t("branch") || "Branch"}</TableHead>
+                  <TableHead>{t("category")}</TableHead>
+                  <TableHead>{t("amount" as any) || "Amount"}</TableHead>
+                  <TableHead>{t("date" as any) || "Date"}</TableHead>
+                  <TableHead>{t("descriptionLabel" as any) || "Description"}</TableHead>
+                  <TableHead>{t("actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
-                  <TableRow><TableCell colSpan={6}>Loading...</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={6}>{t("loading" as any) || "Loading..."}</TableCell></TableRow>
                 ) : expenses.length === 0 ? (
-                  <TableRow><TableCell colSpan={6}>No expenses found.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={6}>{t("noExpensesFound" as any) || "No expenses found."}</TableCell></TableRow>
                 ) : expenses.map(expense => (
                   <TableRow key={expense.id}>
-                    <TableCell>{BRANCHES.find(b => b.id === expense.branch_id)?.name || "All Branches"}</TableCell>
+                    <TableCell>{BRANCHES.find(b => b.id === expense.branch_id)?.name || (t("allBranches") || "All Branches")}</TableCell>
                     <TableCell><Badge>{expense.category}</Badge></TableCell>
-                    <TableCell>{Number(expense.amount).toLocaleString()} Birr</TableCell>
+                    <TableCell>{Number(expense.amount).toLocaleString()} ብር</TableCell>
                     <TableCell>{expense.expense_date}</TableCell>
                     <TableCell>{expense.description}</TableCell>
                     <TableCell>
-                      <Button size="sm" variant="outline" onClick={() => handleEdit(expense)}>Edit</Button>
-                      <Button size="sm" variant="destructive" className="ml-2" onClick={() => { setDeleteExpenseId(expense.id); setIsDeleteDialogOpen(true); }}>Delete</Button>
+                      <Button size="sm" variant="outline" onClick={() => handleEdit(expense)}>{t("edit")}</Button>
+                      <Button size="sm" variant="destructive" className="ml-2" onClick={() => { setDeleteExpenseId(expense.id); setIsDeleteDialogOpen(true); }}>{t("delete")}</Button>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -216,12 +218,12 @@ export default function ExpensesPage() {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Expense</DialogTitle>
+            <DialogTitle>{t("editExpense" as any) || "Edit Expense"}</DialogTitle>
           </DialogHeader>
           {editExpense && (
             <form className="space-y-4" onSubmit={e => { e.preventDefault(); handleEditSave(); }}>
               <div>
-                <Label>Branch</Label>
+                <Label>{t("branch") || "Branch"}</Label>
                 <Select value={editExpense.branch_id || ""} onValueChange={v => setEditExpense((prev: any) => ({ ...prev, branch_id: v }))}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select Branch" />
@@ -234,7 +236,7 @@ export default function ExpensesPage() {
                 </Select>
               </div>
               <div>
-                <Label>Category</Label>
+                <Label>{t("category")}</Label>
                 <Select value={editExpense.category} onValueChange={v => setEditExpense((prev: any) => ({ ...prev, category: v }))}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select Category" />
@@ -247,20 +249,20 @@ export default function ExpensesPage() {
                 </Select>
               </div>
               <div>
-                <Label>Amount</Label>
+                <Label>{t("amount" as any) || "Amount"}</Label>
                 <Input type="number" min="0" step="0.01" value={editExpense.amount} onChange={e => setEditExpense((prev: any) => ({ ...prev, amount: e.target.value }))} required />
               </div>
               <div>
-                <Label>Date</Label>
+                <Label>{t("date" as any) || "Date"}</Label>
                 <Input type="date" value={editExpense.expense_date} onChange={e => setEditExpense((prev: any) => ({ ...prev, expense_date: e.target.value }))} required />
               </div>
               <div>
-                <Label>Description</Label>
+                <Label>{t("descriptionLabel" as any) || "Description"}</Label>
                 <Input value={editExpense.description || ""} onChange={e => setEditExpense((prev: any) => ({ ...prev, description: e.target.value }))} />
               </div>
               <DialogFooter>
-                <Button type="submit">Save</Button>
-                <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
+                <Button type="submit">{t("save")}</Button>
+                <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>{t("cancel")}</Button>
               </DialogFooter>
             </form>
           )}
@@ -271,12 +273,12 @@ export default function ExpensesPage() {
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Expense</DialogTitle>
+            <DialogTitle>{t("deleteExpenseTitle" as any) || "Delete Expense"}</DialogTitle>
           </DialogHeader>
-          <p>Are you sure you want to delete this expense?</p>
+          <p>{t("deleteExpenseConfirm" as any) || "Are you sure you want to delete this expense?"}</p>
           <DialogFooter>
-            <Button variant="destructive" onClick={handleDelete}>Delete</Button>
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={handleDelete}>{t("delete")}</Button>
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>{t("cancel")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

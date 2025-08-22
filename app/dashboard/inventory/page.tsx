@@ -1094,7 +1094,7 @@ export default function InventoryPage() {
           <h1 className="text-2xl font-bold text-gray-900 flex items-center">
             {t("products")} & {t("inventory")}
             <span className="ml-3 px-2 py-1 rounded-full bg-blue-50 text-blue-700 text-sm font-semibold border border-blue-200 shadow-sm">
-              {pagination.total} items
+              {pagination.total} {t("items")}
             </span>
           </h1>
         </div>
@@ -1114,7 +1114,7 @@ export default function InventoryPage() {
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center space-x-2 text-lg">
               <Search className="h-5 w-5 text-pink-500" />
-              <span>Search & Filters</span>
+              <span>{t("searchAndFilters")}</span>
             </CardTitle>
             <div className="flex items-center space-x-2">
               {/* View Mode Toggle */}
@@ -1212,7 +1212,7 @@ export default function InventoryPage() {
                   className="text-red-600 border-red-300 hover:bg-red-50 h-7 px-2 text-xs"
                 >
                   <FilterX className="h-3 w-3 mr-1" />
-                  Clear
+                  {t("clear")}
                 </Button>
                 
                 <Button 
@@ -1225,7 +1225,7 @@ export default function InventoryPage() {
                   className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white h-7 px-2 text-xs"
                 >
                   <Filter className="h-3 w-3 mr-1" />
-                  Apply
+                  {t("apply")}
                 </Button>
               </div>
               
@@ -1298,7 +1298,7 @@ export default function InventoryPage() {
               </div>
               {isCrossBranchSearch && (
                 <Badge variant="outline" className="text-xs bg-blue-50 text-blue-600 border-blue-200">
-                  Cross-Branch Search
+                  {t("crossBranchSearch")}
                 </Badge>
               )}
             </div>
@@ -1382,20 +1382,20 @@ export default function InventoryPage() {
 
           {/* All Quick Filters in One Compact Horizontal Row */}
           <div className="flex items-center gap-2 flex-nowrap overflow-x-auto pb-1">
-            <span className="text-xs font-medium text-gray-600 mr-2 whitespace-nowrap">Quick Filters:</span>
+            <span className="text-xs font-medium text-gray-600 mr-2 whitespace-nowrap">{t("quickFilters")}</span>
             
             {/* Status Filter */}
             <div className="flex-shrink-0">
               <Select value={selectedStatus} onValueChange={setSelectedStatus}>
                 <SelectTrigger className="h-5 px-2 text-xs border-gray-200 focus:border-pink-300 focus:ring-pink-200 w-[120px]">
-                  <SelectValue placeholder="Status" />
+                  <SelectValue placeholder={t("status")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="normal">In Stock</SelectItem>
-                  <SelectItem value="low_stock">Low Stock</SelectItem>
-                  <SelectItem value="out_of_stock">Out of Stock</SelectItem>
-                  <SelectItem value="overstock">Overstock</SelectItem>
+                  <SelectItem value="all">{t("allStatus")}</SelectItem>
+                  <SelectItem value="normal">{t("inStock")}</SelectItem>
+                  <SelectItem value="low_stock">{t("lowStock")}</SelectItem>
+                  <SelectItem value="out_of_stock">{t("outOfStock")}</SelectItem>
+                  <SelectItem value="overstock">{t("overstock")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -1616,7 +1616,7 @@ export default function InventoryPage() {
                   }}
                   className="text-red-600 border-red-300 hover:bg-red-50"
                 >
-                  Clear Selection
+                  {t("clearSelection")}
                 </Button>
               </div>
               <Button
@@ -1629,12 +1629,12 @@ export default function InventoryPage() {
                 {isBulkDeleting ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Deleting...
+                    {t("deleting")}
                   </>
                 ) : (
                   <>
                     <Trash className="h-4 w-4 mr-2" />
-                    Delete Selected ({selectedItems.size})
+                    {t("deleteSelected")} ({selectedItems.size})
                   </>
                 )}
               </Button>
@@ -1691,7 +1691,7 @@ export default function InventoryPage() {
                         </TableHead>
                         <TableHead className="font-semibold text-gray-700">
                           <div className="flex items-center space-x-1">
-                            <span>Product</span>
+                            <span>{t("product")}</span>
                             {sortBy === 'name' && (
                               <span className="text-pink-500">
                                 {sortOrder === 'asc' ? <SortAsc className="h-3 w-3" /> : <SortDesc className="h-3 w-3" />}
@@ -1701,7 +1701,7 @@ export default function InventoryPage() {
                         </TableHead>
                         <TableHead className="font-semibold text-gray-700 w-48">
                           <div className="flex items-center space-x-1">
-                            <span>Details</span>
+                            <span>{t("details")}</span>
                             {sortBy === 'category' && (
                               <span className="text-pink-500">
                                 {sortOrder === 'asc' ? <SortAsc className="h-3 w-3" /> : <SortDesc className="h-3 w-3" />}
@@ -1711,7 +1711,7 @@ export default function InventoryPage() {
                         </TableHead>
                         <TableHead className="font-semibold text-gray-700">
                           <div className="flex items-center space-x-1">
-                            <span>Stock Level</span>
+                            <span>{t("stockLevel")}</span>
                             {(sortBy === 'quantity' || sortBy === 'stock') && (
                               <span className="text-pink-500">
                                 {sortOrder === 'asc' ? <SortAsc className="h-3 w-3" /> : <SortDesc className="h-3 w-3" />}
@@ -1719,14 +1719,14 @@ export default function InventoryPage() {
                             )}
                           </div>
                         </TableHead>
-                        <TableHead className="font-semibold text-gray-700">Status</TableHead>
+                        <TableHead className="font-semibold text-gray-700">{t("status")}</TableHead>
                         {/* Show Branch column when doing cross-branch search */}
                         {isCrossBranchSearch && (
-                          <TableHead className="font-semibold text-gray-700">Branch</TableHead>
+                          <TableHead className="font-semibold text-gray-700">{t("branch")}</TableHead>
                         )}
                         <TableHead className="font-semibold text-gray-700">
                           <div className="flex items-center space-x-1">
-                            <span>Selling Price</span>
+                            <span>{t("sellingPrice")}</span>
                             {sortBy === 'price' && (
                               <span className="text-pink-500">
                                 {sortOrder === 'asc' ? <SortAsc className="h-3 w-3" /> : <SortDesc className="h-3 w-3" />}
@@ -1734,7 +1734,7 @@ export default function InventoryPage() {
                             )}
                           </div>
                         </TableHead>
-                        <TableHead className="font-semibold text-gray-700 text-center">Actions</TableHead>
+                        <TableHead className="font-semibold text-gray-700 text-center">{t("actions")}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -2050,9 +2050,9 @@ export default function InventoryPage() {
                   <div className="text-sm text-gray-600 mb-4 sm:mb-0 flex items-center space-x-2">
                     <Activity className="h-4 w-4 text-pink-500" />
                     <span className="font-medium">
-                      Showing <span className="text-pink-600 font-bold">{((pagination.page - 1) * pagination.limit) + 1}</span> to{' '}
-                      <span className="text-pink-600 font-bold">{Math.min(pagination.page * pagination.limit, pagination.total)}</span> of{' '}
-                      <span className="text-pink-600 font-bold">{pagination.total}</span> results
+                      {t("showing")} <span className="text-pink-600 font-bold">{((pagination.page - 1) * pagination.limit) + 1}</span> {t("to")}{' '}
+                      <span className="text-pink-600 font-bold">{Math.min(pagination.page * pagination.limit, pagination.total)}</span> {t("of")}{' '}
+                      <span className="text-pink-600 font-bold">{pagination.total}</span> {t("results")}
                     </span>
                   </div>
                   <div className="flex items-center space-x-3">
@@ -2063,7 +2063,7 @@ export default function InventoryPage() {
                       onClick={() => handlePageChange(1)}
                       disabled={!pagination.has_prev}
                       className="h-10 w-10 p-0 border-gray-300 hover:border-pink-300 hover:bg-pink-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-                      title="First page"
+                      title={t("firstPage")}
                     >
                       <ChevronsLeft className="h-4 w-4" />
                     </Button>
@@ -2075,7 +2075,7 @@ export default function InventoryPage() {
                       onClick={() => handlePageChange(pagination.page - 1)}
                       disabled={!pagination.has_prev}
                       className="h-10 w-10 p-0 border-gray-300 hover:border-pink-300 hover:bg-pink-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-                      title="Previous page"
+                      title={t("previousPage")}
                     >
                       <ChevronLeft className="h-4 w-4" />
                     </Button>
@@ -2119,7 +2119,7 @@ export default function InventoryPage() {
                       onClick={() => handlePageChange(pagination.page + 1)}
                       disabled={!pagination.has_next}
                       className="h-10 w-10 p-0 border-gray-300 hover:border-pink-300 hover:bg-pink-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-                      title="Next page"
+                      title={t("nextPage")}
                     >
                       <ChevronRight className="h-4 w-4" />
                     </Button>
@@ -2131,7 +2131,7 @@ export default function InventoryPage() {
                       onClick={() => handlePageChange(pagination.total_pages)}
                       disabled={!pagination.has_next}
                       className="h-10 w-10 p-0 border-gray-300 hover:border-pink-300 hover:bg-pink-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-                      title="Last page"
+                      title={t("lastPage")}
                     >
                       <ChevronsRight className="h-4 w-4" />
                     </Button>

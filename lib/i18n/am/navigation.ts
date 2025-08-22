@@ -3,9 +3,10 @@ export default {
   dashboard: "ዳሽቦርድ",
   products: "ምርቶች",
   inventory: "ስቶክ",
-  addProduct: "ምርት ጨምር",
-  sellProducts: "ምርት ሽጥ",
-  stockManagement: "የስቶክ አስተዳደር",
+  addProduct: "ዕቃ ጨምር",
+  sellProducts: "ዕቃ ሽጥ",
+  stockManagement: "የስቶክ መቆጣጠሪያ",
+  expenses: "ወጪዎች",
   reports: "ሪፖርቶች",
   signOut: "ውጣ",
 }

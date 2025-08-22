@@ -45,7 +45,10 @@ const pool = new Pool({
   ssl: resolveSsl(),
   max: 20,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
+  // Increase connection timeout for remote DBs like Neon; allow override via env
+  connectionTimeoutMillis: Number(process.env.DB_CONNECT_TIMEOUT_MS ?? 10000),
+  // Keep TCP connection alive to avoid mid-handshake drops on some networks
+  keepAlive: true,
 })
 
 // Test the connection (less noisy in production)

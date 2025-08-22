@@ -1346,12 +1346,12 @@ export default function SellProductsPage() {
                 <div className="w-8 h-8 bg-gradient-to-r from-pink-500 to-purple-500 rounded-lg flex items-center justify-center">
                   <Search className="h-4 w-4 text-white" />
                 </div>
-                <span>{t("findProducts" as any)}</span>
+                <span>{t("findProducts")}</span>
               </CardTitle>
               <CardDescription className="text-gray-600">
                 {lastUpdate && (
                   <span className="block text-xs text-gray-500 mt-1">
-                    Last updated: {lastUpdate.toLocaleTimeString()} (auto every 10 min)
+                    {t("lastUpdated")}: {lastUpdate.toLocaleTimeString()} ({t("autoEvery10Min")})
                   </span>
                 )}
               </CardDescription>
@@ -1362,7 +1362,7 @@ export default function SellProductsPage() {
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                   <Input
-                    placeholder={t("searchProductsPlaceholder" as any)}
+                    placeholder={t("searchProductsPlaceholder")}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     onFocus={() => setIsSearchFocused(true)}
@@ -1382,7 +1382,7 @@ export default function SellProductsPage() {
                       variant="ghost"
                       size="sm"
                       className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600"
-                      title="Search Help: < 3 chars = Exact match, 3-5 chars = Partial match, 6+ chars = Phrase match"
+                      title={t("searchHelp")}
                     >
                       ?
                     </Button>
@@ -1674,7 +1674,7 @@ export default function SellProductsPage() {
                 <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
                   <Package className="h-4 w-4 text-white" />
                 </div>
-                <span>{t("availableProducts" as any)} ({processedProducts.length})</span>
+                <span>{t("availableProducts")} ({processedProducts.length})</span>
               </CardTitle>
               <CardDescription className="text-gray-600">
                 Click on products to quickly add them to cart
@@ -1687,9 +1687,11 @@ export default function SellProductsPage() {
                 </div>
               ) : allProductsForDisplay.length === 0 ? (
                 <div className="text-center py-12">
-                  <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
-                  <p className="text-gray-500">Try adjusting your search or filters</p>
+                  <div className="w-16 h-16 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Package className="h-8 w-8 text-gray-400" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">{t("clickProductsToAddToCart")}</h3>
+                  <p className="text-gray-500">{t("selectProductsToStartSale")}</p>
                 </div>
               ) : (
                 <div className={viewMode === 'grid' ? 
@@ -2010,8 +2012,8 @@ export default function SellProductsPage() {
                   <ShoppingBag className="h-5 w-5 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold">Cart</h2>
-                  <p className="text-sm text-green-100">{cart.length} items</p>
+                  <h2 className="text-lg font-semibold">{t("cart")}</h2>
+                  <p className="text-sm text-green-100">{cart.length} {t("items")}</p>
                 </div>
               </div>
               {cart.length > 0 && (
@@ -2304,8 +2306,8 @@ export default function SellProductsPage() {
                     <ShoppingBag className="h-5 w-5 text-white" />
                   </div>
                   <div>
-                    <h2 className="text-lg font-semibold">Cart</h2>
-                    <p className="text-sm text-green-100">{cart.length} items</p>
+                    <h2 className="text-lg font-semibold">{t("cart")}</h2>
+                    <p className="text-sm text-green-100">{cart.length} {t("items")}</p>
                   </div>
                 </div>
                 {cart.length > 0 && (
@@ -2504,7 +2506,7 @@ export default function SellProductsPage() {
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center space-x-2">
                   <Search className="h-4 w-4 text-blue-500" />
-                  <span className="text-sm font-medium">{t("focusSearch" as any)}</span>
+                  <span className="text-sm font-medium">{t("focusSearch")}</span>
                 </div>
                 <kbd className="px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-200 border border-gray-300 rounded">
                   Ctrl + K
@@ -2524,7 +2526,7 @@ export default function SellProductsPage() {
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center space-x-2">
                   <RefreshCw className="h-4 w-4 text-blue-500" />
-                  <span className="text-sm font-medium">{t("refreshProducts" as any)}</span>
+                  <span className="text-sm font-medium">{t("refreshProducts")}</span>
                 </div>
                 <kbd className="px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-200 border border-gray-300 rounded">
                   Ctrl + R
@@ -2534,7 +2536,7 @@ export default function SellProductsPage() {
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center space-x-2">
                   <XCircle className="h-4 w-4 text-red-500" />
-                  <span className="text-sm font-medium">{t("clearSearch" as any)}</span>
+                  <span className="text-sm font-medium">{t("clearSearch")}</span>
                 </div>
                 <kbd className="px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-200 border border-gray-300 rounded">
                   Escape

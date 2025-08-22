@@ -20,8 +20,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Access denied to this branch" }, { status: 403 })
     }
 
-    // Get dashboard stats
-    const result = await query("SELECT * FROM get_dashboard_stats($1)", [branchId || null])
+    // Get dashboard stats (cast param to varchar to avoid unknown/null type resolution issues)
+    const result = await query("SELECT * FROM public.get_dashboard_stats($1::varchar)", [branchId || null])
 
     const stats = result.rows[0]
 

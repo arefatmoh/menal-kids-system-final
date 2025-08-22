@@ -929,7 +929,7 @@ export default function AddProductPage() {
               <div className="space-y-4 p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
                 <div className="flex items-center space-x-2 mb-4">
                   <Search className="h-5 w-5 text-blue-600" />
-                  <h3 className="text-lg font-semibold text-blue-800">Select Existing Product</h3>
+                  <h3 className="text-lg font-semibold text-blue-800">{t("selectExistingProduct" as any)}</h3>
                 </div>
                 
                 <div className="space-y-4">
@@ -1105,7 +1105,7 @@ export default function AddProductPage() {
             {/* Product Name - Only show for new products */}
             {productType !== "existing-variation" && (
             <div className="space-y-2">
-              <Label htmlFor="name">Product Name *</Label>
+              <Label htmlFor="name">{`${t("productName" as any)} *`}</Label>
               <Input
                 id="name"
                 placeholder="e.g., Rainbow Unicorn Dress"
@@ -1131,7 +1131,7 @@ export default function AddProductPage() {
             {/* Category - Only show for new products */}
             {productType !== "existing-variation" && (
             <div className="space-y-2">
-              <Label htmlFor="category">Category *</Label>
+              <Label htmlFor="category">{`${t("category")} *`}</Label>
               <Select
                 key={`category-select-${categories.length}`}
                 value={formData.category_id}
@@ -1146,7 +1146,7 @@ export default function AddProductPage() {
                 disabled={isSubmitting}
               >
                 <SelectTrigger className="rounded-xl border-gray-200 focus:border-pink-300 focus:ring-pink-200">
-                  <SelectValue placeholder="Select category">
+                  <SelectValue placeholder={t("selectCategory" as any)}>
                     {formData.category_id && categories.length > 0 && categories.find(cat => cat.id === formData.category_id)?.name}
                   </SelectValue>
                 </SelectTrigger>
@@ -1158,7 +1158,7 @@ export default function AddProductPage() {
                   ))}
                   <SelectItem value="add-new-category" className="text-pink-600 font-medium">
                     <Plus className="h-4 w-4 mr-2 inline" />
-                    Add New Category
+                    {t("addNewCategory" as any)}
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -1181,24 +1181,24 @@ export default function AddProductPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="gender">Gender (Optional)</Label>
+                <Label htmlFor="gender">{t("genderOptional" as any)}</Label>
                 <Select value={formData.gender} onValueChange={(value) => handleInputChange("gender", value)} disabled={isSubmitting}>
                   <SelectTrigger className="rounded-xl border-gray-200 focus:border-pink-300 focus:ring-pink-200">
-                    <SelectValue placeholder="Select gender" />
+                    <SelectValue placeholder={t("selectGender" as any)} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="unisex">Unisex</SelectItem>
-                    <SelectItem value="boys">Boys</SelectItem>
-                    <SelectItem value="girls">Girls</SelectItem>
+                    <SelectItem value="unisex">{t("unisex" as any)}</SelectItem>
+                    <SelectItem value="boys">{t("boys" as any)}</SelectItem>
+                    <SelectItem value="girls">{t("girls" as any)}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="age">Age Range (Optional)</Label>
+                <Label htmlFor="age">{t("ageRangeOptional" as any)}</Label>
                 <Input
                   id="age"
-                  placeholder="e.g., 2-4 years, 6+ months"
+                  placeholder={t("ageRangePlaceholder" as any)}
                   value={formData.age_range}
                   onChange={(e) => handleInputChange("age_range", e.target.value)}
                   className="rounded-xl border-gray-200 focus:border-pink-300 focus:ring-pink-200"
@@ -1211,10 +1211,10 @@ export default function AddProductPage() {
             {/* Description - Only show for new products */}
             {productType !== "existing-variation" && (
             <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">{t("descriptionLabel" as any)}</Label>
               <Textarea
                 id="description"
-                placeholder="Describe the product features, materials, care instructions..."
+                placeholder={t("descriptionPlaceholder" as any)}
                 value={formData.description}
                 onChange={(e) => handleInputChange("description", e.target.value)}
                 className="rounded-xl border-gray-200 focus:border-pink-300 focus:ring-pink-200 min-h-[100px]"
@@ -1230,10 +1230,10 @@ export default function AddProductPage() {
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="color">Color (Optional)</Label>
+                    <Label htmlFor="color">{t("colorOptional" as any)}</Label>
                     <Select value={formData.color} onValueChange={(value) => handleColorSelect(value)} disabled={isSubmitting}>
                       <SelectTrigger className="rounded-xl border-gray-200 focus:border-pink-300 focus:ring-pink-200">
-                        <SelectValue placeholder="Select color">
+                        <SelectValue placeholder={t("selectColor" as any)}>
                           {formData.color && (
                             <div className="flex items-center space-x-2">
                               <div 
@@ -1335,10 +1335,10 @@ export default function AddProductPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="size">Size (Optional)</Label>
+                    <Label htmlFor="size">{t("sizeOptional" as any)}</Label>
                     <Select value={formData.size} onValueChange={(value) => handleInputChange("size", value)} disabled={isSubmitting}>
                       <SelectTrigger className="rounded-xl border-gray-200 focus:border-pink-300 focus:ring-pink-200">
-                        <SelectValue placeholder="Select size" />
+                        <SelectValue placeholder={t("selectSize" as any)} />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="0-3m">0-3 Months</SelectItem>
@@ -1356,12 +1356,12 @@ export default function AddProductPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="quantity">Initial Stock Quantity *</Label>
+                    <Label htmlFor="quantity">{t("initialStockQuantity" as any)} *</Label>
                     <Input
                       id="quantity"
                       type="number"
                       min="0"
-                      placeholder="Enter initial stock quantity"
+                      placeholder={t("enterInitialStockQuantity" as any)}
                       value={formData.initial_quantity}
                       onChange={(e) => handleInputChange("initial_quantity", e.target.value)}
                       className="rounded-xl border-gray-200 focus:border-pink-300 focus:ring-pink-200"
@@ -1373,7 +1373,7 @@ export default function AddProductPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="price">Selling Price (ብር) (Optional)</Label>
+                    <Label htmlFor="price">{t("sellingPriceOptional" as any)} (ብር)</Label>
                     <Input
                       id="price"
                       type="number"
@@ -1387,7 +1387,7 @@ export default function AddProductPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="purchase_price">Purchase Price (ብር) (Optional)</Label>
+                    <Label htmlFor="purchase_price">{t("purchasePriceOptional" as any)} (ብር)</Label>
                     <Input
                       id="purchase_price"
                       type="number"
@@ -1403,12 +1403,12 @@ export default function AddProductPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="min_stock_level">Minimum Stock Level (Optional)</Label>
+                    <Label htmlFor="min_stock_level">{t("minimumStockLevelOptional" as any)}</Label>
                     <Input
                       id="min_stock_level"
                       type="number"
                       min="0"
-                      placeholder="Enter minimum stock level (optional)"
+                      placeholder={t("enterMinimumStockLevel" as any)}
                       value={formData.min_stock_level}
                       onChange={(e) => handleInputChange("min_stock_level", e.target.value)}
                       className="rounded-xl border-gray-200 focus:border-pink-300 focus:ring-pink-200"
@@ -1416,12 +1416,12 @@ export default function AddProductPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="max_stock_level">Maximum Stock Level (Optional)</Label>
+                    <Label htmlFor="max_stock_level">{t("maximumStockLevelOptional" as any)}</Label>
                     <Input
                       id="max_stock_level"
                       type="number"
                       min="0"
-                      placeholder="Enter maximum stock level (optional)"
+                      placeholder={t("enterMaximumStockLevel" as any)}
                       value={formData.max_stock_level}
                       onChange={(e) => handleInputChange("max_stock_level", e.target.value)}
                       className="rounded-xl border-gray-200 focus:border-pink-300 focus:ring-pink-200"
@@ -1442,7 +1442,7 @@ export default function AddProductPage() {
 
             {/* Image Upload */}
             <div className="space-y-2">
-              <Label htmlFor="image">Product Image (Optional)</Label>
+              <Label htmlFor="image">{t("productImageOptional" as any)}</Label>
               <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-pink-300 transition-all duration-200 hover:bg-pink-50 group">
                 <input id="image" type="file" accept="image/*" onChange={handleImageChange} className="hidden" disabled={isSubmitting} />
                 <label htmlFor="image" className="cursor-pointer block">
@@ -1450,9 +1450,9 @@ export default function AddProductPage() {
                     <Upload className="h-8 w-8 text-pink-500" />
                   </div>
                   <p className="text-sm font-medium text-gray-700 mb-1">
-                    {formData.image ? formData.image.name : "Click to upload product image"}
+                    {formData.image ? formData.image.name : t("clickToUpload" as any)}
                   </p>
-                  <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                  <p className="text-xs text-gray-500">{t("fileHint" as any)}</p>
                 </label>
               </div>
             </div>
@@ -1470,14 +1470,14 @@ export default function AddProductPage() {
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {productType === "existing-variation" ? "Adding Variations..." : "Adding to Inventory..."}
+                    {productType === "existing-variation" ? t("addingVariations" as any) : t("addingToInventory" as any)}
                   </>
                 ) : (
                   <>
                     <Package className="h-4 w-4 mr-2" />
                     {productType === "existing-variation" 
-                      ? (selectedExistingProduct ? "Add Variations to Product" : "Select Product First")
-                      : "Add to Inventory"
+                      ? (selectedExistingProduct ? t("addVariationsToProduct" as any) : t("selectProductFirst" as any))
+                      : t("addToInventory" as any)
                     }
                   </>
                 )}
@@ -1513,7 +1513,7 @@ export default function AddProductPage() {
                 }}
                 disabled={isSubmitting}
               >
-                Clear Form
+                {t("clearForm" as any)}
               </Button>
             </div>
           </form>

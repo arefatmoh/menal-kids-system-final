@@ -6,6 +6,359 @@
 -- =====================================================
 
 -- =====================================================
+-- DASHBOARD FUNCTIONS
+-- =====================================================
+
+-- Function to get dashboard statistics for a specific branch or all branches
+CREATE OR REPLACE FUNCTION get_dashboard_stats(p_branch_id VARCHAR(50) DEFAULT NULL)
+RETURNS TABLE (
+    total_products BIGINT,
+    low_stock_alerts BIGINT,
+    out_of_stock_alerts BIGINT,
+    stock_in_today BIGINT,
+    stock_out_today BIGINT,
+    total_sales_today NUMERIC,
+    transactions_today BIGINT,
+    active_alerts BIGINT,
+    critical_alerts BIGINT
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        -- Count active products available in branch inventory
+        (
+          SELECT COUNT(DISTINCT p.id)::BIGINT
+          FROM products p
+          JOIN inventory i ON i.product_id = p.id
+          WHERE p.is_active = TRUE
+            AND (p_branch_id IS NULL OR i.branch_id = p_branch_id)
+        ) AS total_products,
+
+        -- Low stock alerts from inventory
+        (
+          SELECT COUNT(DISTINCT i2.id)::BIGINT
+          FROM inventory i2
+          WHERE i2.min_stock_level IS NOT NULL
+            AND i2.quantity <= i2.min_stock_level
+            AND i2.quantity > 0
+            AND (p_branch_id IS NULL OR i2.branch_id = p_branch_id)
+        ) AS low_stock_alerts,
+
+        -- Out of stock alerts from inventory
+        (
+          SELECT COUNT(DISTINCT i3.id)::BIGINT
+          FROM inventory i3
+          WHERE i3.quantity = 0
+            AND (p_branch_id IS NULL OR i3.branch_id = p_branch_id)
+        ) AS out_of_stock_alerts,
+
+        -- Stock in today (sum of stock movements)
+        (
+          SELECT COALESCE(SUM(sm_in.quantity), 0)::BIGINT
+          FROM stock_movements sm_in
+          WHERE sm_in.movement_type = 'in'
+            AND DATE(sm_in.created_at) = CURRENT_DATE
+            AND (p_branch_id IS NULL OR sm_in.branch_id = p_branch_id)
+        ) AS stock_in_today,
+
+        -- Stock out today (sum of stock movements)
+        (
+          SELECT COALESCE(SUM(sm_out.quantity), 0)::BIGINT
+          FROM stock_movements sm_out
+          WHERE sm_out.movement_type = 'out'
+            AND DATE(sm_out.created_at) = CURRENT_DATE
+            AND (p_branch_id IS NULL OR sm_out.branch_id = p_branch_id)
+        ) AS stock_out_today,
+
+        -- Total sales amount today
+        (
+          SELECT COALESCE(SUM(s.total_amount), 0)
+          FROM sales s
+          WHERE DATE(s.created_at) = CURRENT_DATE
+            AND (p_branch_id IS NULL OR s.branch_id = p_branch_id)
+        ) AS total_sales_today,
+
+        -- Number of sales transactions today
+        (
+          SELECT COUNT(s2.id)::BIGINT
+          FROM sales s2
+          WHERE DATE(s2.created_at) = CURRENT_DATE
+            AND (p_branch_id IS NULL OR s2.branch_id = p_branch_id)
+        ) AS transactions_today,
+
+        -- Active alerts (including global alerts where branch_id is NULL)
+        (
+          SELECT COUNT(a.id)::BIGINT
+          FROM alerts a
+          WHERE a.status = 'active'
+            AND (p_branch_id IS NULL OR a.branch_id = p_branch_id OR a.branch_id IS NULL)
+        ) AS active_alerts,
+
+        -- Critical alerts (including global alerts where branch_id is NULL)
+        (
+          SELECT COUNT(a2.id)::BIGINT
+          FROM alerts a2
+          WHERE a2.status = 'active'
+            AND a2.severity = 'critical'
+            AND (p_branch_id IS NULL OR a2.branch_id = p_branch_id OR a2.branch_id IS NULL)
+        ) AS critical_alerts;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to get top selling products for today
+CREATE OR REPLACE FUNCTION get_top_selling_today(p_branch_id VARCHAR(50) DEFAULT NULL)
+RETURNS TABLE (
+    product_name VARCHAR,
+    quantity_sold INTEGER,
+    total_amount NUMERIC,
+    variation_info TEXT
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        p.name as product_name,
+        SUM(si.quantity)::INTEGER as quantity_sold,
+        SUM(si.quantity * si.unit_price) as total_amount,
+        (
+            CASE 
+                WHEN pv.color IS NOT NULL OR pv.size IS NOT NULL 
+                THEN COALESCE(pv.color, '') || CASE WHEN pv.color IS NOT NULL AND pv.size IS NOT NULL THEN ', ' ELSE '' END || COALESCE(pv.size, '')
+                ELSE 'Standard'
+            END
+        )::TEXT as variation_info
+    FROM sales s
+    JOIN sale_items si ON s.id = si.sale_id
+    JOIN products p ON si.product_id = p.id
+    LEFT JOIN product_variations pv ON si.variation_id = pv.id
+    WHERE DATE(s.created_at) = CURRENT_DATE
+        AND (p_branch_id IS NULL OR s.branch_id = p_branch_id)
+    GROUP BY p.id, p.name, pv.color, pv.size
+    ORDER BY quantity_sold DESC
+    LIMIT 5;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to get top selling products for this week
+CREATE OR REPLACE FUNCTION get_top_selling_week(p_branch_id VARCHAR(50) DEFAULT NULL)
+RETURNS TABLE (
+    product_name VARCHAR,
+    quantity_sold INTEGER,
+    total_amount NUMERIC,
+    variation_info TEXT
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        p.name as product_name,
+        SUM(si.quantity)::INTEGER as quantity_sold,
+        SUM(si.quantity * si.unit_price) as total_amount,
+        (
+            CASE 
+                WHEN pv.color IS NOT NULL OR pv.size IS NOT NULL 
+                THEN COALESCE(pv.color, '') || CASE WHEN pv.color IS NOT NULL AND pv.size IS NOT NULL THEN ', ' ELSE '' END || COALESCE(pv.size, '')
+                ELSE 'Standard'
+            END
+        )::TEXT as variation_info
+    FROM sales s
+    JOIN sale_items si ON s.id = si.sale_id
+    JOIN products p ON si.product_id = p.id
+    LEFT JOIN product_variations pv ON si.variation_id = pv.id
+    WHERE s.created_at >= CURRENT_DATE - INTERVAL '7 days'
+        AND (p_branch_id IS NULL OR s.branch_id = p_branch_id)
+    GROUP BY p.id, p.name, pv.color, pv.size
+    ORDER BY quantity_sold DESC
+    LIMIT 5;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to get low stock products with more details
+CREATE OR REPLACE FUNCTION get_low_stock_products(p_branch_id VARCHAR(50) DEFAULT NULL, p_threshold INTEGER DEFAULT 10)
+RETURNS TABLE (
+    product_name VARCHAR,
+    current_quantity INTEGER,
+    variation_info TEXT,
+    category_info TEXT,
+    last_restock_date TIMESTAMP,
+    days_since_restock INTEGER
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        p.name as product_name,
+        i.quantity::INTEGER as current_quantity,
+        (
+            CASE 
+                WHEN pv.color IS NOT NULL OR pv.size IS NOT NULL 
+                THEN COALESCE(pv.color, '') || CASE WHEN pv.color IS NOT NULL AND pv.size IS NOT NULL THEN ', ' ELSE '' END || COALESCE(pv.size, '')
+                ELSE 'Standard'
+            END
+        )::TEXT as variation_info,
+        COALESCE(c.name, 'No Category')::TEXT as category_info,
+        (SELECT MAX(created_at) FROM stock_movements sm2 
+         WHERE sm2.product_id = i.product_id 
+         AND sm2.variation_id IS NOT DISTINCT FROM i.variation_id 
+         AND sm2.branch_id = i.branch_id 
+         AND sm2.movement_type = 'in') as last_restock_date,
+        EXTRACT(DAY FROM (CURRENT_DATE - (SELECT MAX(created_at) FROM stock_movements sm2 
+         WHERE sm2.product_id = i.product_id 
+         AND sm2.variation_id IS NOT DISTINCT FROM i.variation_id 
+         AND sm2.branch_id = i.branch_id 
+         AND sm2.movement_type = 'in')))::INTEGER as days_since_restock
+    FROM inventory i
+    JOIN products p ON i.product_id = p.id
+    LEFT JOIN product_variations pv ON i.variation_id = pv.id
+    LEFT JOIN categories c ON p.category_id = c.id
+    WHERE i.quantity <= p_threshold
+        AND (p_branch_id IS NULL OR i.branch_id = p_branch_id)
+    ORDER BY i.quantity ASC, days_since_restock DESC
+    LIMIT 10;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to get high value inventory (most expensive items in stock)
+CREATE OR REPLACE FUNCTION get_high_value_inventory(p_branch_id VARCHAR(50) DEFAULT NULL, p_limit INTEGER DEFAULT 5)
+RETURNS TABLE (
+    product_name VARCHAR,
+    current_quantity INTEGER,
+    unit_value NUMERIC,
+    total_value NUMERIC,
+    variation_info TEXT,
+    category_info TEXT
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        p.name as product_name,
+        i.quantity::INTEGER as current_quantity,
+        COALESCE(pv.price, 0) as unit_value,
+        (i.quantity * COALESCE(pv.price, 0)) as total_value,
+        (
+            CASE 
+                WHEN pv.color IS NOT NULL OR pv.size IS NOT NULL 
+                THEN COALESCE(pv.color, '') || CASE WHEN pv.color IS NOT NULL AND pv.size IS NOT NULL THEN ', ' ELSE '' END || COALESCE(pv.size, '')
+                ELSE 'Standard'
+            END
+        )::TEXT as variation_info,
+        COALESCE(c.name, 'No Category')::TEXT as category_info
+    FROM inventory i
+    JOIN products p ON i.product_id = p.id
+    LEFT JOIN product_variations pv ON i.variation_id = pv.id
+    LEFT JOIN categories c ON p.category_id = c.id
+    WHERE i.quantity > 0
+        AND (p_branch_id IS NULL OR i.branch_id = p_branch_id)
+        AND COALESCE(pv.price, 0) > 0
+    ORDER BY total_value DESC
+    LIMIT p_limit;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to get recent product updates
+CREATE OR REPLACE FUNCTION get_recent_product_updates(p_branch_id VARCHAR(50) DEFAULT NULL, p_limit INTEGER DEFAULT 7)
+RETURNS TABLE (
+    product_name VARCHAR,
+    update_type VARCHAR,
+    updated_at TIMESTAMP,
+    variation_info VARCHAR,
+    category_info VARCHAR,
+    change_details TEXT
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        p.name::VARCHAR as product_name,
+        'Product Updated'::VARCHAR as update_type,
+        p.updated_at,
+        (CASE 
+            WHEN pv.color IS NOT NULL OR pv.size IS NOT NULL 
+            THEN COALESCE(pv.color, '') || CASE WHEN pv.color IS NOT NULL AND pv.size IS NOT NULL THEN ', ' ELSE '' END || COALESCE(pv.size, '')
+            ELSE 'Standard'
+        END)::VARCHAR as variation_info,
+        COALESCE(c.name, 'No Category')::VARCHAR as category_info,
+        ('Last updated: ' || p.updated_at::DATE)::TEXT as change_details
+    FROM products p
+    LEFT JOIN product_variations pv ON pv.product_id = p.id
+    LEFT JOIN categories c ON p.category_id = c.id
+    WHERE p.updated_at >= CURRENT_DATE - INTERVAL '30 days'
+        AND p.updated_at IS NOT NULL
+        AND p.updated_at != p.created_at
+    ORDER BY p.updated_at DESC
+    LIMIT p_limit;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to get recent activities for dashboard
+CREATE OR REPLACE FUNCTION get_recent_activities(p_branch_id VARCHAR(50) DEFAULT NULL, p_limit INTEGER DEFAULT 10)
+RETURNS TABLE (
+    activity_type VARCHAR,
+    description TEXT,
+    branch_name VARCHAR,
+    user_name VARCHAR,
+    created_at TIMESTAMP,
+    reference_id UUID
+) AS $$
+BEGIN
+    RETURN QUERY
+    (
+        -- Sales activities
+        SELECT 
+            'sale'::VARCHAR as activity_type,
+            ('Sale of ' || COALESCE(SUM(si.quantity), 0) || ' items for $' || s.total_amount)::TEXT as description,
+            b.name as branch_name,
+            u.full_name as user_name,
+            s.created_at,
+            s.id as reference_id
+        FROM sales s
+        JOIN branches b ON s.branch_id = b.id
+        JOIN users u ON s.user_id = u.id
+        LEFT JOIN sale_items si ON s.id = si.sale_id
+        WHERE (p_branch_id IS NULL OR s.branch_id = p_branch_id)
+        GROUP BY s.id, b.name, u.full_name, s.total_amount, s.created_at
+        
+        UNION ALL
+        
+        -- Stock movements activities (deduplicated)
+        SELECT DISTINCT ON (sm.product_id, sm.branch_id, sm.movement_type, sm.quantity, DATE(sm.created_at))
+            ('stock_' || sm.movement_type)::VARCHAR as activity_type,
+            (CASE 
+                WHEN sm.movement_type = 'in' THEN 'Stock added: '
+                ELSE 'Stock removed: '
+            END || sm.quantity || ' units of ' || p.name)::TEXT as description,
+            b.name as branch_name,
+            u.full_name as user_name,
+            sm.created_at,
+            sm.id as reference_id
+        FROM stock_movements sm
+        JOIN products p ON sm.product_id = p.id
+        JOIN branches b ON sm.branch_id = b.id
+        JOIN users u ON sm.user_id = u.id
+        WHERE (p_branch_id IS NULL OR sm.branch_id = p_branch_id)
+            AND sm.reference_type != 'sale' -- Exclude sales-related movements to avoid duplicates
+        
+        UNION ALL
+        
+        -- Transfer activities
+        SELECT 
+            ('transfer_' || t.status)::VARCHAR as activity_type,
+            ('Transfer ' || t.status || ' from ' || fb.name || ' to ' || tb.name)::TEXT as description,
+            CASE 
+                WHEN p_branch_id = t.from_branch_id THEN fb.name
+                ELSE tb.name
+            END as branch_name,
+            u.full_name as user_name,
+            COALESCE(t.transfer_date, t.created_at) as created_at,
+            t.id as reference_id
+        FROM transfers t
+        JOIN branches fb ON t.from_branch_id = fb.id
+        JOIN branches tb ON t.to_branch_id = tb.id
+        JOIN users u ON t.user_id = u.id
+        WHERE (p_branch_id IS NULL OR t.from_branch_id = p_branch_id OR t.to_branch_id = p_branch_id)
+    )
+    ORDER BY created_at DESC
+    LIMIT p_limit;
+END;
+$$ LANGUAGE plpgsql;
+
+-- =====================================================
 -- INVENTORY MANAGEMENT FUNCTIONS
 -- =====================================================
 
@@ -221,6 +574,21 @@ EXCEPTION
             DELETE FROM sales WHERE id = v_sale_id;
         END IF;
         RAISE EXCEPTION 'Failed to create sale: %', SQLERRM;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to get accurate sales total for today (for dashboard)
+CREATE OR REPLACE FUNCTION get_today_sales_total(p_branch_id VARCHAR(50) DEFAULT NULL)
+RETURNS NUMERIC AS $$
+DECLARE
+    total_sales NUMERIC;
+BEGIN
+    SELECT COALESCE(SUM(s.total_amount), 0) INTO total_sales
+    FROM sales s
+    WHERE DATE(s.created_at) = CURRENT_DATE
+      AND (p_branch_id IS NULL OR s.branch_id = p_branch_id);
+    
+    RETURN total_sales;
 END;
 $$ LANGUAGE plpgsql;
 

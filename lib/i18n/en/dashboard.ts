@@ -12,6 +12,31 @@ export default {
   recentActivity: "Recent Activity",
   dailyStockLevels: "Daily stock levels overview",
   latestStockMovements: "Latest stock movements",
+
+  // Dashboard analytics cards
+  topSellingToday: "Top Selling (Today)",
+  topSellingTodaySubtitle: "Most sold products today",
+  topSellingWeek: "Top Selling (Week)",
+  topSellingWeekSubtitle: "Most sold products this week",
+  lowStockAlert: "Low Stock Alert",
+  lowStockSubtitle: "Products needing restocking",
+  recentProductUpdates: "Recent Product Updates",
+  recentProductUpdatesSubtitle: "Latest inventory changes",
+
+  // Empty states / labels
+  noSalesToday: "No sales today",
+  noSalesWeek: "No sales this week",
+  noLowStock: "No low stock products",
+  noRecentUpdates: "No recent updates",
+  noRecentActivity: "No recent activity",
+  page: "Page",
+  of: "of",
+  sold: "sold",
+  left: "left",
+  daysAgo: "days ago",
+  units: "units",
+  netStockChange: "Net Stock Change",
+  dayLabel: "Day",
 }
 
 

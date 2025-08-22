@@ -351,10 +351,10 @@ export default function Dashboard() {
                       boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
                     }}
                     formatter={(value: any, name: any) => [
-                      `${value > 0 ? '+' : ''}${value} units`,
-                      'Net Stock Change'
+                      `${value > 0 ? '+' : ''}${value} ${t("units")}`,
+                      t("netStockChange")
                     ]}
-                    labelFormatter={(label) => `Day: ${label}`}
+                    labelFormatter={(label) => `${t("dayLabel")}: ${label}`}
                   />
                   <Line
                     type="monotone"
@@ -449,7 +449,7 @@ export default function Dashboard() {
               ) : (
                 <div className="text-center text-gray-500 py-8">
                   <Calendar className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                  <p>No recent activity</p>
+                  <p>{t("noRecentActivity")}</p>
                 </div>
               )}
             </div>
@@ -484,9 +484,9 @@ export default function Dashboard() {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Trophy className="h-5 w-5 text-yellow-500" />
-              <span>Top Selling (Today)</span>
+              <span>{t("topSellingToday")}</span>
             </CardTitle>
-            <CardDescription>Most sold products today</CardDescription>
+            <CardDescription>{t("topSellingTodaySubtitle")}</CardDescription>
           </CardHeader>
           <CardContent>
             <ul className="divide-y divide-gray-200">
@@ -500,11 +500,11 @@ export default function Dashboard() {
                       )}
                     </div>
                     <div className="text-right">
-                      <span className="text-gray-500 font-medium">{prod.quantity_sold} sold</span>
+                      <span className="text-gray-500 font-medium">{prod.quantity_sold} {t("sold")}</span>
                       <div className="text-xs text-gray-400">${prod.total_amount}</div>
                     </div>
                   </li>
-                )) : <li className="py-4 text-gray-400 text-center">No sales today</li>
+                )) : <li className="py-4 text-gray-400 text-center">{t("noSalesToday")}</li>
               }
             </ul>
             {getTotalPages(topSellingToday) > 1 && (
@@ -535,9 +535,9 @@ export default function Dashboard() {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Trophy className="h-5 w-5 text-yellow-500" />
-              <span>Top Selling (Week)</span>
+              <span>{t("topSellingWeek")}</span>
             </CardTitle>
-            <CardDescription>Most sold products this week</CardDescription>
+            <CardDescription>{t("topSellingWeekSubtitle")}</CardDescription>
           </CardHeader>
           <CardContent>
             <ul className="divide-y divide-gray-200">
@@ -551,11 +551,11 @@ export default function Dashboard() {
                       )}
                     </div>
                     <div className="text-right">
-                      <span className="text-gray-500 font-medium">{prod.quantity_sold} sold</span>
+                      <span className="text-gray-500 font-medium">{prod.quantity_sold} {t("sold")}</span>
                       <div className="text-xs text-gray-400">${prod.total_amount}</div>
                     </div>
                   </li>
-                )) : <li className="py-4 text-gray-400 text-center">No sales this week</li>
+                )) : <li className="py-4 text-gray-400 text-center">{t("noSalesWeek")}</li>
               }
             </ul>
             {getTotalPages(topSellingWeek) > 1 && (
@@ -586,9 +586,9 @@ export default function Dashboard() {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <AlertTriangle className="h-5 w-5 text-orange-500" />
-              <span>Low Stock Alert</span>
+              <span>{t("lowStockAlert")}</span>
             </CardTitle>
-            <CardDescription>Products needing restocking</CardDescription>
+            <CardDescription>{t("lowStockSubtitle")}</CardDescription>
           </CardHeader>
           <CardContent>
             <ul className="divide-y divide-gray-200">
@@ -603,11 +603,11 @@ export default function Dashboard() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <span className="text-orange-600 font-semibold">{prod.current_quantity} left</span>
-                      <div className="text-xs text-gray-400">{prod.days_since_restock || 0} days ago</div>
+                      <span className="text-orange-600 font-semibold">{prod.current_quantity} {t("left")}</span>
+                      <div className="text-xs text-gray-400">{(prod.days_since_restock || 0)} {t("daysAgo")}</div>
                     </div>
                   </li>
-                )) : <li className="py-4 text-gray-400 text-center">No low stock products</li>
+                )) : <li className="py-4 text-gray-400 text-center">{t("noLowStock")}</li>
               }
             </ul>
             {getTotalPages(lowStockProducts) > 1 && (
@@ -638,9 +638,9 @@ export default function Dashboard() {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <BarChart3 className="h-5 w-5 text-purple-500" />
-              <span>Recent Product Updates</span>
+              <span>{t("recentProductUpdates")}</span>
             </CardTitle>
-            <CardDescription>Latest inventory changes</CardDescription>
+            <CardDescription>{t("recentProductUpdatesSubtitle")}</CardDescription>
           </CardHeader>
           <CardContent>
             <ul className="divide-y divide-gray-200">
@@ -659,7 +659,7 @@ export default function Dashboard() {
                       <div className="text-xs text-gray-400">{new Date(update.updated_at).toLocaleDateString()}</div>
                     </div>
                   </li>
-                )) : <li className="py-4 text-gray-400 text-center">No recent updates</li>
+                )) : <li className="py-4 text-gray-400 text-center">{t("noRecentUpdates")}</li>
               }
             </ul>
             {getTotalPages(recentProductUpdates) > 1 && (
