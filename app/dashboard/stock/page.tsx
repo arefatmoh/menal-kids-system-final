@@ -63,7 +63,8 @@ import {
   PieChart,
   Phone,
   TrendingUp as TrendingUpIcon,
-  TrendingDown as TrendingDownIcon
+  TrendingDown as TrendingDownIcon,
+  X,
 } from "lucide-react"
 import apiClient from "@/lib/api-client"
 import { useToast } from "@/hooks/use-toast"
@@ -185,6 +186,7 @@ export default function StockManagementPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [selectedStatus, setSelectedStatus] = useState("all")
+  const [showFilters, setShowFilters] = useState(false)
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1)
@@ -912,13 +914,13 @@ export default function StockManagementPage() {
         </div>
         
         {/* Enhanced Action Buttons */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
           {/* UI Preferences Toggle */}
           <Button
             variant="outline"
             size="sm"
             onClick={() => updateUiPreference('compactMode', !uiPreferences.compactMode)}
-            className="hidden sm:flex"
+            className="hidden sm:flex w-full sm:w-auto"
           >
             {uiPreferences.compactMode ? <EyeOff className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
             {uiPreferences.compactMode ? 'Compact' : 'Normal'}
@@ -929,7 +931,7 @@ export default function StockManagementPage() {
             variant="outline"
             size="sm"
             onClick={() => updateUiPreference('autoRefresh', !uiPreferences.autoRefresh)}
-            className="hidden sm:flex"
+            className="hidden sm:flex w-full sm:w-auto"
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${uiPreferences.autoRefresh ? 'animate-spin' : ''}`} />
             Auto
@@ -944,6 +946,7 @@ export default function StockManagementPage() {
               fetchData().finally(() => setLoadingState('isRefreshing', false))
             }}
             disabled={isLoading || loadingStates.isRefreshing}
+            className="w-full sm:w-auto"
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${(isLoading || loadingStates.isRefreshing) ? 'animate-spin' : ''}`} />
             <span className="hidden sm:inline">{t("refresh")}</span>
@@ -989,18 +992,18 @@ export default function StockManagementPage() {
       )}
 
       {/* Enhanced Stats Cards with Mobile Responsiveness */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className={`border-0 shadow-lg bg-gradient-to-br from-blue-50 to-blue-100 transition-all duration-300 hover:shadow-xl hover:scale-105 ${
           uiPreferences.compactMode ? 'p-3' : 'p-4'
         }`}>
           <CardContent className={uiPreferences.compactMode ? 'p-2' : 'p-4'}>
-            <div className="flex items-center space-x-3">
-              <div className={`${uiPreferences.compactMode ? 'w-8 h-8' : 'w-10 h-10'} bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-110`}>
-                <Package className={`${uiPreferences.compactMode ? 'h-4 w-4' : 'h-5 w-5'} text-white`} />
+            <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
+              <div className={`${uiPreferences.compactMode ? 'w-8 h-8' : 'w-8 h-8 sm:w-10 sm:h-10'} bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-110 mx-auto sm:mx-0`}>
+                <Package className={`${uiPreferences.compactMode ? 'h-4 w-4' : 'h-4 w-4 sm:h-5 sm:w-5'} text-white`} />
               </div>
-              <div className="flex-1 min-w-0">
-                <p className={`${uiPreferences.compactMode ? 'text-xs' : 'text-sm'} font-medium text-blue-700 truncate`}>{t("totalStocks")}</p>
-                <p className={`${uiPreferences.compactMode ? 'text-xl' : 'text-2xl'} font-bold text-blue-900`}>{stats.total_products}</p>
+              <div className="flex-1 min-w-0 text-center sm:text-left">
+                <p className={`${uiPreferences.compactMode ? 'text-xs' : 'text-xs sm:text-sm'} font-medium text-blue-700 leading-tight`}>{t("totalStocks")}</p>
+                <p className={`${uiPreferences.compactMode ? 'text-xl' : 'text-lg sm:text-xl lg:text-2xl'} font-bold text-blue-900 leading-tight`}>{stats.total_products}</p>
               </div>
             </div>
           </CardContent>
@@ -1010,13 +1013,13 @@ export default function StockManagementPage() {
           uiPreferences.compactMode ? 'p-3' : 'p-4'
         }`}>
           <CardContent className={uiPreferences.compactMode ? 'p-2' : 'p-4'}>
-            <div className="flex items-center space-x-3">
-              <div className={`${uiPreferences.compactMode ? 'w-8 h-8' : 'w-10 h-10'} bg-gradient-to-r from-red-500 to-red-600 rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-110`}>
-                <XCircle className={`${uiPreferences.compactMode ? 'h-4 w-4' : 'h-5 w-5'} text-white`} />
+            <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
+              <div className={`${uiPreferences.compactMode ? 'w-8 h-8' : 'w-8 h-8 sm:w-10 sm:h-10'} bg-gradient-to-r from-red-500 to-red-600 rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-110 mx-auto sm:mx-0`}>
+                <XCircle className={`${uiPreferences.compactMode ? 'h-4 w-4' : 'h-4 w-4 sm:h-5 sm:w-5'} text-white`} />
               </div>
-              <div className="flex-1 min-w-0">
-                <p className={`${uiPreferences.compactMode ? 'text-xs' : 'text-sm'} font-medium text-red-700 truncate`}>{t("outOfStock")}</p>
-                <p className={`${uiPreferences.compactMode ? 'text-xl' : 'text-2xl'} font-bold text-red-900`}>{stats.out_of_stock_items}</p>
+              <div className="flex-1 min-w-0 text-center sm:text-left">
+                <p className={`${uiPreferences.compactMode ? 'text-xs' : 'text-xs sm:text-sm'} font-medium text-red-700 leading-tight`}>{t("outOfStock")}</p>
+                <p className={`${uiPreferences.compactMode ? 'text-xl' : 'text-lg sm:text-xl lg:text-2xl'} font-bold text-red-900 leading-tight`}>{stats.out_of_stock_items}</p>
               </div>
             </div>
           </CardContent>
@@ -1026,13 +1029,13 @@ export default function StockManagementPage() {
           uiPreferences.compactMode ? 'p-3' : 'p-4'
         }`}>
           <CardContent className={uiPreferences.compactMode ? 'p-2' : 'p-4'}>
-            <div className="flex items-center space-x-3">
-              <div className={`${uiPreferences.compactMode ? 'w-8 h-8' : 'w-10 h-10'} bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-110`}>
-                <AlertTriangle className={`${uiPreferences.compactMode ? 'h-4 w-4' : 'h-5 w-5'} text-white`} />
+            <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
+              <div className={`${uiPreferences.compactMode ? 'w-8 h-8' : 'w-8 h-8 sm:w-10 sm:h-10'} bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-110 mx-auto sm:mx-0`}>
+                <AlertTriangle className={`${uiPreferences.compactMode ? 'h-4 w-4' : 'h-4 w-4 sm:h-5 sm:w-5'} text-white`} />
               </div>
-              <div className="flex-1 min-w-0">
-                <p className={`${uiPreferences.compactMode ? 'text-xs' : 'text-sm'} font-medium text-yellow-700 truncate`}>{t("lowStock")}</p>
-                <p className={`${uiPreferences.compactMode ? 'text-xl' : 'text-2xl'} font-bold text-yellow-900`}>{stats.low_stock_items}</p>
+              <div className="flex-1 min-w-0 text-center sm:text-left">
+                <p className={`${uiPreferences.compactMode ? 'text-xs' : 'text-xs sm:text-sm'} font-medium text-yellow-700 leading-tight`}>{t("lowStock")}</p>
+                <p className={`${uiPreferences.compactMode ? 'text-xl' : 'text-lg sm:text-xl lg:text-2xl'} font-bold text-yellow-900 leading-tight`}>{stats.low_stock_items}</p>
               </div>
             </div>
           </CardContent>
@@ -1043,13 +1046,13 @@ export default function StockManagementPage() {
             uiPreferences.compactMode ? 'p-3' : 'p-4'
           }`}>
             <CardContent className={uiPreferences.compactMode ? 'p-2' : 'p-4'}>
-              <div className="flex items-center space-x-3">
-                <div className={`${uiPreferences.compactMode ? 'w-8 h-8' : 'w-10 h-10'} bg-gradient-to-r from-green-500 to-green-600 rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-110`}>
-                  <DollarSign className={`${uiPreferences.compactMode ? 'h-4 w-4' : 'h-5 w-5'} text-white`} />
+              <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
+                <div className={`${uiPreferences.compactMode ? 'w-8 h-8' : 'w-8 h-8 sm:w-10 sm:h-10'} bg-gradient-to-r from-green-500 to-green-600 rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-110 mx-auto sm:mx-0`}>
+                  <DollarSign className={`${uiPreferences.compactMode ? 'h-4 w-4' : 'h-4 w-4 sm:h-5 sm:w-5'} text-white`} />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className={`${uiPreferences.compactMode ? 'text-xs' : 'text-sm'} font-medium text-green-700 truncate`}>Total Value</p>
-                  <p className={`${uiPreferences.compactMode ? 'text-xl' : 'text-2xl'} font-bold text-green-900`}>{stats.total_value.toFixed(0)} ብር</p>
+                <div className="flex-1 min-w-0 text-center sm:text-left">
+                  <p className={`${uiPreferences.compactMode ? 'text-xs' : 'text-xs sm:text-sm'} font-medium text-green-700 leading-tight`}>Total Value</p>
+                  <p className={`${uiPreferences.compactMode ? 'text-xl' : 'text-lg sm:text-xl lg:text-2xl'} font-bold text-green-900 leading-tight`}>{stats.total_value.toFixed(0)} ብር</p>
                 </div>
               </div>
             </CardContent>
@@ -1059,13 +1062,13 @@ export default function StockManagementPage() {
 
       {/* Main Content */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="overview">{t("overview")}</TabsTrigger>
-          <TabsTrigger value="operations">Operations</TabsTrigger>
-          <TabsTrigger value="alerts">{t("alerts")}</TabsTrigger>
-          <TabsTrigger value="history">{t("history")}</TabsTrigger>
-          <TabsTrigger value="analytics">{t("inventoryAnalytics")}</TabsTrigger>
-          <TabsTrigger value="settings">{t("settings")}</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 gap-2 overflow-x-auto">
+          <TabsTrigger value="overview" className="text-xs sm:text-sm whitespace-nowrap">{t("overview")}</TabsTrigger>
+          <TabsTrigger value="operations" className="text-xs sm:text-sm whitespace-nowrap">Operations</TabsTrigger>
+          <TabsTrigger value="alerts" className="text-xs sm:text-sm whitespace-nowrap">{t("alerts")}</TabsTrigger>
+          <TabsTrigger value="history" className="text-xs sm:text-sm whitespace-nowrap">{t("history")}</TabsTrigger>
+          <TabsTrigger value="analytics" className="text-xs sm:text-sm whitespace-nowrap">{t("inventoryAnalytics")}</TabsTrigger>
+          <TabsTrigger value="settings" className="text-xs sm:text-sm whitespace-nowrap">{t("settings")}</TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
@@ -1083,57 +1086,149 @@ export default function StockManagementPage() {
                 </CardHeader>
                 <CardContent>
                   {/* Filters */}
-                  <div className="flex items-center space-x-4 mb-4">
-                    <div className="flex-1">
-                      <Input
-                        placeholder={`${t("search")}...`}
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="max-w-sm"
-                      />
-                    </div>
-                    <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                      <SelectTrigger className="w-40">
-                        <SelectValue placeholder={t("category")} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">{t("allCategories")}</SelectItem>
-                        {categories.map(category => (
-                          <SelectItem key={category} value={category}>{category}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                      <SelectTrigger className="w-40">
-                        <SelectValue placeholder={t("status")} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">{t("allStatus")}</SelectItem>
-                        <SelectItem value="in_stock">{t("inStock")}</SelectItem>
-                        <SelectItem value="low_stock">{t("lowStock")}</SelectItem>
-                        <SelectItem value="out_of_stock">{t("outOfStock")}</SelectItem>
-                        <SelectItem value="overstock">Overstock</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-gray-600">Show:</span>
-                      <Select value={pageSize.toString()} onValueChange={(value) => {
-                        setPageSize(Number(value))
-                        setCurrentPage(1) // Reset to first page when changing page size
-                      }}>
-                        <SelectTrigger className="w-20">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="6">6 per page</SelectItem>
-                          <SelectItem value="12">12 per page</SelectItem>
-                          <SelectItem value="24">24 per page</SelectItem>
-                          <SelectItem value="48">48 per page</SelectItem>
-                        </SelectContent>
-                      </Select>
+                  <div className="space-y-3 mb-4">
+                    {/* Mobile Quick Filters Header - Always Visible */}
+                    <div className="flex items-center justify-between sm:hidden">
+                      <span className="text-xs font-medium text-gray-600">Quick Filters</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowFilters(!showFilters)}
+                        className="h-6 px-2 text-xs text-gray-500 hover:text-gray-700"
+                      >
+                        {showFilters ? (
+                          <>
+                            <X className="h-3 w-3 mr-1" />
+                            Hide
+                          </>
+                        ) : (
+                          <>
+                            <Filter className="h-3 w-3 mr-1" />
+                            Show
+                          </>
+                        )}
+                      </Button>
                     </div>
 
+                    {/* Desktop Filters - Always Visible */}
+                    <div className="hidden sm:flex sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
+                      <div className="w-full sm:flex-1">
+                        <Input
+                          placeholder={`${t("search")}...`}
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="w-full sm:max-w-sm"
+                        />
+                      </div>
+                      <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                        <SelectTrigger className="w-full sm:w-40">
+                          <SelectValue placeholder={t("category")} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">{t("allCategories")}</SelectItem>
+                          {categories.map(category => (
+                            <SelectItem key={category} value={category}>{category}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                        <SelectTrigger className="w-full sm:w-40">
+                          <SelectValue placeholder={t("status")} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">{t("allStatus")}</SelectItem>
+                          <SelectItem value="in_stock">{t("inStock")}</SelectItem>
+                          <SelectItem value="low_stock">{t("lowStock")}</SelectItem>
+                          <SelectItem value="out_of_stock">{t("outOfStock")}</SelectItem>
+                          <SelectItem value="overstock">Overstock</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-2 w-full sm:w-auto">
+                        <span className="text-sm text-gray-600">Show:</span>
+                        <Select value={pageSize.toString()} onValueChange={(value) => {
+                          setPageSize(Number(value))
+                          setCurrentPage(1) // Reset to first page when changing page size
+                        }}>
+                          <SelectTrigger className="w-full sm:w-20">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="6">6 per page</SelectItem>
+                            <SelectItem value="12">12 per page</SelectItem>
+                            <SelectItem value="24">24 per page</SelectItem>
+                            <SelectItem value="48">48 per page</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
                   </div>
+
+                  {/* Mobile Quick Filters - Collapsible */}
+                  {showFilters && (
+                    <div className="sm:hidden space-y-3">
+                      {/* Search Input */}
+                      <div className="w-full">
+                        <Input
+                          placeholder={`${t("search")}...`}
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="w-full"
+                        />
+                      </div>
+
+                      {/* Category Filter */}
+                      <div className="w-full">
+                        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                          <SelectTrigger className="w-full h-8">
+                            <SelectValue placeholder={t("category")} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">{t("allCategories")}</SelectItem>
+                            {categories.map(category => (
+                              <SelectItem key={category} value={category}>{category}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Status Filter */}
+                      <div className="w-full">
+                        <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                          <SelectTrigger className="w-full h-8">
+                            <SelectValue placeholder={t("status")} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">{t("allStatus")}</SelectItem>
+                            <SelectItem value="in_stock">{t("inStock")}</SelectItem>
+                            <SelectItem value="low_stock">{t("lowStock")}</SelectItem>
+                            <SelectItem value="out_of_stock">{t("outOfStock")}</SelectItem>
+                            <SelectItem value="overstock">Overstock</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Page Size Filter */}
+                      <div className="w-full">
+                        <div className="flex flex-col space-y-2">
+                          <span className="text-sm text-gray-600">Show:</span>
+                          <Select value={pageSize.toString()} onValueChange={(value) => {
+                            setPageSize(Number(value))
+                            setCurrentPage(1) // Reset to first page when changing page size
+                          }}>
+                            <SelectTrigger className="w-full h-8">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="6">6 per page</SelectItem>
+                              <SelectItem value="12">12 per page</SelectItem>
+                              <SelectItem value="24">24 per page</SelectItem>
+                              <SelectItem value="48">48 per page</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Products Grid/List with Quick Actions */}
                   {isLoading ? (

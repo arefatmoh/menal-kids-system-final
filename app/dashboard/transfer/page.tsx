@@ -66,7 +66,8 @@ import {
   ChevronsRight,
   ChevronUp,
   ChevronDown,
-  Layers
+  Layers,
+  X
 } from "lucide-react"
 import { useLanguage } from "@/lib/language-context"
 import { useBranch } from "@/lib/branch-context"
@@ -1033,10 +1034,10 @@ export default function TransferPage() {
               <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center">
                 <CheckCircle className="h-5 w-5 text-white" />
               </div>
-              <span>Transfer Completed Successfully!</span>
+              <span>{t("transferCompleted")}</span>
             </CardTitle>
             <CardDescription className="text-green-700">
-              Items have been transferred instantly between branches and inventory has been updated
+              {t("transferDescriptionSuccess")}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -1044,7 +1045,7 @@ export default function TransferPage() {
               {/* Transfer Details */}
               <div className="lg:col-span-2">
                 <div className="space-y-3">
-                  <h4 className="font-semibold text-green-800 mb-3">Transfer Details:</h4>
+                  <h4 className="font-semibold text-green-800 mb-3">{t("transferDetails")}:</h4>
                   <div className="space-y-2">
                     {lastTransfer.items.map((item: any) => (
                       <div key={item.id} className="flex items-center justify-between p-3 bg-white rounded-lg border border-green-200">
@@ -1058,7 +1059,7 @@ export default function TransferPage() {
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="text-sm text-gray-500">Transferred</p>
+                          <p className="text-sm text-gray-500">{t("transferred")}</p>
                         </div>
                       </div>
                     ))}
@@ -1123,18 +1124,18 @@ export default function TransferPage() {
         </Card>
       )}
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-4 sm:space-y-0">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
+          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
             Branch Transfer
           </h1>
-          <p className="text-gray-600 mt-1">Transfer products between branches instantly - no approval needed</p>
+          <p className="text-gray-600 mt-1 text-sm sm:text-base">Transfer products between branches instantly - no approval needed</p>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
           <Button 
             variant="outline"
             onClick={() => window.location.href = '/dashboard/inventory'}
-            className="border-gray-200 hover:bg-gray-50 shadow-sm"
+            className="border-gray-200 hover:bg-gray-50 shadow-sm w-full sm:w-auto"
           >
             <Package className="h-4 w-4 mr-2" />
             View Inventory
@@ -1143,7 +1144,7 @@ export default function TransferPage() {
             variant="outline"
             onClick={handleRefreshData}
             disabled={isRefreshing}
-            className="border-blue-200 text-blue-600 hover:bg-blue-50"
+            className="border-blue-200 text-blue-600 hover:bg-blue-50 w-full sm:w-auto"
           >
             {isRefreshing ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -1155,44 +1156,44 @@ export default function TransferPage() {
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 to-blue-100">
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
-                <Truck className="h-5 w-5 text-white" />
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mx-auto sm:mx-0">
+                <Truck className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
               </div>
-              <div>
-                <p className="text-sm font-medium text-blue-700">Total Transfers</p>
-                <p className="text-2xl font-bold text-blue-900">{transferStats.total_transfers}</p>
+              <div className="text-center sm:text-left">
+                <p className="text-xs sm:text-sm font-medium text-blue-700 leading-tight">Total Transfers</p>
+                <p className="text-lg sm:text-2xl font-bold text-blue-900 leading-tight">{transferStats.total_transfers}</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card className="border-0 shadow-lg bg-gradient-to-br from-green-50 to-green-100">
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-green-600 rounded-lg flex items-center justify-center">
-                <CheckCircle className="h-5 w-5 text-white" />
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-green-500 to-green-600 rounded-lg flex items-center justify-center mx-auto sm:mx-0">
+                <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
               </div>
-              <div>
-                <p className="text-sm font-medium text-green-700">Completed</p>
-                <p className="text-2xl font-bold text-green-900">{transferStats.completed_transfers}</p>
+              <div className="text-center sm:text-left">
+                <p className="text-xs sm:text-sm font-medium text-green-700 leading-tight">Completed</p>
+                <p className="text-lg sm:text-2xl font-bold text-green-900 leading-tight">{transferStats.completed_transfers}</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card className="border-0 shadow-lg bg-gradient-to-br from-yellow-50 to-yellow-100">
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-lg flex items-center justify-center">
-                <Clock className="h-5 w-5 text-white" />
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-lg flex items-center justify-center mx-auto sm:mx-0">
+                <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
               </div>
-              <div>
-                <p className="text-sm font-medium text-yellow-700">Pending</p>
-                <p className="text-2xl font-bold text-yellow-900">{transferStats.pending_transfers}</p>
+              <div className="text-center sm:text-left">
+                <p className="text-xs sm:text-sm font-medium text-yellow-700 leading-tight">Pending</p>
+                <p className="text-lg sm:text-2xl font-bold text-yellow-900 leading-tight">{transferStats.pending_transfers}</p>
               </div>
             </div>
           </CardContent>
@@ -1235,7 +1236,7 @@ export default function TransferPage() {
                     <div className="space-y-2">
                       <Label htmlFor="fromBranch">{t("fromBranch")} *</Label>
                       <Select value={fromBranch} onValueChange={setFromBranch} required>
-                        <SelectTrigger className="rounded-xl border-gray-200 focus:border-pink-300 focus:ring-pink-200">
+                        <SelectTrigger className="w-full rounded-xl border-gray-200 focus:border-pink-300 focus:ring-pink-200">
                           <SelectValue placeholder={t("fromBranch")} />
                         </SelectTrigger>
                         <SelectContent>
@@ -1251,7 +1252,7 @@ export default function TransferPage() {
                     <div className="space-y-2">
                       <Label htmlFor="toBranch">{t("toBranch")} *</Label>
                       <Select value={toBranch} onValueChange={setToBranch} required>
-                        <SelectTrigger className="rounded-xl border-gray-200 focus:border-pink-300 focus:ring-pink-200">
+                        <SelectTrigger className="w-full rounded-xl border-gray-200 focus:border-pink-300 focus:ring-pink-200">
                           <SelectValue placeholder={t("toBranch")} />
                         </SelectTrigger>
                         <SelectContent>
@@ -1284,7 +1285,7 @@ export default function TransferPage() {
                     <div className="space-y-2">
                       <Label htmlFor="toBranch">{t("toBranch")} *</Label>
                       <Select value={toBranch} onValueChange={setToBranch} required>
-                        <SelectTrigger className="rounded-xl border-gray-200 focus:border-pink-300 focus:ring-pink-200">
+                        <SelectTrigger className="w-full rounded-xl border-gray-200 focus:border-pink-300 focus:ring-pink-200">
                           <SelectValue placeholder={t("toBranch")} />
                         </SelectTrigger>
                         <SelectContent>
@@ -1462,131 +1463,203 @@ export default function TransferPage() {
             <CardContent className="p-6">
               {/* Product Search and Filters */}
               <div className="space-y-4 mb-6">
-                {/* Advanced Product Search */}
-                <div className="relative">
+                {/* Mobile Quick Filters Header - Always Visible */}
+                <div className="flex items-center justify-between sm:hidden">
+                  <span className="text-xs font-medium text-gray-600">Quick Filters</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowFilters(!showFilters)}
+                    className="h-6 px-2 text-xs text-gray-500 hover:text-gray-700"
+                  >
+                    {showFilters ? (
+                      <>
+                        <X className="h-3 w-3 mr-1" />
+                        Hide
+                      </>
+                    ) : (
+                      <>
+                        <Filter className="h-3 w-3 mr-1" />
+                        Show
+                      </>
+                    )}
+                  </Button>
+                </div>
+
+                {/* Desktop Search and Filters - Always Visible */}
+                <div className="hidden sm:block space-y-4">
+                  {/* Advanced Product Search */}
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                    <Input
-                      placeholder="Search products by name, SKU, brand, category, color, or size..."
-                      value={productSearchTerm}
-                      onChange={(e) => setProductSearchTerm(e.target.value)}
-                      className="pl-10 pr-20 rounded-xl border-gray-200 focus:border-pink-300 focus:ring-pink-200"
-                      disabled={isOwner ? !fromBranch : !toBranch}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault()
-                          // Trigger search - the filtering is already handled by the useMemo
-                        }
-                      }}
-                    />
-                    <div className="absolute right-8 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600"
-                        title="Search Help: < 3 chars = Exact match, 3-5 chars = Partial match, 6+ chars = Phrase match"
-                      >
-                        ?
-                      </Button>
-                      {productSearchTerm && (
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                      <Input
+                        placeholder="Search products by name, SKU, brand, category, color, or size..."
+                        value={productSearchTerm}
+                        onChange={(e) => setProductSearchTerm(e.target.value)}
+                        className="w-full pl-10 pr-20 rounded-xl border-gray-200 focus:border-pink-300 focus:ring-pink-200"
+                        disabled={isOwner ? !fromBranch : !toBranch}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault()
+                            // Trigger search - the filtering is already handled by the useMemo
+                          }
+                        }}
+                      />
+                      <div className="absolute right-8 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => setProductSearchTerm("")}
                           className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600"
+                          title="Search Help: < 3 chars = Exact match, 3-5 chars = Partial match, 6+ chars = Phrase match"
                         >
-                          <XCircle className="h-4 w-4" />
+                          ?
                         </Button>
-                      )}
+                        {productSearchTerm && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setProductSearchTerm("")}
+                            className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600"
+                          >
+                            <XCircle className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
                     </div>
+
+                    {/* Search Type Indicator */}
+                    {productSearchTerm.trim() && (
+                      <div className="mt-2 p-2 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg">
+                        <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2">
+                          <div className="flex items-center space-x-2">
+                            <Search className="h-4 w-4 text-blue-600" />
+                            <span className="text-sm font-medium text-blue-800">
+                              {productSearchTerm.trim().length < 3 ? 'Enhanced Match' :
+                               productSearchTerm.trim().length <= 5 ? 'Partial Match' : 'Phrase Match'}
+                            </span>
+                          </div>
+                          <span className="text-xs text-blue-600">
+                            {productSearchTerm.trim().length < 3 ? 'Finding exact matches' :
+                             productSearchTerm.trim().length <= 5 ? 'Finding partial matches' : 'Finding phrase matches'}
+                          </span>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
-                  {/* Search Type Indicator */}
-                  {productSearchTerm.trim() && (
-                    <div className="mt-2 p-2 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg">
-                      <div className="flex items-center space-x-2">
-                        <Search className="h-4 w-4 text-blue-600" />
-                        <span className="text-sm font-medium text-blue-800">
-                          {productSearchTerm.trim().length < 3 ? 'Enhanced Match' :
-                           productSearchTerm.trim().length <= 5 ? 'Partial Match' : 'Phrase Match'}
-                        </span>
-                        <span className="text-xs text-blue-600">
-                          {productSearchTerm.trim().length < 3 ? 'Finding exact matches' :
-                           productSearchTerm.trim().length <= 5 ? 'Finding partial matches' : 'Finding phrase matches'}
-                        </span>
+                  {/* Category Filter */}
+                  {getAvailableProducts().length > 0 && (
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-700">Filter by Category</Label>
+                      <div className="flex flex-wrap gap-2">
+                        {Array.from(new Set(getAvailableProducts().map(p => p.category_name))).map(category => (
+                          <Button
+                            key={category}
+                            variant={productSelectedCategories.has(category) ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => {
+                              const newSelected = new Set(productSelectedCategories)
+                              if (newSelected.has(category)) {
+                                newSelected.delete(category)
+                              } else {
+                                newSelected.add(category)
+                              }
+                              setProductSelectedCategories(newSelected)
+                            }}
+                            className="text-xs h-8 px-3"
+                          >
+                            {category}
+                          </Button>
+                        ))}
                       </div>
                     </div>
                   )}
-                </div>
 
-                {/* Category Filter */}
-                {getAvailableProducts().length > 0 && (
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium text-gray-700">Filter by Category</Label>
-                    <div className="flex flex-wrap gap-2">
-                      {Array.from(new Set(getAvailableProducts().map(p => p.category_name))).map(category => (
+                  {/* View Mode and Clear Filters */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-3 sm:space-y-0">
+                    <p className="text-sm font-medium text-gray-700 text-center sm:text-left">
+                      Available Products ({allProducts.length})
+                    </p>
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
+                      {(productSearchTerm.trim() || productSelectedCategories.size > 0) && (
                         <Button
-                          key={category}
-                          variant={productSelectedCategories.has(category) ? "default" : "outline"}
+                          variant="outline"
                           size="sm"
                           onClick={() => {
-                            const newSelected = new Set(productSelectedCategories)
-                            if (newSelected.has(category)) {
-                              newSelected.delete(category)
-                            } else {
-                              newSelected.add(category)
-                            }
-                            setProductSelectedCategories(newSelected)
+                            setProductSearchTerm("")
+                            setProductSelectedCategories(new Set())
                           }}
-                          className="text-xs"
+                          className="w-full sm:w-auto"
                         >
-                          {category}
+                          <FilterX className="h-4 w-4 mr-2" />
+                          Clear All Filters
                         </Button>
-                      ))}
+                      )}
                     </div>
                   </div>
-                )}
-
-                {/* View Mode and Clear Filters */}
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-medium text-gray-700">
-                    Available Products ({allProducts.length})
-                  </p>
-                  <div className="flex items-center space-x-2">
-                    {(productSearchTerm.trim() || productSelectedCategories.size > 0) && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setProductSearchTerm("")
-                          setProductSelectedCategories(new Set())
-                        }}
-                        className="h-8 px-3 text-gray-600 hover:text-gray-800"
-                      >
-                        <FilterX className="h-4 w-4 mr-1" />
-                        Clear Filters
-                      </Button>
-                    )}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-                      className="h-8 px-3"
-                    >
-                      {viewMode === 'grid' ? (
-                        <>
-                          <List className="h-4 w-4 mr-1" />
-                          List
-                        </>
-                      ) : (
-                        <>
-                          <Grid3X3 className="h-4 w-4 mr-1" />
-                          Grid
-                        </>
-                      )}
-                    </Button>
-                  </div>
                 </div>
+
+                {/* Mobile Quick Filters - Collapsible */}
+                {showFilters && (
+                  <div className="sm:hidden space-y-3">
+                    {/* Search Input */}
+                    <div className="w-full">
+                      <Input
+                        placeholder="Search products by name, SKU, brand, category, color, or size..."
+                        value={productSearchTerm}
+                        onChange={(e) => setProductSearchTerm(e.target.value)}
+                        className="w-full pl-10 pr-20 rounded-xl border-gray-200 focus:border-pink-300 focus:ring-pink-200"
+                        disabled={isOwner ? !fromBranch : !toBranch}
+                      />
+                    </div>
+
+                    {/* Category Filter */}
+                    {getAvailableProducts().length > 0 && (
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-700">Filter by Category</Label>
+                        <div className="flex flex-wrap gap-2">
+                          {Array.from(new Set(getAvailableProducts().map(p => p.category_name))).map(category => (
+                            <Button
+                              key={category}
+                              variant={productSelectedCategories.has(category) ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => {
+                                const newSelected = new Set(productSelectedCategories)
+                                if (newSelected.has(category)) {
+                                  newSelected.delete(category)
+                                } else {
+                                  newSelected.add(category)
+                                }
+                                setProductSelectedCategories(newSelected)
+                              }}
+                              className="text-xs h-8 px-3"
+                            >
+                              {category}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Clear Filters */}
+                    {(productSearchTerm.trim() || productSelectedCategories.size > 0) && (
+                      <div className="w-full">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setProductSearchTerm("")
+                            setProductSelectedCategories(new Set())
+                          }}
+                          className="w-full"
+                        >
+                          <FilterX className="h-4 w-4 mr-2" />
+                          Clear All Filters
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Product Grid - 3 per row */}
@@ -2316,48 +2389,50 @@ export default function TransferPage() {
         </CardHeader>
         <CardContent>
           <div className="rounded-xl border border-gray-200 overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-gray-50">
-                  <TableHead className="font-semibold">Date</TableHead>
-                  <TableHead className="font-semibold">Product</TableHead>
-                  <TableHead className="font-semibold">From</TableHead>
-                  <TableHead className="font-semibold">To</TableHead>
-                  <TableHead className="font-semibold">Quantity</TableHead>
-                  <TableHead className="font-semibold">Status</TableHead>
-                  <TableHead className="font-semibold">Reason</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {processedTransfers.map((transfer) => (
-                  <TableRow key={transfer.id} className="hover:bg-gray-50">
-                    <TableCell className="font-medium">
-                      {new Date(transfer.requested_at).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      {transfer.items.map((item) => item.product_name).join(", ")}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="bg-blue-50 text-blue-700">
-                        {transfer.from_branch_name || getBranchName(transfer.from_branch_id)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="bg-green-50 text-green-700">
-                        {transfer.to_branch_name || getBranchName(transfer.to_branch_id)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {transfer.items.reduce((sum, item) => sum + item.quantity, 0)}
-                    </TableCell>
-                    <TableCell>
-                      {getStatusBadge(transfer.status)}
-                    </TableCell>
-                    <TableCell className="text-gray-600 max-w-xs truncate">{transfer.reason}</TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-gray-50">
+                    <TableHead className="font-semibold text-xs sm:text-sm">Date</TableHead>
+                    <TableHead className="font-semibold text-xs sm:text-sm">Product</TableHead>
+                    <TableHead className="font-semibold text-xs sm:text-sm">From</TableHead>
+                    <TableHead className="font-semibold text-xs sm:text-sm">To</TableHead>
+                    <TableHead className="font-semibold text-xs sm:text-sm">Quantity</TableHead>
+                    <TableHead className="font-semibold text-xs sm:text-sm">Status</TableHead>
+                    <TableHead className="font-semibold text-xs sm:text-sm">Reason</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {processedTransfers.map((transfer) => (
+                    <TableRow key={transfer.id} className="hover:bg-gray-50">
+                      <TableCell className="font-medium text-xs sm:text-sm">
+                        {new Date(transfer.requested_at).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell className="text-xs sm:text-sm">
+                        {transfer.items.map((item) => item.product_name).join(", ")}
+                      </TableCell>
+                      <TableCell className="text-xs sm:text-sm">
+                        <Badge variant="outline" className="bg-blue-50 text-blue-700 text-xs">
+                          {transfer.from_branch_name || getBranchName(transfer.from_branch_id)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-xs sm:text-sm">
+                        <Badge variant="outline" className="bg-green-50 text-green-700 text-xs">
+                          {transfer.to_branch_name || getBranchName(transfer.to_branch_id)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="font-medium text-xs sm:text-sm">
+                        {transfer.items.reduce((sum, item) => sum + item.quantity, 0)}
+                      </TableCell>
+                      <TableCell className="text-xs sm:text-sm">
+                        {getStatusBadge(transfer.status)}
+                      </TableCell>
+                      <TableCell className="text-gray-600 max-w-xs truncate text-xs sm:text-sm">{transfer.reason}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </div>
         </CardContent>
       </Card>

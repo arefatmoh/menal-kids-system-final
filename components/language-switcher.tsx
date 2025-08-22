@@ -8,7 +8,7 @@ export function LanguageSwitcher() {
 
   return (
     <Select value={language} onValueChange={(value: "en" | "am") => setLanguage(value)}>
-      <SelectTrigger className="w-32 rounded-xl border-gray-200 focus:border-pink-300 focus:ring-pink-200">
+      <SelectTrigger className="w-28 sm:w-32 rounded-xl border-gray-200 focus:border-pink-300 focus:ring-pink-200">
         <Languages className="h-4 w-4 mr-2" />
         <SelectValue />
       </SelectTrigger>

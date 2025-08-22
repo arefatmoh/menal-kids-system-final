@@ -45,7 +45,8 @@ import {
   BarChart3,
   ChevronDown,
   ChevronUp,
-  Layers
+  Layers,
+  X
 } from "lucide-react"
 import apiClient from "@/lib/api-client"
 import { useToast } from "@/hooks/use-toast"
@@ -164,7 +165,7 @@ export default function SellProductsPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [sortBy, setSortBy] = useState<string>('name')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
-  const [showFilters] = useState(false)
+  const [showFilters, setShowFilters] = useState(false)
   const [selectedCategories] = useState<Set<string>>(new Set())
   const [selectedBrands] = useState<Set<string>>(new Set())
   // removed unused showManualAdd setter usage
@@ -1307,30 +1308,32 @@ export default function SellProductsPage() {
         </Card>
         </div>
       )}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col space-y-4">
         <div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
             {t("sellProductsTitle" as any)}
           </h1>
           <p className="text-gray-600 mt-1">Process sales and manage transactions</p>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button 
-            variant="outline"
-            onClick={() => window.location.href = '/dashboard/inventory'}
-            className="border-gray-200 hover:bg-gray-50 shadow-sm"
-          >
-            <Package className="h-4 w-4 mr-2" />
-            {t("viewInventory" as any)}
-          </Button>
-          <Button 
-            variant="outline"
-            onClick={() => window.location.href = '/dashboard/reports'}
-            className="border-gray-200 hover:bg-gray-50 shadow-sm"
-          >
-            <BarChart3 className="h-4 w-4 mr-2" />
-            {t("viewReports" as any)}
-          </Button>
+          
+          {/* Action Buttons */}
+          <div className="flex items-center space-x-3 mt-4">
+            <Button 
+              variant="outline"
+              onClick={() => window.location.href = '/dashboard/inventory'}
+              className="border-gray-200 hover:bg-gray-50 shadow-sm"
+            >
+              <Package className="h-4 w-4 mr-2" />
+              {t("viewInventory" as any)}
+            </Button>
+            <Button 
+              variant="outline"
+              onClick={() => window.location.href = '/dashboard/reports'}
+              className="border-gray-200 hover:bg-gray-50 shadow-sm"
+            >
+              <BarChart3 className="h-4 w-4 mr-2" />
+              {t("viewReports" as any)}
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -1375,7 +1378,7 @@ export default function SellProductsPage() {
                         fetchProducts(term)
                       }
                     }}
-                    className="pl-10 pr-20 rounded-xl border-gray-200 focus:border-pink-300 focus:ring-pink-200"
+                    className="pl-10 pr-20 rounded-xl border-gray-200 focus:border-pink-300 focus:ring-pink-200 w-full"
                   />
                   <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center space-x-1">
                     <Button
@@ -1456,10 +1459,10 @@ export default function SellProductsPage() {
               </div>
 
               {/* View/Sort/Actions */}
-              <div className="flex items-center justify-between">
+              <div className="flex flex-row items-center justify-between space-x-2">
                 <div className="flex items-center space-x-2">
                   <Select value={sortBy} onValueChange={setSortBy}>
-                    <SelectTrigger className="w-32 h-8">
+                    <SelectTrigger className="w-24 sm:w-32 h-8">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -1526,144 +1529,310 @@ export default function SellProductsPage() {
               </div>
 
               {/* Compact Quick Filters Row (always visible) */}
-              <div className="flex items-center gap-2 flex-nowrap overflow-x-auto pb-1 mt-3">
-
-                {/* Status */}
-                <div className="flex-shrink-0">
-                  <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                    <SelectTrigger className="h-5 px-2 text-xs border-gray-200 focus:border-pink-300 focus:ring-pink-200 w-[100px]">
-                      <SelectValue placeholder="Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Status</SelectItem>
-                      <SelectItem value="normal">In Stock</SelectItem>
-                      <SelectItem value="low_stock">Low Stock</SelectItem>
-                      <SelectItem value="out_of_stock">Out of Stock</SelectItem>
-                      <SelectItem value="overstock">Overstock</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Category */}
-                <div className="flex-shrink-0">
-                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                    <SelectTrigger className="h-5 px-2 text-xs border-gray-200 focus:border-pink-300 focus:ring-pink-200 w-[140px]">
-                      <SelectValue placeholder="Category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Categories</SelectItem>
-                      {categories.map((cat) => (
-                        <SelectItem key={cat.id} value={cat.id}>
-                          {cat.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                    </div>
-
-                {/* Brand */}
-                <div className="flex-shrink-0">
-                  <Select value={selectedBrand} onValueChange={setSelectedBrand}>
-                    <SelectTrigger className="h-5 px-2 text-xs border-gray-200 focus:border-pink-300 focus:ring-pink-200 w-[100px]">
-                      <SelectValue placeholder="Brand" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Brands</SelectItem>
-                      {brands.map((brand) => (
-                        <SelectItem key={brand} value={brand}>
-                            {brand}
-                        </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-                      </div>
-
-                {/* Gender */}
-                <div className="flex-shrink-0">
-                  <Select value={selectedGender} onValueChange={setSelectedGender}>
-                    <SelectTrigger className="h-5 px-2 text-xs border-gray-200 focus:border-pink-300 focus:ring-pink-200 w-[100px]">
-                      <SelectValue placeholder="Gender" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Genders</SelectItem>
-                      <SelectItem value="boys">Boys</SelectItem>
-                      <SelectItem value="girls">Girls</SelectItem>
-                      <SelectItem value="unisex">Unisex</SelectItem>
-                    </SelectContent>
-                  </Select>
-                    </div>
-
-                {/* Age Range */}
-                <div className="flex-shrink-0">
-                  <Select value={selectedAgeRange} onValueChange={setSelectedAgeRange}>
-                    <SelectTrigger className="h-5 px-2 text-xs border-gray-200 focus:border-pink-300 focus:ring-pink-200 w-[100px]">
-                      <SelectValue placeholder="Age Range" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Age Ranges</SelectItem>
-                      {ageRanges.map((ageRange) => (
-                        <SelectItem key={ageRange} value={ageRange}>
-                          {ageRange}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  </div>
-
-                {/* Size */}
-                <div className="flex-shrink-0">
-                  <Select value={selectedSize} onValueChange={setSelectedSize}>
-                    <SelectTrigger className="h-5 px-2 text-xs border-gray-200 focus:border-pink-300 focus:ring-pink-200 w-[100px]">
-                      <SelectValue placeholder="Size" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Sizes</SelectItem>
-                      <SelectItem value="0-3m">0-3 Months</SelectItem>
-                      <SelectItem value="3-6m">3-6 Months</SelectItem>
-                      <SelectItem value="6-12m">6-12 Months</SelectItem>
-                      <SelectItem value="12-18m">12-18 Months</SelectItem>
-                      <SelectItem value="18-24m">18-24 Months</SelectItem>
-                      <SelectItem value="xs">XS (4-5)</SelectItem>
-                      <SelectItem value="s">S (6-7)</SelectItem>
-                      <SelectItem value="m">M (8-9)</SelectItem>
-                      <SelectItem value="l">L (10-11)</SelectItem>
-                      <SelectItem value="xl">XL (12-13)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Color - Compact Popover-like selection via Select for simplicity */}
-                <div className="flex-shrink-0">
-                  <Select value={selectedColor} onValueChange={setSelectedColor}>
-                      <SelectTrigger className="h-5 px-2 text-xs border-gray-200 focus:border-pink-300 focus:ring-pink-200 w-[100px]">
-                      <SelectValue placeholder="Color" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Colors</SelectItem>
-                      {colors.map((c) => (
-                        <SelectItem key={c} value={c}>{c.replace('-', ' ')}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Active Filters Count */}
-                {(selectedStatus !== "all" || selectedCategory !== "all" || selectedBrand !== "all" || selectedGender !== "all" || selectedAgeRange !== "all" || selectedSize !== "all" || selectedColor !== "all" || priceRange[0] > 0 || priceRange[1] < 1000 || stockRange[0] > 0 || stockRange[1] < 100) && (
-                  <Badge variant="secondary" className="h-6 px-2 text-xs bg-pink-100 text-pink-700">
-                    {getActiveFilterCount()} active
-                  </Badge>
-                )}
-                {(selectedStatus !== "all" || selectedCategory !== "all" || selectedBrand !== "all" || selectedGender !== "all" || selectedAgeRange !== "all" || selectedSize !== "all" || selectedColor !== "all" || priceRange[0] > 0 || priceRange[1] < 1000 || stockRange[0] > 0 || stockRange[1] < 100) && (
+              <div className="space-y-2 pb-1 mt-3">
+                {/* Mobile Quick Filters Header - Always Visible */}
+                <div className="flex items-center justify-between sm:hidden">
+                  <span className="text-xs font-medium text-gray-600">Quick Filters</span>
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={handleClearFilters}
-                    className="h-6 px-2 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                    onClick={() => setShowFilters(!showFilters)}
+                    className="h-6 px-2 text-xs text-gray-500 hover:text-gray-700"
                   >
-                    Clear
+                    {showFilters ? (
+                      <>
+                        <X className="h-3 w-3 mr-1" />
+                        Hide
+                      </>
+                    ) : (
+                      <>
+                        <Search className="h-3 w-3 mr-1" />
+                        Show
+                      </>
+                    )}
                   </Button>
-                )}
+                </div>
+
+                {/* Desktop Quick Filters - Always Visible */}
+                <div className="hidden sm:flex items-center gap-2 flex-nowrap overflow-x-auto">
+                  {/* Status */}
+                  <div className="flex-shrink-0">
+                    <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                      <SelectTrigger className="h-5 px-2 text-xs border-gray-200 focus:border-pink-300 focus:ring-pink-200 w-[100px]">
+                        <SelectValue placeholder="Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Status</SelectItem>
+                        <SelectItem value="normal">In Stock</SelectItem>
+                        <SelectItem value="low_stock">Low Stock</SelectItem>
+                        <SelectItem value="out_of_stock">Out of Stock</SelectItem>
+                        <SelectItem value="overstock">Overstock</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Category */}
+                  <div className="flex-shrink-0">
+                    <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                      <SelectTrigger className="h-5 px-2 text-xs border-gray-200 focus:border-pink-300 focus:ring-pink-200 w-[140px]">
+                        <SelectValue placeholder="Category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Categories</SelectItem>
+                        {categories.map((cat) => (
+                          <SelectItem key={cat.id} value={cat.id}>
+                            {cat.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Brand */}
+                  <div className="flex-shrink-0">
+                    <Select value={selectedBrand} onValueChange={setSelectedBrand}>
+                      <SelectTrigger className="h-5 px-2 text-xs border-gray-200 focus:border-pink-300 focus:ring-pink-200 w-[100px]">
+                        <SelectValue placeholder="Brand" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Brands</SelectItem>
+                        {brands.map((brand) => (
+                          <SelectItem key={brand} value={brand}>
+                              {brand}
+                          </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Gender */}
+                  <div className="flex-shrink-0">
+                    <Select value={selectedGender} onValueChange={setSelectedGender}>
+                      <SelectTrigger className="h-5 px-2 text-xs border-gray-200 focus:border-pink-300 focus:ring-pink-200 w-[100px]">
+                        <SelectValue placeholder="Gender" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Genders</SelectItem>
+                        <SelectItem value="boys">Boys</SelectItem>
+                        <SelectItem value="girls">Girls</SelectItem>
+                        <SelectItem value="unisex">Unisex</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Age Range */}
+                  <div className="flex-shrink-0">
+                    <Select value={selectedAgeRange} onValueChange={setSelectedAgeRange}>
+                      <SelectTrigger className="h-5 px-2 text-xs border-gray-200 focus:border-pink-300 focus:ring-pink-200 w-[100px]">
+                        <SelectValue placeholder="Age Range" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Age Ranges</SelectItem>
+                        {ageRanges.map((ageRange) => (
+                          <SelectItem key={ageRange} value={ageRange}>
+                            {ageRange}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Size */}
+                  <div className="flex-shrink-0">
+                    <Select value={selectedSize} onValueChange={setSelectedSize}>
+                      <SelectTrigger className="h-5 px-2 text-xs border-gray-200 focus:border-pink-300 focus:ring-pink-200 w-[100px]">
+                        <SelectValue placeholder="Size" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Sizes</SelectItem>
+                        <SelectItem value="0-3m">0-3 Months</SelectItem>
+                        <SelectItem value="3-6m">3-6 Months</SelectItem>
+                        <SelectItem value="6-12m">6-12 Months</SelectItem>
+                        <SelectItem value="12-18m">12-18 Months</SelectItem>
+                        <SelectItem value="18-24m">18-24 Months</SelectItem>
+                        <SelectItem value="xs">XS (4-5)</SelectItem>
+                        <SelectItem value="s">S (6-7)</SelectItem>
+                        <SelectItem value="m">M (8-9)</SelectItem>
+                        <SelectItem value="l">L (10-11)</SelectItem>
+                        <SelectItem value="xl">XL (12-13)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Color - Compact Popover-like selection via Select for simplicity */}
+                  <div className="flex-shrink-0">
+                    <Select value={selectedColor} onValueChange={setSelectedColor}>
+                        <SelectTrigger className="h-5 px-2 text-xs border-gray-200 focus:border-pink-300 focus:ring-pink-200 w-[100px]">
+                        <SelectValue placeholder="Color" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Colors</SelectItem>
+                        {colors.map((c) => (
+                          <SelectItem key={c} value={c}>{c.replace('-', ' ')}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Active Filters Count */}
+                  {(selectedStatus !== "all" || selectedCategory !== "all" || selectedBrand !== "all" || selectedGender !== "all" || selectedAgeRange !== "all" || selectedSize !== "all" || selectedColor !== "all" || priceRange[0] > 0 || priceRange[1] < 1000 || stockRange[0] > 0 || stockRange[1] < 100) && (
+                    <Badge variant="secondary" className="h-6 px-2 text-xs bg-pink-100 text-pink-700">
+                      {getActiveFilterCount()} active
+                    </Badge>
+                  )}
+                  {(selectedStatus !== "all" || selectedCategory !== "all" || selectedBrand !== "all" || selectedGender !== "all" || selectedAgeRange !== "all" || selectedSize !== "all" || selectedColor !== "all" || priceRange[0] > 0 || priceRange[1] < 1000 || stockRange[0] > 0 || stockRange[1] < 100) && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleClearFilters}
+                      className="h-6 px-2 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      Clear
+                    </Button>
+                  )}
+                </div>
               </div>
+
+              {/* Mobile Quick Filters - Collapsible */}
+              {showFilters && (
+                <div className="sm:hidden space-y-2">
+                  {/* Status Filter */}
+                  <div className="w-full">
+                    <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                      <SelectTrigger className="h-8 px-2 text-xs border-gray-200 focus:border-pink-300 focus:ring-pink-200 w-full">
+                        <SelectValue placeholder="Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Status</SelectItem>
+                        <SelectItem value="normal">In Stock</SelectItem>
+                        <SelectItem value="low_stock">Low Stock</SelectItem>
+                        <SelectItem value="out_of_stock">Out of Stock</SelectItem>
+                        <SelectItem value="overstock">Overstock</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Category Filter */}
+                  <div className="w-full">
+                    <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                      <SelectTrigger className="h-8 px-2 text-xs border-gray-200 focus:border-pink-300 focus:ring-pink-200 w-full">
+                        <SelectValue placeholder="Category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Categories</SelectItem>
+                        {categories.map((cat) => (
+                          <SelectItem key={cat.id} value={cat.id}>
+                            {cat.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Brand Filter */}
+                  <div className="w-full">
+                    <Select value={selectedBrand} onValueChange={setSelectedBrand}>
+                      <SelectTrigger className="h-8 px-2 text-xs border-gray-200 focus:border-pink-300 focus:ring-pink-200 w-full">
+                        <SelectValue placeholder="Brand" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Brands</SelectItem>
+                        {brands.map((brand) => (
+                          <SelectItem key={brand} value={brand}>
+                            {brand}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Gender Filter */}
+                  <div className="w-full">
+                    <Select value={selectedGender} onValueChange={setSelectedGender}>
+                      <SelectTrigger className="h-8 px-2 text-xs border-gray-200 focus:border-pink-300 focus:ring-pink-200 w-full">
+                        <SelectValue placeholder="Gender" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Genders</SelectItem>
+                        <SelectItem value="boys">Boys</SelectItem>
+                        <SelectItem value="girls">Girls</SelectItem>
+                        <SelectItem value="unisex">Unisex</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Age Range Filter */}
+                  <div className="w-full">
+                    <Select value={selectedAgeRange} onValueChange={setSelectedAgeRange}>
+                      <SelectTrigger className="h-8 px-2 text-xs border-gray-200 focus:border-pink-300 focus:ring-pink-200 w-full">
+                        <SelectValue placeholder="Age Range" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Age Ranges</SelectItem>
+                        {ageRanges.map((ageRange) => (
+                          <SelectItem key={ageRange} value={ageRange}>
+                            {ageRange}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Size Filter */}
+                  <div className="w-full">
+                    <Select value={selectedSize} onValueChange={setSelectedSize}>
+                      <SelectTrigger className="h-8 px-2 text-xs border-gray-200 focus:border-pink-300 focus:ring-pink-200 w-full">
+                        <SelectValue placeholder="Size" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Sizes</SelectItem>
+                        <SelectItem value="0-3m">0-3 Months</SelectItem>
+                        <SelectItem value="3-6m">3-6 Months</SelectItem>
+                        <SelectItem value="6-12m">6-12 Months</SelectItem>
+                        <SelectItem value="12-18m">12-18 Months</SelectItem>
+                        <SelectItem value="18-24m">18-24 Months</SelectItem>
+                        <SelectItem value="xs">XS (4-5)</SelectItem>
+                        <SelectItem value="s">S (6-7)</SelectItem>
+                        <SelectItem value="m">M (8-9)</SelectItem>
+                        <SelectItem value="l">L (10-11)</SelectItem>
+                        <SelectItem value="xl">XL (12-13)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Color Filter */}
+                  <div className="w-full">
+                    <Select value={selectedColor} onValueChange={setSelectedColor}>
+                      <SelectTrigger className="h-8 px-2 text-xs border-gray-200 focus:border-pink-300 focus:ring-pink-200 w-full">
+                        <SelectValue placeholder="Color" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Colors</SelectItem>
+                        {colors.map((c) => (
+                          <SelectItem key={c} value={c}>{c.replace('-', ' ')}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Active Filters Count and Clear Button */}
+                  {(selectedStatus !== "all" || selectedCategory !== "all" || selectedBrand !== "all" || selectedGender !== "all" || selectedAgeRange !== "all" || selectedSize !== "all" || selectedColor !== "all" || priceRange[0] > 0 || priceRange[1] < 1000 || stockRange[0] > 0 || stockRange[1] < 100) && (
+                    <div className="flex flex-col space-y-2">
+                      <Badge variant="secondary" className="h-6 px-2 text-xs bg-pink-100 text-pink-700 w-full text-center">
+                        {getActiveFilterCount()} active
+                      </Badge>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleClearFilters}
+                        className="h-8 px-2 text-xs text-red-600 hover:text-red-700 hover:bg-red-50 w-full"
+                      >
+                        Clear All Filters
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
 

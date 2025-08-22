@@ -24,10 +24,17 @@ export async function GET(request: NextRequest) {
     // Get recent activities using the database function
     const result = await query("SELECT * FROM get_recent_activities($1, $2)", [branchId || null, limit])
 
-    return NextResponse.json({
-      success: true,
-      data: result.rows,
-    })
+    return NextResponse.json(
+      {
+        success: true,
+        data: result.rows,
+      },
+      {
+        headers: {
+          "Cache-Control": "private, max-age=10",
+        },
+      },
+    )
   } catch (error) {
     console.error("Dashboard activities error:", error)
     return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 })

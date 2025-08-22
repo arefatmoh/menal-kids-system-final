@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Access denied to to branch" }, { status: 403 })
     }
 
-    sql += ` ORDER BY t.requested_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`
+    sql += ` ORDER BY t.transfer_date DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`
     params.push(limit, (page - 1) * limit)
 
     const result = await query(sql, params)
@@ -157,24 +157,38 @@ export async function POST(request: NextRequest) {
     try {
       // Check inventory availability for all items
       for (const item of validatedData.items) {
-        const inventoryResult = await query(`
-          SELECT quantity FROM inventory 
-          WHERE product_id = $1 AND branch_id = $2
-        `, [item.product_id, validatedData.from_branch_id])
+        let inventoryResult
+        if (item.variation_id) {
+          // Check specific variation inventory
+          inventoryResult = await query(`
+            SELECT quantity FROM inventory 
+            WHERE product_id = $1 AND branch_id = $2 AND variation_id = $3
+          `, [item.product_id, validatedData.from_branch_id, item.variation_id])
+        } else {
+          // Check total product inventory (sum of all variations + base product)
+          inventoryResult = await query(`
+            SELECT COALESCE(SUM(quantity), 0) as total_quantity FROM inventory 
+            WHERE product_id = $1 AND branch_id = $2
+          `, [item.product_id, validatedData.from_branch_id])
+        }
         
-        if (inventoryResult.rows.length === 0 || inventoryResult.rows[0].quantity < item.quantity) {
+        const availableQuantity = item.variation_id ? 
+          (inventoryResult.rows[0]?.quantity || 0) : 
+          (inventoryResult.rows[0]?.total_quantity || 0)
+        
+        if (availableQuantity < item.quantity) {
           await query('ROLLBACK')
           return NextResponse.json({ 
             success: false, 
-            error: `Insufficient stock for product ${item.product_id}` 
+            error: `Insufficient stock for product ${item.product_id}${item.variation_id ? ' variation' : ''}. Available: ${availableQuantity}, Requested: ${item.quantity}` 
           }, { status: 400 })
         }
       }
 
       // Create transfer record
       const transferResult = await query(`
-        INSERT INTO transfers (from_branch_id, to_branch_id, reason, status, user_id, approved_by, transfer_date)
-        VALUES ($1, $2, $3, 'completed', $4, $4, NOW())
+        INSERT INTO transfers (from_branch_id, to_branch_id, notes, status, user_id, transfer_date)
+        VALUES ($1, $2, $3, 'completed', $4, NOW())
         RETURNING id
       `, [validatedData.from_branch_id, validatedData.to_branch_id, validatedData.reason, user.id])
 
@@ -263,20 +277,19 @@ export async function POST(request: NextRequest) {
           t.from_branch_id,
           t.to_branch_id,
           t.status,
-          t.reason,
-          t.requested_at,
-          t.completed_at,
-          t.requested_by,
-          t.approved_by,
+          t.notes as reason,
+          t.transfer_date as requested_at,
+          t.transfer_date as completed_at,
+          t.user_id as requested_by,
+          t.user_id as approved_by,
           fb.name as from_branch_name,
           tb.name as to_branch_name,
           u1.full_name as requested_by_name,
-          u2.full_name as approved_by_name
+          u1.full_name as approved_by_name
         FROM transfers t
         LEFT JOIN branches fb ON t.from_branch_id = fb.id
         LEFT JOIN branches tb ON t.to_branch_id = tb.id
-        LEFT JOIN users u1 ON t.requested_by = u1.id
-        LEFT JOIN users u2 ON t.approved_by = u2.id
+        LEFT JOIN users u1 ON t.user_id = u1.id
         WHERE t.id = $1
       `, [transferId])
 

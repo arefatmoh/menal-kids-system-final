@@ -43,7 +43,7 @@ export default {
   searchAndFilters: "ፍለጋ እና ማጣሪያዎች",
   clear: "አጽዳ",
   apply: "ተግብር",
-  crossBranchSearch: "ክርክር ቅርንጫፍ ፍለጋ",
+  crossBranchSearch: "በሌላኛው ቅርንጫፍ ፍለጋ",
 
   // Inventory empty states
   noProductsFoundTitle: "ምንም ምርቶች አልተገኙም",
@@ -136,7 +136,7 @@ export default {
   submitTransfer: "የመላኪያ ስራውን አስገባ",
   submitting: "የሚገባ...",
   transferCompleted: "የመላኪያ ስራው በተሳካኝ ሁኔታ ተጠናቅቋል!",
-  transferSummary: "የመላኪያ ስራ ማጠቃለያ",
+  transferSummary: "የመላኪያ ማጠቃለያ",
   productsTransferred: "የተላኩ ምርቶች",
   totalQuantity: "ጠቅላላ መጠን",
   destinationBranch: "የመድረሻ ቅርንጫፍ",
@@ -144,6 +144,26 @@ export default {
   // Product selection
   clickProductsToAddToCart: "ምርቶችን በፍጥነት ወደ ጋሪ ለመጨመር ያጫውቷቸው",
   selectProductsToStartSale: "ግብይትዎን ለመጀመር ከዚህ በታች ካለው ዝርዝር ምርቶችን ይምረጡ",
+  
+  // Transfer page specific
+  branchTransfer: "የቅርንጫፍ መላኪያ",
+  transferDescription: "ምርቶችን በቅርንጫፎች መካከል ወትሮ ያሳልሙ - ማጽደቅ አያስፈልግም",
+  viewInventory: "የስቶክ ዝርዝር ይመልከቱ",
+  totalTransfers: "ጠቅላላ መላኪያዎች",
+  itemsTransferred: "የተላኩ እቃዎች",
+  transferDescriptionSuccess: "እቃዎች በቅርንጫፎች መካከል ወትሮ ተላክተዋል እና የስቶክ ዝርዝር ተዘምኗል",
+  transferDetails: "የመላኪያ ዝርዝሮች",
+  continueTransferring: "መላኪያ ይቀጥሉ",
+  startNewTransfer: "አዲስ መላኪያ ያስጀምሩ",
+  
+  // Expense page specific
+  expenses: "ወጪዎች",
+  addExpense: "ወጪ ጨምር",
+  noExpensesFound: "ምንም ወጪዎች አልተገኙም።",
+  descriptionLabel: "መግለጫ",
+  amount: "መጠን",
+  date: "ቀን",
+  selectCategory: "ምድብ ይምረጡ",
 }
 
 

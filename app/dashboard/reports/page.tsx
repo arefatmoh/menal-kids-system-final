@@ -263,15 +263,15 @@ export default function ReportsPage() {
   }))
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="space-y-6 px-4 sm:px-6">
+      <div className="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">{t("reports")}</h1>
-          <p className="text-gray-600 mt-1">{t("financialOverview" as any)}</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{t("reports")}</h1>
+          <p className="text-gray-600 mt-1 text-sm sm:text-base">{t("financialOverview" as any)}</p>
         </div>
-        <div className="flex items-center space-x-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
           <Select value={timeRange} onValueChange={setTimeRange}>
-            <SelectTrigger className="w-40 rounded-xl border-gray-200 focus:border-pink-300 focus:ring-pink-200">
+            <SelectTrigger className="w-full sm:w-40 rounded-xl border-gray-200 focus:border-pink-300 focus:ring-pink-200">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -283,7 +283,7 @@ export default function ReportsPage() {
           </Select>
           <Button
             onClick={() => handleDownloadReport("complete")}
-            className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white rounded-xl"
+            className="w-full sm:w-auto bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white rounded-xl"
           >
             <Download className="h-4 w-4 mr-2" />
             {t("downloadCompleteReport" as any)}
@@ -295,29 +295,29 @@ export default function ReportsPage() {
       {timeRange === "custom" && (
         <Card className="border-0 shadow-lg">
           <CardContent className="pt-6">
-            <div className="flex flex-col sm:flex-row gap-4 items-end">
+            <div className="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:gap-4 sm:items-end">
               <div className="flex-1">
-                <Label htmlFor="dateFrom">From Date</Label>
+                <Label htmlFor="dateFrom" className="text-sm font-medium text-gray-700 mb-2 block">From Date</Label>
                 <Input
                   id="dateFrom"
                   type="date"
                   value={customDateFrom}
                   onChange={(e) => setCustomDateFrom(e.target.value)}
-                  className="rounded-xl border-gray-200 focus:border-pink-300 focus:ring-pink-200"
+                  className="w-full rounded-xl border-gray-200 focus:border-pink-300 focus:ring-pink-200"
                 />
               </div>
               <div className="flex-1">
-                <Label htmlFor="dateTo">To Date</Label>
+                <Label htmlFor="dateTo" className="text-sm font-medium text-gray-700 mb-2 block">To Date</Label>
                 <Input
                   id="dateTo"
                   type="date"
                   value={customDateTo}
                   onChange={(e) => setCustomDateTo(e.target.value)}
-                  className="rounded-xl border-gray-200 focus:border-pink-300 focus:ring-pink-200"
+                  className="w-full rounded-xl border-gray-200 focus:border-pink-300 focus:ring-pink-200"
                 />
               </div>
               <Button
-                className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl"
+                className="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl"
                 disabled={!customDateFrom || !customDateTo}
                 onClick={fetchReportsData}
               >
@@ -336,23 +336,23 @@ export default function ReportsPage() {
 
       {!isLoading && (
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:grid-cols-3">
-            <TabsTrigger value="overview">{t("financialOverview" as any)}</TabsTrigger>
-            <TabsTrigger value="finance">Finance & Budget</TabsTrigger>
-            <TabsTrigger value="comparison">Branch Comparison</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 gap-2 overflow-x-auto">
+            <TabsTrigger value="overview" className="text-xs sm:text-sm whitespace-nowrap">{t("financialOverview" as any)}</TabsTrigger>
+            <TabsTrigger value="finance" className="text-xs sm:text-sm whitespace-nowrap">Finance & Budget</TabsTrigger>
+            <TabsTrigger value="comparison" className="text-xs sm:text-sm whitespace-nowrap">Branch Comparison</TabsTrigger>
           </TabsList>
 
           {/* Sales Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
             {/* Today's Sales Summary */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 to-blue-100">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-blue-700">{t("totalSales" as any)}</CardTitle>
+                  <CardTitle className="text-xs sm:text-sm font-medium text-blue-700">{t("totalSales" as any)}</CardTitle>
                   <DollarSign className="h-4 w-4 text-blue-600" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-blue-900">
+                  <div className="text-lg sm:text-2xl font-bold text-blue-900">
                     {formatMoney(Object.values(branchTotals).reduce((sum, branch) => sum + branch.totalSales, 0))} ብር
                   </div>
                   <p className="text-xs text-blue-600 mt-1">
@@ -364,11 +364,11 @@ export default function ReportsPage() {
 
               <Card className="border-0 shadow-lg bg-gradient-to-br from-green-50 to-green-100">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-green-700">{t("salesTransactions" as any)}</CardTitle>
+                  <CardTitle className="text-xs sm:text-sm font-medium text-green-700">{t("salesTransactions" as any)}</CardTitle>
                   <Package className="h-4 w-4 text-green-600" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-green-900">
+                  <div className="text-lg sm:text-2xl font-bold text-green-900">
                     {Object.values(branchTotals).reduce((sum, branch) => sum + branch.totalTransactions, 0)}
                   </div>
                   <p className="text-xs text-green-600 mt-1">
@@ -383,7 +383,7 @@ export default function ReportsPage() {
                   index === 0 ? 'from-purple-50 to-purple-100' : 'from-orange-50 to-orange-100'
                 }`}>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className={`text-sm font-medium ${
+                    <CardTitle className={`text-xs sm:text-sm font-medium ${
                       index === 0 ? 'text-purple-700' : 'text-orange-700'
                     }`}>{branchName} Sales</CardTitle>
                     <Building2 className={`h-4 w-4 ${
@@ -391,7 +391,7 @@ export default function ReportsPage() {
                     }`} />
                 </CardHeader>
                 <CardContent>
-                    <div className={`text-2xl font-bold ${
+                    <div className={`text-lg sm:text-2xl font-bold ${
                       index === 0 ? 'text-purple-900' : 'text-orange-900'
                     }`}>
                       {formatMoney(branchTotals[branchName]?.totalSales || 0)} ብር
@@ -411,48 +411,34 @@ export default function ReportsPage() {
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <BarChart className="h-5 w-5 text-pink-500" />
-                  <span>{t("salesPerformanceByBranch" as any)}</span>
+                  <span className="text-lg sm:text-xl">{t("salesPerformanceByBranch" as any)}</span>
                 </CardTitle>
-                <CardDescription>Compare sales performance across branches over time</CardDescription>
+                <CardDescription className="text-sm">Compare sales performance across branches over time</CardDescription>
               </CardHeader>
               <CardContent>
                 {salesChartData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={400}>
-                    <ComposedChart data={salesChartData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                    <XAxis
-                      dataKey="period"
-                      stroke="#666"
-                    />
-                    <YAxis stroke="#666" />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "#fff",
-                        border: "1px solid #e2e8f0",
-                        borderRadius: "8px",
-                        boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-                      }}
-                      formatter={(value, name) => [
-                          `${formatMoney(value as number)} ብር`,
-                          name as string
-                        ]}
-                      />
-                      {branchNames.map((branchName, index) => (
-                        <Bar 
-                          key={branchName}
-                          dataKey={branchName} 
-                          fill={index === 0 ? "#8b5cf6" : "#06b6d4"} 
-                          name={branchName}
-                          radius={[4, 4, 0, 0]} 
-                        />
-                      ))}
-                  </ComposedChart>
-                </ResponsiveContainer>
+                  <div className="w-full h-64 sm:h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={salesChartData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="period" className="text-xs" />
+                        <YAxis className="text-xs" />
+                        <Tooltip />
+                        {branchNames.map((branchName, index) => (
+                          <Bar
+                            key={branchName}
+                            dataKey={branchName}
+                            fill={getRandomColor()}
+                            radius={[4, 4, 0, 0]}
+                          />
+                        ))}
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
                 ) : (
-                  <div className="text-center py-8">
-                    <BarChart className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">{t("noSalesData" as any)}</h3>
-                    <p className="text-gray-500">No sales data available for visualization</p>
+                  <div className="text-center py-12">
+                    <BarChart className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-500 text-sm sm:text-base">No sales data available for the selected time range</p>
                   </div>
                 )}
               </CardContent>
@@ -462,14 +448,14 @@ export default function ReportsPage() {
           {/* Finance & Budget Tab */}
           <TabsContent value="finance" className="space-y-6">
             {/* Financial Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               <Card className="border-0 shadow-lg bg-gradient-to-br from-green-50 to-green-100">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-green-700">Total Sales</CardTitle>
+                  <CardTitle className="text-xs sm:text-sm font-medium text-green-700">Total Sales</CardTitle>
                   <TrendingUp className="h-4 w-4 text-green-600" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-green-900">
+                  <div className="text-lg sm:text-2xl font-bold text-green-900">
                     {formatMoney(Object.values(branchTotals).reduce((sum, branch) => sum + branch.totalSales, 0))} ብር
                   </div>
                   <p className="text-xs text-green-600 mt-1">
@@ -481,11 +467,11 @@ export default function ReportsPage() {
 
               <Card className="border-0 shadow-lg bg-gradient-to-br from-red-50 to-red-100">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-red-700">Total Expenses</CardTitle>
+                  <CardTitle className="text-xs sm:text-sm font-medium text-red-700">Total Expenses</CardTitle>
                   <TrendingDown className="h-4 w-4 text-red-600" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-red-900">
+                  <div className="text-lg sm:text-2xl font-bold text-red-900">
                     {formatMoney(expenseData.reduce((sum, expense) => sum + (typeof expense.total_amount === 'number' ? expense.total_amount : Number(expense.total_amount)), 0))} ብር
                   </div>
                   <p className="text-xs text-red-600 mt-1">
@@ -497,11 +483,11 @@ export default function ReportsPage() {
 
               <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 to-blue-100">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-blue-700">Net Profit</CardTitle>
+                  <CardTitle className="text-xs sm:text-sm font-medium text-blue-700">Net Profit</CardTitle>
                   <Target className="h-4 w-4 text-blue-600" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-blue-900">
+                  <div className="text-lg sm:text-2xl font-bold text-blue-900">
                     {(() => {
                       const totalSales = Object.values(branchTotals).reduce((sum, branch) => sum + branch.totalSales, 0)
                       const totalExpenses = expenseData.reduce((sum, expense) => sum + (typeof expense.total_amount === 'number' ? expense.total_amount : Number(expense.total_amount)), 0)
@@ -518,11 +504,11 @@ export default function ReportsPage() {
               {/* Average Order Value */}
               <Card className="border-0 shadow-lg bg-gradient-to-br from-amber-50 to-amber-100">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-amber-700">Average Order Value</CardTitle>
+                  <CardTitle className="text-xs sm:text-sm font-medium text-amber-700">Average Order Value</CardTitle>
                   <DollarSign className="h-4 w-4 text-amber-600" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-amber-900">
+                  <div className="text-lg sm:text-2xl font-bold text-amber-900">
                     {(() => {
                       const totalSales = Object.values(branchTotals).reduce((sum, b) => sum + b.totalSales, 0)
                       const totalTransactions = Object.values(branchTotals).reduce((sum, b) => sum + b.totalTransactions, 0)
@@ -537,11 +523,11 @@ export default function ReportsPage() {
               {/* Expense Entries Count */}
               <Card className="border-0 shadow-lg bg-gradient-to-br from-slate-50 to-slate-100">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-slate-700">Expense Entries</CardTitle>
+                  <CardTitle className="text-xs sm:text-sm font-medium text-slate-700">Expense Entries</CardTitle>
                   <FileText className="h-4 w-4 text-slate-600" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-slate-900">
+                  <div className="text-lg sm:text-2xl font-bold text-slate-900">
                     {expenseData.reduce((sum, e) => sum + (typeof e.expense_count === 'number' ? e.expense_count : Number(e.expense_count)), 0)}
                   </div>
                   <p className="text-xs text-slate-600 mt-1">Count of expenses in range</p>
@@ -551,11 +537,11 @@ export default function ReportsPage() {
               {/* Expenses to Sales Ratio */}
               <Card className="border-0 shadow-lg bg-gradient-to-br from-fuchsia-50 to-fuchsia-100">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-fuchsia-700">Expenses / Sales</CardTitle>
+                  <CardTitle className="text-xs sm:text-sm font-medium text-fuchsia-700">Expenses / Sales</CardTitle>
                   <TrendingDown className="h-4 w-4 text-fuchsia-600" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-fuchsia-900">
+                  <div className="text-lg sm:text-2xl font-bold text-fuchsia-900">
                     {(() => {
                       const totalSales = Object.values(branchTotals).reduce((sum, b) => sum + b.totalSales, 0)
                       const totalExpenses = expenseData.reduce((sum, e) => sum + (typeof e.total_amount === 'number' ? e.total_amount : Number(e.total_amount)), 0)
@@ -735,32 +721,32 @@ export default function ReportsPage() {
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <Building2 className="h-5 w-5 text-purple-500" />
-                  <span>Branch Performance Comparison</span>
+                  <span className="text-lg sm:text-xl">Branch Performance Comparison</span>
                 </CardTitle>
-                <CardDescription>Side-by-side comparison of branch metrics</CardDescription>
+                <CardDescription className="text-sm">Side-by-side comparison of branch metrics</CardDescription>
               </CardHeader>
               <CardContent>
                 {branchNames.length > 0 ? (
                 <div className="space-y-6">
                     {branchComparisonData.map((branchData, index) => (
                     <div key={index} className="p-4 rounded-lg bg-gray-50">
-                        <h4 className="font-medium text-gray-900 mb-4">{branchData.metric}</h4>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <h4 className="font-medium text-gray-900 mb-4 text-sm sm:text-base">{branchData.metric}</h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div className="text-center p-4 bg-purple-50 rounded-lg">
-                            <p className="text-sm text-purple-600 mb-1">Total Sales</p>
-                          <p className="text-2xl font-bold text-purple-900">
+                            <p className="text-xs sm:text-sm text-purple-600 mb-1">Total Sales</p>
+                          <p className="text-lg sm:text-2xl font-bold text-purple-900">
                               {formatMoney(branchData.totalSales)} ብር
                           </p>
                         </div>
                         <div className="text-center p-4 bg-blue-50 rounded-lg">
-                            <p className="text-sm text-blue-600 mb-1">Transactions</p>
-                          <p className="text-2xl font-bold text-blue-900">
+                            <p className="text-xs sm:text-sm text-blue-600 mb-1">Transactions</p>
+                          <p className="text-lg sm:text-2xl font-bold text-blue-900">
                               {branchData.totalTransactions}
-                            </p>
+                          </p>
                           </div>
                           <div className="text-center p-4 bg-green-50 rounded-lg">
-                            <p className="text-sm text-green-600 mb-1">Avg Order</p>
-                            <p className="text-2xl font-bold text-green-900">
+                            <p className="text-xs sm:text-sm text-green-600 mb-1">Avg Order</p>
+                            <p className="text-lg sm:text-2xl font-bold text-green-900">
                               {formatMoney(branchData.avgOrder)} ብር
                           </p>
                         </div>
@@ -783,17 +769,18 @@ export default function ReportsPage() {
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <BarChart className="h-5 w-5 text-green-500" />
-                  <span>Sales by Branch</span>
+                  <span className="text-lg sm:text-xl">Sales by Branch</span>
                 </CardTitle>
-                <CardDescription>Graphical representation of branch sales performance</CardDescription>
+                <CardDescription className="text-sm">Graphical representation of branch sales performance</CardDescription>
               </CardHeader>
               <CardContent>
                 {branchNames.length > 0 ? (
-                <ResponsiveContainer width="100%" height={400}>
+                <div className="w-full h-64 sm:h-80">
+                  <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={branchComparisonData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                      <XAxis dataKey="metric" stroke="#666" />
-                      <YAxis stroke="#666" />
+                      <XAxis dataKey="metric" stroke="#666" className="text-xs" />
+                      <YAxis stroke="#666" className="text-xs" />
                     <Tooltip
                       contentStyle={{
                         backgroundColor: "#fff",
@@ -802,10 +789,11 @@ export default function ReportsPage() {
                         boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
                       }}
                         formatter={(value) => [`${formatMoney(value as number)} ብር`, "Sales"]}
-                    />
+                      />
                       <Bar dataKey="totalSales" fill="#8b5cf6" radius={[0, 4, 4, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
                 ) : (
                   <div className="text-center py-8">
                     <BarChart className="h-12 w-12 text-gray-400 mx-auto mb-4" />

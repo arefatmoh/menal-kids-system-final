@@ -174,16 +174,16 @@ export default function DashboardLayout({
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top bar */}
         <div className="sticky top-0 z-40 bg-white shadow-sm border-b border-gray-200">
-          <div className="flex items-center justify-between h-16 px-4 sm:px-6">
+          <div className="flex items-center justify-between h-16 px-3 sm:px-6">
             <Button variant="ghost" size="sm" className="lg:hidden" onClick={() => setSidebarOpen(true)}>
               <Menu className="h-5 w-5" />
             </Button>
             <div className="flex-1" />
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               <AlertsNotificationBell />
               <BranchSwitcher />
               <LanguageSwitcher />
-              <div className="text-sm text-gray-500">
+              <div className="text-sm text-gray-500 hidden sm:block">
                 {new Date().toLocaleDateString("en-US", {
                   weekday: "long",
                   year: "numeric",
@@ -196,6 +196,16 @@ export default function DashboardLayout({
         </div>
 
         {/* Page content */}
+        {/* Mobile date below top bar */}
+        <div className="sm:hidden px-4 pt-2 text-sm text-gray-500">
+          {new Date().toLocaleDateString("en-US", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })}
+        </div>
+
         <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
       </div>
 

@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
@@ -19,6 +19,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false)
   const router = useRouter()
   const { t } = useLanguage()
   const { toast } = useToast()
@@ -76,6 +77,46 @@ export default function LoginPage() {
   }
 
   const togglePasswordVisibility = () => setShowPassword((prev) => !prev)
+
+  // Detect mobile virtual keyboard and input focus to prevent footer overlap
+  useEffect(() => {
+    const handleFocusIn = (event: Event) => {
+      const target = event.target as HTMLElement | null
+      if (!target) return
+      const isFormField = ["INPUT", "TEXTAREA"].includes(target.tagName)
+      if (isFormField) setIsKeyboardOpen(true)
+    }
+
+    const handleFocusOut = () => {
+      // Delay to allow focus to move between inputs without flicker
+      setTimeout(() => setIsKeyboardOpen(false), 100)
+    }
+
+    document.addEventListener("focusin", handleFocusIn)
+    document.addEventListener("focusout", handleFocusOut)
+
+    let baseline = 0
+    const vv = (typeof window !== "undefined" ? (window as any).visualViewport : null) as VisualViewport | null
+    if (vv) {
+      baseline = vv.height
+      const onResize = () => {
+        const heightDrop = baseline - vv.height
+        // Heuristic: if viewport shrinks significantly, keyboard is likely open
+        setIsKeyboardOpen(heightDrop > 120)
+      }
+      vv.addEventListener("resize", onResize)
+      return () => {
+        document.removeEventListener("focusin", handleFocusIn)
+        document.removeEventListener("focusout", handleFocusOut)
+        vv.removeEventListener("resize", onResize)
+      }
+    }
+
+    return () => {
+      document.removeEventListener("focusin", handleFocusIn)
+      document.removeEventListener("focusout", handleFocusOut)
+    }
+  }, [])
 
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 flex flex-col justify-center items-center p-4 overflow-hidden">
@@ -170,7 +211,7 @@ export default function LoginPage() {
           </CardContent>
         </Card>
       </motion.div>
-              <div className="absolute bottom-12 text-center w-full text-xs text-gray-500 z-10 space-y-1">
+              <div className={`absolute bottom-12 text-center w-full text-xs text-gray-500 z-10 space-y-1 ${isKeyboardOpen ? "hidden" : "block"}`}>
           <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white/60 backdrop-blur-sm shadow-md">
             <img src="/sarfus.png" alt="Sarfus Logo" className="h-4 w-4" />
             <span className="text-gray-600 font-medium">

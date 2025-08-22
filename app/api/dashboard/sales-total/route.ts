@@ -26,12 +26,19 @@ export async function GET(request: NextRequest) {
 
     const totalSales = result.rows[0]?.total_sales || 0
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        total_sales: totalSales
-      }
-    })
+    return NextResponse.json(
+      {
+        success: true,
+        data: {
+          total_sales: totalSales
+        }
+      },
+      {
+        headers: {
+          "Cache-Control": "private, max-age=10",
+        },
+      },
+    )
   } catch (error) {
     console.error("Get sales total error:", error)
     return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 })

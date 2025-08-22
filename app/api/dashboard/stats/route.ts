@@ -25,10 +25,18 @@ export async function GET(request: NextRequest) {
 
     const stats = result.rows[0]
 
-    return NextResponse.json({
-      success: true,
-      data: stats,
-    })
+    return NextResponse.json(
+      {
+        success: true,
+        data: stats,
+      },
+      {
+        headers: {
+          // Safe short-lived private caching to speed up navigation
+          "Cache-Control": "private, max-age=10",
+        },
+      },
+    )
   } catch (error) {
     console.error("Dashboard stats error:", error)
     return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 })

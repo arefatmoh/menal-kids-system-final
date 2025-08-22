@@ -38,7 +38,7 @@ export function BranchSwitcher() {
 
   return (
     <Select value={currentBranch} onValueChange={(value: "branch1" | "branch2" | "all") => setBranch(value)}>
-      <SelectTrigger className="w-40 rounded-xl border-gray-200 focus:border-pink-300 focus:ring-pink-200">
+      <SelectTrigger className="w-32 sm:w-40 rounded-xl border-gray-200 focus:border-pink-300 focus:ring-pink-200">
         <Building2 className="h-4 w-4 mr-2" />
         <SelectValue />
       </SelectTrigger>

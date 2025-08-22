@@ -22,10 +22,17 @@ export async function GET(request: NextRequest) {
       parseInt(limit)
     ])
 
-    return NextResponse.json({
-      success: true,
-      data: result.rows
-    })
+    return NextResponse.json(
+      {
+        success: true,
+        data: result.rows
+      },
+      {
+        headers: {
+          "Cache-Control": "private, max-age=10",
+        },
+      },
+    )
   } catch (error) {
     console.error("Get recent product updates error:", error)
     return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 })

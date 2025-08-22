@@ -124,100 +124,108 @@ export default function Dashboard() {
 
       setIsLoading(true)
       try {
-        // Fetch dashboard stats
-        const statsResponse = await apiClient.getDashboardStats(currentBranch === "all" ? undefined : currentBranch)
-        if (statsResponse.success) {
-          const s = statsResponse.data as DashboardStats
+        const branchParam = currentBranch === "all" ? undefined : currentBranch
+
+        const stockTrendParams: any = {}
+        if (branchParam) stockTrendParams.branch_id = branchParam
+
+        const salesParams: any = {}
+        if (branchParam) salesParams.branch_id = branchParam
+
+        const topSellingTodayParams: any = {}
+        if (branchParam) topSellingTodayParams.branch_id = branchParam
+
+        const topSellingWeekParams: any = {}
+        if (branchParam) topSellingWeekParams.branch_id = branchParam
+
+        const lowStockParams: any = {}
+        if (branchParam) lowStockParams.branch_id = branchParam
+
+        const recentUpdatesParams: any = {}
+        if (branchParam) recentUpdatesParams.branch_id = branchParam
+
+        const promises: Array<Promise<any>> = [
+          apiClient.getDashboardStats(branchParam),
+          apiClient.getRecentActivities(branchParam, 50),
+          apiClient.getStockTrend(stockTrendParams),
+          apiClient.getTopSellingToday(topSellingTodayParams),
+          apiClient.getTopSellingWeek(topSellingWeekParams),
+          apiClient.getLowStockProducts(lowStockParams),
+          apiClient.getRecentProductUpdates(recentUpdatesParams),
+        ]
+
+        if (userRole === 'owner') {
+          promises.push(apiClient.getSalesTotal(salesParams))
+        }
+
+        const results = await Promise.allSettled(promises)
+
+        const [
+          statsResult,
+          activitiesResult,
+          stockTrendResult,
+          topTodayResult,
+          topWeekResult,
+          lowStockResult,
+          recentUpdatesResult,
+          salesTotalResult,
+        ] = results
+
+        if (statsResult?.status === 'fulfilled' && statsResult.value?.success) {
+          const s = statsResult.value.data as DashboardStats
           setStats(s)
-          // Ensure employees also see today's sales (from stats)
           const todaySales = typeof s.total_sales_today === 'number' ? s.total_sales_today : Number((s as any).total_sales_today || 0)
           setSalesSummary(todaySales)
         }
 
-        // Fetch recent activities (50 total, we'll paginate on frontend)
-        const activitiesResponse = await apiClient.getRecentActivities(currentBranch === "all" ? undefined : currentBranch, 50)
-        if (activitiesResponse.success) {
-          const items = (activitiesResponse.data as unknown as RecentActivity[]) || []
+        if (activitiesResult?.status === 'fulfilled' && activitiesResult.value?.success) {
+          const items = (activitiesResult.value.data as unknown as RecentActivity[]) || []
           setRecentActivities(items)
           setTotalActivities(items.length)
         }
 
-        // Fetch stock trend data for the last 7 days
-        const stockTrendParams: any = {}
-        if (currentBranch !== "all") {
-          stockTrendParams.branch_id = currentBranch
-        }
-        const stockTrendResponse = await apiClient.getStockTrend(stockTrendParams)
-        if (stockTrendResponse.success && stockTrendResponse.data && Array.isArray(stockTrendResponse.data)) {
-          // Transform the data for the chart - ensure we have proper data
-          const trendData = stockTrendResponse.data.map((day: any) => ({
+        if (stockTrendResult?.status === 'fulfilled' && stockTrendResult.value?.success && Array.isArray(stockTrendResult.value.data)) {
+          const trendData = stockTrendResult.value.data.map((day: any) => ({
             name: day.name,
-            stock: day.net_change || 0, // Show net stock change for each day
+            stock: day.net_change || 0,
             stock_in: day.stock_in || 0,
             stock_out: day.stock_out || 0,
             total_stock: day.total_stock || 0
           }))
-          console.log('Stock trend data received:', stockTrendResponse.data)
-          console.log('Transformed trend data:', trendData)
           setStockTrend(trendData)
-        } else {
-          console.log('Stock trend response:', stockTrendResponse)
+        } else if (stockTrendResult?.status === 'fulfilled') {
           setStockTrend([])
         }
 
-        // Fetch sales summary for today (owner-only endpoint).
-        if (userRole === 'owner') {
-          const salesParams: any = {}
-          if (currentBranch !== "all") { salesParams.branch_id = currentBranch }
-          const salesResponse = await apiClient.getSalesTotal(salesParams)
-          if (salesResponse.success && salesResponse.data) {
-            type SalesTotalResponse = { total_sales?: number }
-            const data = salesResponse.data as unknown as SalesTotalResponse
-            setSalesSummary(Number(data?.total_sales ?? 0))
-          }
+        if (userRole === 'owner' && salesTotalResult?.status === 'fulfilled' && salesTotalResult.value?.success) {
+          type SalesTotalResponse = { total_sales?: number }
+          const data = salesTotalResult.value.data as unknown as SalesTotalResponse
+          setSalesSummary(Number(data?.total_sales ?? 0))
         }
 
-        // Fetch top selling products for today
-        const topSellingTodayParams: any = {}
-        if (currentBranch !== "all") { topSellingTodayParams.branch_id = currentBranch }
-        const topSellingTodayResponse = await apiClient.getTopSellingToday(topSellingTodayParams)
-        if (topSellingTodayResponse.success && topSellingTodayResponse.data) {
+        if (topTodayResult?.status === 'fulfilled' && topTodayResult.value?.success) {
           type TopSelling = { product_name: string; quantity_sold: number; total_amount: number; variation_info: string }
-          const items = (topSellingTodayResponse.data as unknown) as TopSelling[]
+          const items = (topTodayResult.value.data as unknown) as TopSelling[]
           setTopSellingToday(Array.isArray(items) ? items : [])
         }
 
-        // Fetch top selling products for this week
-        const topSellingWeekParams: any = {}
-        if (currentBranch !== "all") { topSellingWeekParams.branch_id = currentBranch }
-        const topSellingWeekResponse = await apiClient.getTopSellingWeek(topSellingWeekParams)
-        if (topSellingWeekResponse.success && topSellingWeekResponse.data) {
+        if (topWeekResult?.status === 'fulfilled' && topWeekResult.value?.success) {
           type TopSelling = { product_name: string; quantity_sold: number; total_amount: number; variation_info: string }
-          const items = (topSellingWeekResponse.data as unknown) as TopSelling[]
+          const items = (topWeekResult.value.data as unknown) as TopSelling[]
           setTopSellingWeek(Array.isArray(items) ? items : [])
         }
 
-        // Fetch low stock products
-        const lowStockParams: any = {}
-        if (currentBranch !== "all") { lowStockParams.branch_id = currentBranch }
-        const lowStockResponse = await apiClient.getLowStockProducts(lowStockParams)
-        if (lowStockResponse.success && lowStockResponse.data) {
+        if (lowStockResult?.status === 'fulfilled' && lowStockResult.value?.success) {
           type LowStock = { product_name: string; current_quantity: number; variation_info: string; category_info: string; days_since_restock: number }
-          const items = (lowStockResponse.data as unknown) as LowStock[]
+          const items = (lowStockResult.value.data as unknown) as LowStock[]
           setLowStockProducts(Array.isArray(items) ? items : [])
         }
 
-        // Fetch recent product updates instead of high value inventory
-        const recentUpdatesParams: any = {}
-        if (currentBranch !== "all") { recentUpdatesParams.branch_id = currentBranch }
-        const recentUpdatesResponse = await apiClient.getRecentProductUpdates(recentUpdatesParams)
-        if (recentUpdatesResponse.success && recentUpdatesResponse.data) {
+        if (recentUpdatesResult?.status === 'fulfilled' && recentUpdatesResult.value?.success) {
           type RecentUpdate = { product_name: string; update_type: string; updated_at: string; variation_info: string; category_info: string; change_details: string }
-          const items = (recentUpdatesResponse.data as unknown) as RecentUpdate[]
+          const items = (recentUpdatesResult.value.data as unknown) as RecentUpdate[]
           setRecentProductUpdates(Array.isArray(items) ? items : [])
         }
-
-        // (Removed) Critical alerts fetch
 
       } catch (error: any) {
         console.error("Dashboard data fetch error:", error)

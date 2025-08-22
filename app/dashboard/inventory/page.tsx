@@ -1089,18 +1089,18 @@ export default function InventoryPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-3 sm:space-y-0">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
           <h1 className="text-2xl font-bold text-gray-900 flex items-center">
             {t("products")} & {t("inventory")}
-            <span className="ml-3 px-2 py-1 rounded-full bg-blue-50 text-blue-700 text-sm font-semibold border border-blue-200 shadow-sm">
+            <span className="ml-0 sm:ml-3 mt-2 sm:mt-0 px-2 py-1 rounded-full bg-blue-50 text-blue-700 text-sm font-semibold border border-blue-200 shadow-sm">
               {pagination.total} {t("items")}
             </span>
           </h1>
         </div>
-        <Button 
+        <Button
+          className="w-full sm:w-auto bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white"
           onClick={() => window.location.href = '/dashboard/add-product'}
-          className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white"
         >
           <Plus className="h-4 w-4 mr-2" />
           {t("addProduct")}
@@ -1111,19 +1111,19 @@ export default function InventoryPage() {
       {/* Search and Filters - More Compact */}
       <Card className="border-0 shadow-lg">
         <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-3 lg:space-y-0">
             <CardTitle className="flex items-center space-x-2 text-lg">
               <Search className="h-5 w-5 text-pink-500" />
               <span>{t("searchAndFilters")}</span>
             </CardTitle>
-            <div className="flex items-center space-x-2">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
               {/* View Mode Toggle */}
-              <div className="flex items-center bg-gray-100 rounded-lg p-1">
+              <div className="flex items-center bg-gray-100 rounded-lg p-1 w-full sm:w-auto justify-center sm:justify-start">
                 <Button
                   variant={viewMode === 'table' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setViewMode('table')}
-                  className="h-7 px-2 text-xs"
+                  className="h-7 px-2 text-xs flex-1 sm:flex-none"
                 >
                   <List className="h-3 w-3 mr-1" />
                   Table
@@ -1132,7 +1132,7 @@ export default function InventoryPage() {
                   variant={viewMode === 'card' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setViewMode('card')}
-                  className="h-7 px-2 text-xs"
+                  className="h-7 px-2 text-xs flex-1 sm:flex-none"
                 >
                   <Grid3X3 className="h-3 w-3 mr-1" />
                   Cards
@@ -1140,9 +1140,9 @@ export default function InventoryPage() {
               </div>
 
               {/* Sort Options */}
-              <div className="flex items-center space-x-2">
+              <div className="flex flex-row items-center space-x-2 w-full sm:w-auto justify-center sm:justify-start">
                 <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-28 h-7 text-xs">
+                  <SelectTrigger className="w-full sm:w-28 h-7 text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -1163,13 +1163,13 @@ export default function InventoryPage() {
                   {sortOrder === 'asc' ? <SortAsc className="h-3 w-3" /> : <SortDesc className="h-3 w-3" />}
                 </Button>
               </div>
-              
-              <Separator orientation="vertical" className="h-5" />
+               
+              <Separator orientation="vertical" className="h-5 hidden sm:block" />
 
               {/* Compact Filter Actions */}
-              <div className="flex items-center space-x-2">
+              <div className="flex flex-row items-center space-x-2 w-full sm:w-auto justify-center sm:justify-start">
                 {/* Cross-Branch Search Toggle */}
-                <div className="flex items-center space-x-2 bg-gray-50 rounded-lg px-3 py-1 border border-gray-200">
+                <div className="flex items-center space-x-2 bg-gray-50 rounded-lg px-3 py-1 border border-gray-200 w-full sm:w-auto justify-center sm:justify-start">
                   <span className="text-xs font-medium text-gray-700">
                     {getBranchDisplayName(currentBranch || "branch1")}
                   </span>
@@ -1205,28 +1205,30 @@ export default function InventoryPage() {
                   </span>
                 </div>
                 
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={handleClearFilters}
-                  className="text-red-600 border-red-300 hover:bg-red-50 h-7 px-2 text-xs"
-                >
-                  <FilterX className="h-3 w-3 mr-1" />
-                  {t("clear")}
-                </Button>
-                
-                <Button 
-                  variant="default" 
-                  size="sm"
-                  onClick={() => {
-                    fetchInventory(1, safeDebouncedSearchTerm, selectedStatus, selectedCategory)
-                    setIsFilterPanelOpen(false)
-                  }}
-                  className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white h-7 px-2 text-xs"
-                >
-                  <Filter className="h-3 w-3 mr-1" />
-                  {t("apply")}
-                </Button>
+                <div className="flex flex-row items-center space-x-2 w-full sm:w-auto">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={handleClearFilters}
+                    className="text-red-600 border-red-300 hover:bg-red-50 h-7 px-2 text-xs flex-1 sm:flex-none"
+                  >
+                    <FilterX className="h-3 w-3 mr-1" />
+                    {t("clear")}
+                  </Button>
+                  
+                  <Button 
+                    variant="default" 
+                    size="sm"
+                    onClick={() => {
+                      fetchInventory(1, safeDebouncedSearchTerm, selectedStatus, selectedCategory)
+                      setIsFilterPanelOpen(false)
+                    }}
+                    className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white h-7 px-2 text-xs flex-1 sm:flex-none"
+                  >
+                    <Filter className="h-3 w-3 mr-1" />
+                    {t("apply")}
+                  </Button>
+                </div>
               </div>
               
 
@@ -1249,7 +1251,7 @@ export default function InventoryPage() {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onFocus={() => setIsSearchFocused(true)}
                 onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
-                className={`pl-10 pr-20 rounded-xl border-gray-200 focus:border-pink-300 focus:ring-pink-200 h-10 ${
+                className={`pl-10 pr-20 rounded-xl border-gray-200 focus:border-pink-300 focus:ring-pink-200 h-10 w-full ${
                   isCrossBranchSearch ? 'border-blue-300 bg-blue-50' : ''
                 }`}
                 onKeyDown={(e) => {
@@ -1286,7 +1288,7 @@ export default function InventoryPage() {
             </div>
 
             {/* Branch Search Indicator */}
-            <div className="mt-2 flex items-center justify-between">
+            <div className="mt-2 flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-2 sm:space-y-0">
               <div className="flex items-center space-x-2">
                 <Building2 className={`h-4 w-4 ${isCrossBranchSearch ? 'text-blue-500' : 'text-gray-400'}`} />
                 <span className={`text-sm font-medium ${isCrossBranchSearch ? 'text-blue-600' : 'text-gray-600'}`}>
@@ -1381,198 +1383,420 @@ export default function InventoryPage() {
           </div>
 
           {/* All Quick Filters in One Compact Horizontal Row */}
-          <div className="flex items-center gap-2 flex-nowrap overflow-x-auto pb-1">
-            <span className="text-xs font-medium text-gray-600 mr-2 whitespace-nowrap">{t("quickFilters")}</span>
-            
-            {/* Status Filter */}
-            <div className="flex-shrink-0">
-              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                <SelectTrigger className="h-5 px-2 text-xs border-gray-200 focus:border-pink-300 focus:ring-pink-200 w-[120px]">
-                  <SelectValue placeholder={t("status")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t("allStatus")}</SelectItem>
-                  <SelectItem value="normal">{t("inStock")}</SelectItem>
-                  <SelectItem value="low_stock">{t("lowStock")}</SelectItem>
-                  <SelectItem value="out_of_stock">{t("outOfStock")}</SelectItem>
-                  <SelectItem value="overstock">{t("overstock")}</SelectItem>
-                </SelectContent>
-              </Select>
+          <div className="space-y-2 pb-1">
+            {/* Mobile Quick Filters Header - Always Visible */}
+            <div className="flex items-center justify-between sm:hidden">
+              <span className="text-xs font-medium text-gray-600">{t("quickFilters")}</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowFilters(!showFilters)}
+                className="h-6 px-2 text-xs text-gray-500 hover:text-gray-700"
+              >
+                {showFilters ? (
+                  <>
+                    <X className="h-3 w-3 mr-1" />
+                    Hide
+                  </>
+                ) : (
+                  <>
+                    <Filter className="h-3 w-3 mr-1" />
+                    Show
+                  </>
+                )}
+              </Button>
             </div>
 
-            {/* Category Filter */}
-            <div className="flex-shrink-0">
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger className="h-5 px-2 text-xs border-gray-200 focus:border-pink-300 focus:ring-pink-200 w-[160px]">
-                  <SelectValue placeholder="Category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {/* Desktop Quick Filters - Always Visible */}
+            <div className="hidden sm:flex sm:flex-row items-start sm:items-center gap-2 sm:gap-2">
+              <span className="text-xs font-medium text-gray-600 mr-2 whitespace-nowrap">{t("quickFilters")}</span>
+              
+              {/* Status Filter */}
+              <div className="w-full sm:w-auto">
+                <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                  <SelectTrigger className="h-8 px-2 text-xs border-gray-200 focus:border-pink-300 focus:ring-pink-200 w-full sm:w-[120px]">
+                    <SelectValue placeholder={t("status")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t("allStatus")}</SelectItem>
+                    <SelectItem value="normal">{t("inStock")}</SelectItem>
+                    <SelectItem value="low_stock">{t("lowStock")}</SelectItem>
+                    <SelectItem value="out_of_stock">{t("outOfStock")}</SelectItem>
+                    <SelectItem value="overstock">{t("overstock")}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-            {/* Brand Filter */}
-            <div className="flex-shrink-0">
-              <Select value={selectedBrand} onValueChange={setSelectedBrand}>
-                <SelectTrigger className="h-5 px-2 text-xs border-gray-200 focus:border-pink-300 focus:ring-pink-200 w-[120px]">
-                  <SelectValue placeholder="Brand" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Brands</SelectItem>
-                  {brands.map((brand) => (
-                    <SelectItem key={brand} value={brand}>
-                      {brand}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+              {/* Category Filter */}
+              <div className="w-full sm:w-auto">
+                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                  <SelectTrigger className="h-8 px-2 text-xs border-gray-200 focus:border-pink-300 focus:ring-pink-200 w-full sm:w-[160px]">
+                    <SelectValue placeholder="Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-            {/* Gender Filter */}
-            <div className="flex-shrink-0">
-              <Select value={selectedGender} onValueChange={setSelectedGender}>
-                <SelectTrigger className="h-5 px-2 text-xs border-gray-200 focus:border-pink-300 focus:ring-pink-200 w-[120px]">
-                  <SelectValue placeholder="Gender" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Genders</SelectItem>
-                  <SelectItem value="boys">Boys</SelectItem>
-                  <SelectItem value="girls">Girls</SelectItem>
-                  <SelectItem value="unisex">Unisex</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+              {/* Brand Filter */}
+              <div className="w-full sm:w-auto">
+                <Select value={selectedBrand} onValueChange={setSelectedBrand}>
+                  <SelectTrigger className="h-8 px-2 text-xs border-gray-200 focus:border-pink-300 focus:ring-pink-200 w-full sm:w-[160px]">
+                    <SelectValue placeholder="Brand" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Brands</SelectItem>
+                    {brands.map((brand) => (
+                      <SelectItem key={brand} value={brand}>
+                        {brand}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-            {/* Age Range Filter */}
-            <div className="flex-shrink-0">
-              <Select value={selectedAgeRange} onValueChange={setSelectedAgeRange}>
-                <SelectTrigger className="h-5 px-2 text-xs border-gray-200 focus:border-pink-300 focus:ring-pink-200 w-[100px]">
-                  <SelectValue placeholder="Age Range" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Age Ranges</SelectItem>
-                  {ageRanges.map((ageRange) => (
-                    <SelectItem key={ageRange} value={ageRange}>
-                      {ageRange}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+              {/* Gender Filter */}
+              <div className="w-full sm:w-auto">
+                <Select value={selectedGender} onValueChange={setSelectedGender}>
+                  <SelectTrigger className="h-8 px-2 text-xs border-gray-200 focus:border-pink-300 focus:ring-pink-200 w-full sm:w-[120px]">
+                    <SelectValue placeholder="Gender" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Genders</SelectItem>
+                    <SelectItem value="boys">Boys</SelectItem>
+                    <SelectItem value="girls">Girls</SelectItem>
+                    <SelectItem value="unisex">Unisex</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-            {/* Size Filter */}
-            <div className="flex-shrink-0">
-              <Select value={selectedSize} onValueChange={setSelectedSize}>
-                <SelectTrigger className="h-5 px-2 text-xs border-gray-200 focus:border-pink-300 focus:ring-pink-200 w-[110px]">
-                  <SelectValue placeholder="Size" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Sizes</SelectItem>
-                  <SelectItem value="0-3m">0-3 Months</SelectItem>
-                  <SelectItem value="3-6m">3-6 Months</SelectItem>
-                  <SelectItem value="6-12m">6-12 Months</SelectItem>
-                  <SelectItem value="12-18m">12-18 Months</SelectItem>
-                  <SelectItem value="18-24m">18-24 Months</SelectItem>
-                  <SelectItem value="xs">XS (4-5)</SelectItem>
-                  <SelectItem value="s">S (6-7)</SelectItem>
-                  <SelectItem value="m">M (8-9)</SelectItem>
-                  <SelectItem value="l">L (10-11)</SelectItem>
-                  <SelectItem value="xl">XL (12-13)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+              {/* Age Range Filter */}
+              <div className="w-full sm:w-auto">
+                <Select value={selectedAgeRange} onValueChange={setSelectedAgeRange}>
+                  <SelectTrigger className="h-8 px-2 text-xs border-gray-200 focus:border-pink-300 focus:ring-pink-200 w-full sm:w-[100px]">
+                    <SelectValue placeholder="Age Range" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Age Ranges</SelectItem>
+                    {ageRanges.map((ageRange) => (
+                      <SelectItem key={ageRange} value={ageRange}>
+                        {ageRange}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-            {/* Color Filter - Compact */}
-            <div className="flex-shrink-0">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-5 px-2 text-xs border-gray-200 focus:border-pink-300 focus:ring-pink-200 w-[110px]"
-                  >
-                    <Palette className="h-3 w-3 mr-1" />
-                    {selectedColor === "all" ? "Color" : selectedColor.replace('-', ' ')}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-64 p-3">
-                  <div className="space-y-2">
-                    <Label className="text-xs font-medium text-gray-700">Select Color</Label>
-                    <div className="grid grid-cols-8 gap-1">
-                      <button
-                        onClick={() => setSelectedColor("all")}
-                        className={`w-6 h-6 rounded-full border-2 transition-all duration-200 ${
-                          selectedColor === "all" 
-                            ? 'border-pink-500 scale-110' 
-                            : 'border-gray-300 hover:border-pink-400 hover:scale-105'
-                        }`}
-                        title="All Colors"
-                      >
-                        <div className="w-full h-full rounded-full bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center">
-                          <span className="text-xs text-white font-bold">A</span>
-                        </div>
-                      </button>
-                      {colors.slice(0, 15).map((color) => (
+              {/* Size Filter */}
+              <div className="w-full sm:w-auto">
+                <Select value={selectedSize} onValueChange={setSelectedSize}>
+                  <SelectTrigger className="h-8 px-2 text-xs border-gray-200 focus:border-pink-300 focus:ring-pink-200 w-full sm:w-[120px]">
+                    <SelectValue placeholder="Size" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Sizes</SelectItem>
+                    <SelectItem value="0-3m">0-3 Months</SelectItem>
+                    <SelectItem value="3-6m">3-6 Months</SelectItem>
+                    <SelectItem value="6-12m">6-12 Months</SelectItem>
+                    <SelectItem value="12-18m">12-18 Months</SelectItem>
+                    <SelectItem value="18-24m">18-24 Months</SelectItem>
+                    <SelectItem value="xs">XS (4-5)</SelectItem>
+                    <SelectItem value="s">S (6-7)</SelectItem>
+                    <SelectItem value="m">M (8-9)</SelectItem>
+                    <SelectItem value="l">L (10-11)</SelectItem>
+                    <SelectItem value="xl">XL (12-13)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Color Filter - Compact */}
+              <div className="w-full sm:w-auto">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 px-2 text-xs border-gray-200 focus:border-pink-300 focus:ring-pink-200 w-full sm:w-[110px]"
+                    >
+                      <Palette className="h-3 w-3 mr-1" />
+                      {selectedColor === "all" ? "Color" : selectedColor.replace('-', ' ')}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-64 p-3">
+                    <div className="space-y-2">
+                      <Label className="text-xs font-medium text-gray-700">Select Color</Label>
+                      <div className="grid grid-cols-8 gap-1">
                         <button
-                          key={color}
-                          onClick={() => setSelectedColor(color)}
+                          onClick={() => setSelectedColor("all")}
                           className={`w-6 h-6 rounded-full border-2 transition-all duration-200 ${
-                            selectedColor === color 
+                            selectedColor === "all" 
                               ? 'border-pink-500 scale-110' 
                               : 'border-gray-300 hover:border-pink-400 hover:scale-105'
                           }`}
-                          style={{
-                            backgroundColor: color === 'baby-peach' ? '#FFCBA4' :
-                              color === 'baby-mint' ? '#B8E6B8' :
-                              color === 'baby-lavender' ? '#E6E6FA' :
-                              color === 'cream' ? '#FFFDD0' :
-                              color === 'ivory' ? '#FFFFF0' :
-                              color === 'beige' ? '#F5F5DC' :
-                              color === 'coral' ? '#FF7F50' :
-                              color === 'turquoise' ? '#40E0D0' :
-                              color === 'lilac' ? '#C8A2C8' :
-                              color === 'sage' ? '#9CAF88' :
-                              color === 'white' ? '#FFFFFF' :
-                              color === 'black' ? '#000000' :
-                              color === 'gray' ? '#6B7280' :
-                              color === 'red' ? '#EF4444' :
-                              color === 'blue' ? '#3B82F6' :
-                              color === 'green' ? '#10B981' :
-                              color === 'yellow' ? '#F59E0B' :
-                              color === 'orange' ? '#F97316' :
-                              color === 'purple' ? '#8B5CF6' :
-                              color === 'brown' ? '#92400E' :
-                              color === 'baby-pink' ? '#FCE7F3' :
-                              color === 'baby-blue' ? '#DBEAFE' :
-                              color === 'baby-yellow' ? '#FEF3C7' :
-                              color === 'baby-green' ? '#D1FAE5' :
-                              color === 'baby-purple' ? '#EDE9FE' : '#FFFFFF'
-                          }}
-                          title={color.replace('-', ' ')}
-                        />
-                      ))}
-                    </div>
-                    {colors.length > 15 && (
-                      <div className="text-xs text-gray-500 text-center pt-1">
-                        +{colors.length - 15} more colors
+                          title="All Colors"
+                        >
+                          <div className="w-full h-full rounded-full bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center">
+                            <span className="text-xs text-white font-bold">A</span>
+                          </div>
+                        </button>
+                        {colors.slice(0, 15).map((color) => (
+                          <button
+                            key={color}
+                            onClick={() => setSelectedColor(color)}
+                            className={`w-6 h-6 rounded-full border-2 transition-all duration-200 ${
+                              selectedColor === color 
+                                ? 'border-pink-500 scale-110' 
+                                : 'border-gray-300 hover:border-pink-400 hover:scale-105'
+                            }`}
+                            style={{
+                              backgroundColor: color === 'baby-peach' ? '#FFCBA4' :
+                                color === 'baby-mint' ? '#B8E6B8' :
+                                color === 'baby-lavender' ? '#E6E6FA' :
+                                color === 'cream' ? '#FFFDD0' :
+                                color === 'ivory' ? '#FFFFF0' :
+                                color === 'beige' ? '#F5F5DC' :
+                                color === 'coral' ? '#FF7F50' :
+                                color === 'turquoise' ? '#40E0D0' :
+                                color === 'lilac' ? '#C8A2C8' :
+                                color === 'sage' ? '#9CAF88' :
+                                color === 'white' ? '#FFFFFF' :
+                                color === 'black' ? '#000000' :
+                                color === 'gray' ? '#6B7280' :
+                                color === 'red' ? '#EF4444' :
+                                color === 'blue' ? '#3B82F6' :
+                                color === 'green' ? '#10B981' :
+                                color === 'yellow' ? '#F59E0B' :
+                                color === 'orange' ? '#F97316' :
+                                color === 'purple' ? '#8B5CF6' :
+                                color === 'brown' ? '#92400E' :
+                                color === 'baby-pink' ? '#FCE7F3' :
+                                color === 'baby-blue' ? '#DBEAFE' :
+                                color === 'baby-yellow' ? '#FEF3C7' :
+                                color === 'baby-green' ? '#D1FAE5' :
+                                color === 'baby-purple' ? '#EDE9FE' : '#FFFFFF'
+                            }}
+                            title={color.replace('-', ' ')}
+                          />
+                        ))}
                       </div>
-                    )}
-                  </div>
-                </PopoverContent>
-              </Popover>
+                      {colors.length > 15 && (
+                        <div className="text-xs text-gray-500 text-center pt-1">
+                          +{colors.length - 15} more colors
+                        </div>
+                      )}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              {/* Active Filters Count */}
+              {(selectedStatus !== "all" || selectedCategory !== "all" || selectedBrand !== "all" || selectedGender !== "all" || selectedAgeRange !== "all" || selectedSize !== "all" || selectedColor !== "all") && (
+                <Badge variant="secondary" className="h-6 px-2 text-xs bg-pink-100 text-pink-700 w-full sm:w-auto text-center">
+                  {getActiveFilterCount()} active
+                </Badge>
+              )}
             </div>
 
-            {/* Active Filters Count */}
-            {(selectedStatus !== "all" || selectedCategory !== "all" || selectedBrand !== "all" || selectedGender !== "all" || selectedAgeRange !== "all" || selectedSize !== "all" || selectedColor !== "all") && (
-              <Badge variant="secondary" className="h-6 px-2 text-xs bg-pink-100 text-pink-700">
-                {getActiveFilterCount()} active
-              </Badge>
+            {/* Mobile Quick Filters - Collapsible */}
+            {showFilters && (
+              <div className="sm:hidden space-y-2">
+                {/* Status Filter */}
+                <div className="w-full">
+                  <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                    <SelectTrigger className="h-8 px-2 text-xs border-gray-200 focus:border-pink-300 focus:ring-pink-200 w-full">
+                      <SelectValue placeholder={t("status")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">{t("allStatus")}</SelectItem>
+                      <SelectItem value="normal">{t("inStock")}</SelectItem>
+                      <SelectItem value="low_stock">{t("lowStock")}</SelectItem>
+                      <SelectItem value="out_of_stock">{t("outOfStock")}</SelectItem>
+                      <SelectItem value="overstock">{t("overstock")}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Category Filter */}
+                <div className="w-full">
+                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                    <SelectTrigger className="h-8 px-2 text-xs border-gray-200 focus:border-pink-300 focus:ring-pink-200 w-full">
+                      <SelectValue placeholder="Category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Categories</SelectItem>
+                      {categories.map((cat) => (
+                        <SelectItem key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Brand Filter */}
+                <div className="w-full">
+                  <Select value={selectedBrand} onValueChange={setSelectedBrand}>
+                    <SelectTrigger className="h-8 px-2 text-xs border-gray-200 focus:border-pink-300 focus:ring-pink-200 w-full">
+                      <SelectValue placeholder="Brand" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Brands</SelectItem>
+                      {brands.map((brand) => (
+                        <SelectItem key={brand} value={brand}>
+                          {brand}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Gender Filter */}
+                <div className="w-full">
+                  <Select value={selectedGender} onValueChange={setSelectedGender}>
+                    <SelectTrigger className="h-8 px-2 text-xs border-gray-200 focus:border-pink-300 focus:ring-pink-200 w-full">
+                      <SelectValue placeholder="Gender" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Genders</SelectItem>
+                      <SelectItem value="boys">Boys</SelectItem>
+                      <SelectItem value="girls">Girls</SelectItem>
+                      <SelectItem value="unisex">Unisex</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Age Range Filter */}
+                <div className="w-full">
+                  <Select value={selectedAgeRange} onValueChange={setSelectedAgeRange}>
+                    <SelectTrigger className="h-8 px-2 text-xs border-gray-200 focus:border-pink-300 focus:ring-pink-200 w-full">
+                      <SelectValue placeholder="Age Range" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Age Ranges</SelectItem>
+                      {ageRanges.map((ageRange) => (
+                        <SelectItem key={ageRange} value={ageRange}>
+                          {ageRange}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Size Filter */}
+                <div className="w-full">
+                  <Select value={selectedSize} onValueChange={setSelectedSize}>
+                    <SelectTrigger className="h-8 px-2 text-xs border-gray-200 focus:border-pink-300 focus:ring-pink-200 w-full">
+                      <SelectValue placeholder="Size" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Sizes</SelectItem>
+                      <SelectItem value="0-3m">0-3 Months</SelectItem>
+                      <SelectItem value="3-6m">3-6 Months</SelectItem>
+                      <SelectItem value="6-12m">6-12 Months</SelectItem>
+                      <SelectItem value="12-18m">12-18 Months</SelectItem>
+                      <SelectItem value="18-24m">18-24 Months</SelectItem>
+                      <SelectItem value="xs">XS (4-5)</SelectItem>
+                      <SelectItem value="s">S (6-7)</SelectItem>
+                      <SelectItem value="m">M (8-9)</SelectItem>
+                      <SelectItem value="l">L (10-11)</SelectItem>
+                      <SelectItem value="xl">XL (12-13)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Color Filter - Compact */}
+                <div className="w-full">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 px-2 text-xs border-gray-200 focus:border-pink-300 focus:ring-pink-200 w-full"
+                      >
+                        <Palette className="h-3 w-3 mr-1" />
+                        {selectedColor === "all" ? "Color" : selectedColor.replace('-', ' ')}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-64 p-3">
+                      <div className="space-y-2">
+                        <Label className="text-xs font-medium text-gray-700">Select Color</Label>
+                        <div className="grid grid-cols-8 gap-1">
+                          <button
+                            onClick={() => setSelectedColor("all")}
+                            className={`w-6 h-6 rounded-full border-2 transition-all duration-200 ${
+                              selectedColor === "all" 
+                                ? 'border-pink-500 scale-110' 
+                                : 'border-gray-300 hover:border-pink-400 hover:scale-105'
+                            }`}
+                            title="All Colors"
+                          >
+                            <div className="w-full h-full rounded-full bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center">
+                              <span className="text-xs text-white font-bold">A</span>
+                            </div>
+                          </button>
+                          {colors.slice(0, 15).map((color) => (
+                            <button
+                              key={color}
+                              onClick={() => setSelectedColor(color)}
+                              className={`w-6 h-6 rounded-full border-2 transition-all duration-200 ${
+                                selectedColor === color 
+                                  ? 'border-pink-500 scale-110' 
+                                  : 'border-gray-300 hover:border-pink-400 hover:scale-105'
+                              }`}
+                              style={{
+                                backgroundColor: color === 'baby-peach' ? '#FFCBA4' :
+                                  color === 'baby-mint' ? '#B8E6B8' :
+                                  color === 'baby-lavender' ? '#E6E6FA' :
+                                  color === 'cream' ? '#FFFDD0' :
+                                  color === 'ivory' ? '#FFFFF0' :
+                                  color === 'beige' ? '#F5F5DC' :
+                                  color === 'coral' ? '#FF7F50' :
+                                  color === 'turquoise' ? '#40E0D0' :
+                                  color === 'lilac' ? '#C8A2C8' :
+                                  color === 'sage' ? '#9CAF88' :
+                                  color === 'white' ? '#FFFFFF' :
+                                  color === 'black' ? '#000000' :
+                                  color === 'gray' ? '#6B7280' :
+                                  color === 'red' ? '#EF4444' :
+                                  color === 'blue' ? '#3B82F6' :
+                                  color === 'green' ? '#10B981' :
+                                  color === 'yellow' ? '#F59E0B' :
+                                  color === 'orange' ? '#F97316' :
+                                  color === 'purple' ? '#8B5CF6' :
+                                  color === 'brown' ? '#92400E' :
+                                  color === 'baby-pink' ? '#FCE7F3' :
+                                  color === 'baby-blue' ? '#DBEAFE' :
+                                  color === 'baby-yellow' ? '#FEF3C7' :
+                                  color === 'baby-green' ? '#D1FAE5' :
+                                  color === 'baby-purple' ? '#EDE9FE' : '#FFFFFF'
+                              }}
+                              title={color.replace('-', ' ')}
+                            />
+                          ))}
+                        </div>
+                        {colors.length > 15 && (
+                          <div className="text-xs text-gray-500 text-center pt-1">
+                            +{colors.length - 15} more colors
+                          </div>
+                        )}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                {/* Active Filters Count */}
+                {(selectedStatus !== "all" || selectedCategory !== "all" || selectedBrand !== "all" || selectedGender !== "all" || selectedAgeRange !== "all" || selectedSize !== "all" || selectedColor !== "all") && (
+                  <Badge variant="secondary" className="h-6 px-2 text-xs bg-pink-100 text-pink-700 w-full text-center">
+                    {getActiveFilterCount()} active
+                  </Badge>
+                )}
+              </div>
             )}
           </div>
 

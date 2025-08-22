@@ -131,18 +131,18 @@ export default function ExpensesPage() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto mt-10 space-y-6">
+    <div className="max-w-5xl mx-auto mt-6 sm:mt-10 px-4 sm:px-6 space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>{t("expenses" as any) || "Expenses"}</CardTitle>
+          <CardTitle className="text-xl sm:text-2xl">{t("expenses" as any) || "Expenses"}</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col md:flex-row gap-4 mb-6">
+          <div className="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:gap-4 mb-6">
             {isOwner ? (
-              <div className="flex-1">
-                <Label>{t("branch") || "Branch"}</Label>
+              <div className="w-full sm:flex-1">
+                <Label className="text-sm font-medium text-gray-700 mb-2 block">{t("branch") || "Branch"}</Label>
                 <Select value={filterBranch} onValueChange={value => { setFilterBranch(value); setTimeout(fetchExpenses, 0); }}>
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder={t("allBranches") || "All Branches"} />
                   </SelectTrigger>
                   <SelectContent>
@@ -154,15 +154,15 @@ export default function ExpensesPage() {
                 </Select>
               </div>
             ) : (
-              <div className="flex-1">
-                <Label>{t("branch") || "Branch"}</Label>
-                <Input value={BRANCHES.find(b => b.id === currentBranch)?.name || ''} disabled readOnly />
+              <div className="w-full sm:flex-1">
+                <Label className="text-sm font-medium text-gray-700 mb-2 block">{t("branch") || "Branch"}</Label>
+                <Input value={BRANCHES.find(b => b.id === currentBranch)?.name || ''} disabled readOnly className="w-full" />
               </div>
             )}
-            <div className="flex-1">
-              <Label>{t("category")}</Label>
+            <div className="w-full sm:flex-1">
+              <Label className="text-sm font-medium text-gray-700 mb-2 block">{t("category")}</Label>
               <Select value={filterCategory} onValueChange={value => { setFilterCategory(value); setTimeout(fetchExpenses, 0); }}>
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder={t("allCategories") || "All Categories"} />
                 </SelectTrigger>
                 <SelectContent>
@@ -173,38 +173,40 @@ export default function ExpensesPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex items-end gap-2">
-              <Button onClick={() => router.push("/dashboard/expenses/add")}>{t("addExpense" as any) || "Add Expense"}</Button>
-              <Button variant="outline" onClick={fetchExpenses}>{t("refresh")}</Button>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-2 w-full sm:w-auto">
+              <Button onClick={() => router.push("/dashboard/expenses/add")} className="w-full sm:w-auto">{t("addExpense" as any) || "Add Expense"}</Button>
+              <Button variant="outline" onClick={fetchExpenses} className="w-full sm:w-auto">{t("refresh")}</Button>
             </div>
           </div>
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t("branch") || "Branch"}</TableHead>
-                  <TableHead>{t("category")}</TableHead>
-                  <TableHead>{t("amount" as any) || "Amount"}</TableHead>
-                  <TableHead>{t("date" as any) || "Date"}</TableHead>
-                  <TableHead>{t("descriptionLabel" as any) || "Description"}</TableHead>
-                  <TableHead>{t("actions")}</TableHead>
+                  <TableHead className="text-xs sm:text-sm font-semibold">{t("branch") || "Branch"}</TableHead>
+                  <TableHead className="text-xs sm:text-sm font-semibold">{t("category")}</TableHead>
+                  <TableHead className="text-xs sm:text-sm font-semibold">{t("amount" as any) || "Amount"}</TableHead>
+                  <TableHead className="text-xs sm:text-sm font-semibold">{t("date" as any) || "Date"}</TableHead>
+                  <TableHead className="text-xs sm:text-sm font-semibold">{t("descriptionLabel" as any) || "Description"}</TableHead>
+                  <TableHead className="text-xs sm:text-sm font-semibold">{t("actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
-                  <TableRow><TableCell colSpan={6}>{t("loading" as any) || "Loading..."}</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={6} className="text-center text-xs sm:text-sm">{t("loading" as any) || "Loading..."}</TableCell></TableRow>
                 ) : expenses.length === 0 ? (
-                  <TableRow><TableCell colSpan={6}>{t("noExpensesFound" as any) || "No expenses found."}</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={6} className="text-center text-xs sm:text-sm">{t("noExpensesFound" as any) || "No expenses found."}</TableCell></TableRow>
                 ) : expenses.map(expense => (
                   <TableRow key={expense.id}>
-                    <TableCell>{BRANCHES.find(b => b.id === expense.branch_id)?.name || (t("allBranches") || "All Branches")}</TableCell>
-                    <TableCell><Badge>{expense.category}</Badge></TableCell>
-                    <TableCell>{Number(expense.amount).toLocaleString()} ብር</TableCell>
-                    <TableCell>{expense.expense_date}</TableCell>
-                    <TableCell>{expense.description}</TableCell>
+                    <TableCell className="text-xs sm:text-sm">{BRANCHES.find(b => b.id === expense.branch_id)?.name || (t("allBranches") || "All Branches")}</TableCell>
+                    <TableCell className="text-xs sm:text-sm"><Badge className="text-xs">{expense.category}</Badge></TableCell>
+                    <TableCell className="text-xs sm:text-sm font-medium">{Number(expense.amount).toLocaleString()} ብር</TableCell>
+                    <TableCell className="text-xs sm:text-sm">{expense.expense_date}</TableCell>
+                    <TableCell className="text-xs sm:text-sm max-w-[150px] truncate">{expense.description}</TableCell>
                     <TableCell>
-                      <Button size="sm" variant="outline" onClick={() => handleEdit(expense)}>{t("edit")}</Button>
-                      <Button size="sm" variant="destructive" className="ml-2" onClick={() => { setDeleteExpenseId(expense.id); setIsDeleteDialogOpen(true); }}>{t("delete")}</Button>
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <Button size="sm" variant="outline" onClick={() => handleEdit(expense)} className="text-xs h-8 px-2">{t("edit")}</Button>
+                        <Button size="sm" variant="destructive" onClick={() => { setDeleteExpenseId(expense.id); setIsDeleteDialogOpen(true); }} className="text-xs h-8 px-2">{t("delete")}</Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -216,16 +218,16 @@ export default function ExpensesPage() {
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
+        <DialogContent className="w-[95vw] max-w-md sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>{t("editExpense" as any) || "Edit Expense"}</DialogTitle>
+            <DialogTitle className="text-lg sm:text-xl">{t("editExpense" as any) || "Edit Expense"}</DialogTitle>
           </DialogHeader>
           {editExpense && (
             <form className="space-y-4" onSubmit={e => { e.preventDefault(); handleEditSave(); }}>
               <div>
-                <Label>{t("branch") || "Branch"}</Label>
+                <Label className="text-sm font-medium text-gray-700 mb-2 block">{t("branch") || "Branch"}</Label>
                 <Select value={editExpense.branch_id || ""} onValueChange={v => setEditExpense((prev: any) => ({ ...prev, branch_id: v }))}>
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select Branch" />
                   </SelectTrigger>
                   <SelectContent>
@@ -236,9 +238,9 @@ export default function ExpensesPage() {
                 </Select>
               </div>
               <div>
-                <Label>{t("category")}</Label>
+                <Label className="text-sm font-medium text-gray-700 mb-2 block">{t("category")}</Label>
                 <Select value={editExpense.category} onValueChange={v => setEditExpense((prev: any) => ({ ...prev, category: v }))}>
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select Category" />
                   </SelectTrigger>
                   <SelectContent>
@@ -249,20 +251,20 @@ export default function ExpensesPage() {
                 </Select>
               </div>
               <div>
-                <Label>{t("amount" as any) || "Amount"}</Label>
-                <Input type="number" min="0" step="0.01" value={editExpense.amount} onChange={e => setEditExpense((prev: any) => ({ ...prev, amount: e.target.value }))} required />
+                <Label className="text-sm font-medium text-gray-700 mb-2 block">{t("amount" as any) || "Amount"}</Label>
+                <Input type="number" min="0" step="0.01" value={editExpense.amount} onChange={e => setEditExpense((prev: any) => ({ ...prev, amount: e.target.value }))} required className="w-full" />
               </div>
               <div>
-                <Label>{t("date" as any) || "Date"}</Label>
-                <Input type="date" value={editExpense.expense_date} onChange={e => setEditExpense((prev: any) => ({ ...prev, expense_date: e.target.value }))} required />
+                <Label className="text-sm font-medium text-gray-700 mb-2 block">{t("date" as any) || "Date"}</Label>
+                <Input type="date" value={editExpense.expense_date} onChange={e => setEditExpense((prev: any) => ({ ...prev, expense_date: e.target.value }))} required className="w-full" />
               </div>
               <div>
-                <Label>{t("descriptionLabel" as any) || "Description"}</Label>
-                <Input value={editExpense.description || ""} onChange={e => setEditExpense((prev: any) => ({ ...prev, description: e.target.value }))} />
+                <Label className="text-sm font-medium text-gray-700 mb-2 block">{t("descriptionLabel" as any) || "Description"}</Label>
+                <Input value={editExpense.description || ""} onChange={e => setEditExpense((prev: any) => ({ ...prev, description: e.target.value }))} className="w-full" />
               </div>
-              <DialogFooter>
-                <Button type="submit">{t("save")}</Button>
-                <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>{t("cancel")}</Button>
+              <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0">
+                <Button type="submit" className="w-full sm:w-auto">{t("save")}</Button>
+                <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)} className="w-full sm:w-auto">{t("cancel")}</Button>
               </DialogFooter>
             </form>
           )}
@@ -271,14 +273,14 @@ export default function ExpensesPage() {
 
       {/* Delete Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent>
+        <DialogContent className="w-[95vw] max-w-md">
           <DialogHeader>
-            <DialogTitle>{t("deleteExpenseTitle" as any) || "Delete Expense"}</DialogTitle>
+            <DialogTitle className="text-lg sm:text-xl">{t("deleteExpenseTitle" as any) || "Delete Expense"}</DialogTitle>
           </DialogHeader>
-          <p>{t("deleteExpenseConfirm" as any) || "Are you sure you want to delete this expense?"}</p>
-          <DialogFooter>
-            <Button variant="destructive" onClick={handleDelete}>{t("delete")}</Button>
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>{t("cancel")}</Button>
+          <p className="text-sm sm:text-base text-gray-600">{t("deleteExpenseConfirm" as any) || "Are you sure you want to delete this expense?"}</p>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0">
+            <Button variant="destructive" onClick={handleDelete} className="w-full sm:w-auto">{t("delete")}</Button>
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)} className="w-full sm:w-auto">{t("cancel")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

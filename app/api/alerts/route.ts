@@ -73,10 +73,18 @@ export async function GET(request: NextRequest) {
 
     const result = await query(alertsQuery, params)
 
-    return NextResponse.json({
-      success: true,
-      data: result.rows,
-    })
+    return NextResponse.json(
+      {
+        success: true,
+        data: result.rows,
+      },
+      {
+        headers: {
+          // Short-lived private cache to avoid refetch storms during navigation
+          "Cache-Control": "private, max-age=10",
+        },
+      },
+    )
   } catch (error) {
     console.error("Get alerts error:", error)
     return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 })

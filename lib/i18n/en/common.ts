@@ -144,6 +144,28 @@ export default {
   // Product selection
   clickProductsToAddToCart: "Click on products to quickly add them to cart",
   selectProductsToStartSale: "Select products from the list below to start building your sale",
+  
+  // Transfer page specific
+  branchTransfer: "Branch Transfer",
+  transferDescription: "Transfer products between branches instantly - no approval needed",
+  viewInventory: "View Inventory",
+  totalTransfers: "Total Transfers",
+  itemsTransferred: "Items Transferred",
+  transferDescriptionSuccess: "Items have been transferred instantly between branches and inventory has been updated",
+  transferDetails: "Transfer Details",
+  transferred: "Transferred",
+  transferSummary: "Transfer Summary",
+  continueTransferring: "Continue Transferring",
+  startNewTransfer: "Start New Transfer",
+  
+  // Expense page specific
+  expenses: "Expenses",
+  addExpense: "Add Expense",
+  noExpensesFound: "No expenses found.",
+  descriptionLabel: "Description",
+  amount: "Amount",
+  date: "Date",
+  selectCategory: "Select Category",
 }
 
 
