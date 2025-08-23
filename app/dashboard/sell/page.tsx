@@ -787,10 +787,7 @@ export default function SellProductsPage() {
 
       const variation = variationProduct.variations.find((v) => v.variation_id === selectedVariation)
       if (!variation) return
-      if (!variation.price || variation.price <= 0) {
-        toast({ title: "Invalid price", description: "Variation price must be greater than 0", variant: "destructive" })
-        return
-      }
+      // Price validation removed - allow items with price 0
 
       const cartId = `${variationProduct.product_id}:${selectedVariation}`
       const existingItem = cart.find((item) => item.id === cartId)
@@ -839,10 +836,7 @@ export default function SellProductsPage() {
       // Handle simple product
       const product = products.find((p) => p.id === selectedProduct)
       if (!product) return
-      if (!product.price || product.price <= 0) {
-        toast({ title: "Invalid price", description: "Product price must be greater than 0", variant: "destructive" })
-        return
-      }
+      // Price validation removed - allow items with price 0
 
       const existingItem = cart.find((item) => item.id === product.id && !item.variation_id)
       const qtyToAdd = Number.parseInt(quantity) || 1
@@ -957,10 +951,10 @@ export default function SellProductsPage() {
 
   const savePrice = (itemId: string) => {
     const newPrice = parseFloat(editingPriceValue)
-    if (isNaN(newPrice) || newPrice <= 0) {
+    if (isNaN(newPrice) || newPrice < 0) {
       toast({
         title: "Invalid Price",
-        description: "Please enter a price greater than 0",
+        description: "Please enter a valid price (0 or greater)",
         variant: "destructive",
       })
       return
@@ -1021,7 +1015,7 @@ export default function SellProductsPage() {
 
     // Filter valid items only
     const itemsToSend = cart
-      .filter((item) => (item.productId && isValidUUID(item.productId)) && item.current_price > 0 && item.quantity > 0)
+      .filter((item) => (item.productId && isValidUUID(item.productId)) && item.current_price >= 0 && item.quantity > 0)
       .map((item) => ({
         product_id: item.productId!,
         variation_id: item.variation_id || undefined,
@@ -1137,10 +1131,7 @@ export default function SellProductsPage() {
       return
     } else {
       // Handle simple product
-      if (!product.displayPrice || product.displayPrice <= 0) {
-        toast({ title: "Invalid price", description: "Product price must be greater than 0", variant: "destructive" })
-        return
-      }
+      // Price validation removed - allow items with price 0
       const existingItem = cart.find((item) => item.id === product.id && !item.variation_id)
       const max = product.displayStock || 0
       const currentQty = existingItem?.quantity || 0
@@ -2107,10 +2098,7 @@ export default function SellProductsPage() {
                                       onClick={(e) => {
                                         e.stopPropagation()
                                         // Add variation to cart with quantity 1 (respect stock)
-                                        if (!variation.price || variation.price <= 0) {
-                                          toast({ title: "Invalid price", description: "Variation price must be greater than 0", variant: "destructive" })
-                                          return
-                                        }
+                                        // Price validation removed - allow items with price 0
                                         const cartId = `${product.product_id}:${variation.variation_id}`
                                         const existingItem = cart.find((item) => item.id === cartId)
                                         const currentQty = existingItem?.quantity || 0
