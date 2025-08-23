@@ -335,7 +335,7 @@ export function ExpandableProductRow({
                 )}
                 {product.variations[0].cost_price && (
                   <p className="text-xs text-green-500 font-medium">
-                    Margin: {(((Number(product.variations[0].price) - Number(product.variations[0].cost_price)) / Number(product.variations[0].price)) * 100).toFixed(1)}%
+                    Margin: {Number(product.variations[0].price) > 0 ? (((Number(product.variations[0].price) - Number(product.variations[0].cost_price)) / Number(product.variations[0].price)) * 100).toFixed(1) : '0.0'}%
                   </p>
                 )}
               </>
@@ -461,7 +461,7 @@ export function ExpandableProductRow({
               )}
               {variation.cost_price && (
                 <p className="text-xs text-green-500 font-medium">
-                  Margin: {(((Number(variation.price) - Number(variation.cost_price)) / Number(variation.price)) * 100).toFixed(1)}%
+                  Margin: {Number(variation.price) > 0 ? (((Number(variation.price) - Number(variation.cost_price)) / Number(variation.price)) * 100).toFixed(1) : '0.0'}%
                 </p>
               )}
             </div>

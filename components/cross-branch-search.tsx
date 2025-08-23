@@ -960,7 +960,7 @@ export function CrossBranchSearch({ searchTerm, filters = {} }: CrossBranchSearc
                        )}
                        {product.cost_price && (
                          <p className="text-xs text-green-500 font-medium">
-                           Margin: {(((Number(product.price) - Number(product.cost_price)) / Number(product.price)) * 100).toFixed(1)}%
+                           Margin: {Number(product.price) > 0 ? (((Number(product.price) - Number(product.cost_price)) / Number(product.price)) * 100).toFixed(1) : '0.0'}%
                          </p>
                        )}
                      </div>

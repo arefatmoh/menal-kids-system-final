@@ -16,7 +16,7 @@ const createSaleSchema = z.object({
         product_id: z.string().uuid("Invalid product ID"),
         variation_id: z.string().uuid("Invalid variation ID").optional(),
         quantity: z.number().int().positive("Quantity must be positive"),
-        unit_price: z.number().positive("Unit price must be positive"),
+        unit_price: z.number().min(0, "Unit price must be 0 or greater"),
       }),
     )
     .min(1, "At least one item is required"),
