@@ -11,7 +11,7 @@ export interface Alert {
   severity: "low" | "medium" | "high" | "critical"
   title: string
   message: string
-  branch?: "branch1" | "branch2" | "all"
+  branch?: "franko" | "mebrat-hayl" | "all"
   timestamp: Date
   isRead: boolean
   actionRequired: boolean
@@ -49,7 +49,7 @@ export function AlertsProvider({ children }: { children: React.ReactNode }) {
           severity: alert.severity,
           title: alert.title,
           message: alert.message,
-          branch: alert.branch_id ? (alert.branch_id === "branch1" ? "branch1" : alert.branch_id === "branch2" ? "branch2" : "all") : "all",
+          branch: alert.branch_id ? (alert.branch_id === "franko" ? "franko" : alert.branch_id === "mebrat-hayl" ? "mebrat-hayl" : "all") : "all",
           timestamp: new Date(alert.created_at),
           isRead: alert.status === "acknowledged" || alert.status === "resolved",
           actionRequired: alert.action_required,
@@ -69,7 +69,7 @@ export function AlertsProvider({ children }: { children: React.ReactNode }) {
           severity: "high",
           title: "Branch 2 Sales Below Target",
           message: "Branch 2 sales are 15% below monthly target. Current: 44,000 Birr, Target: 52,000 Birr",
-          branch: "branch2",
+          branch: "mebrat-hayl",
           timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
           isRead: false,
           actionRequired: true,
@@ -110,7 +110,7 @@ export function AlertsProvider({ children }: { children: React.ReactNode }) {
           severity: "medium",
           title: "Daily Transaction Target Not Met",
           message: "Branch 1 completed only 18 transactions today. Target: 25 transactions",
-          branch: "branch1",
+          branch: "franko",
           timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000), // 8 hours ago
           isRead: true,
           actionRequired: false,
@@ -223,7 +223,7 @@ export function AlertsProvider({ children }: { children: React.ReactNode }) {
               severity: "medium" as const,
               title: "Sales Performance Alert",
               message: "Hourly sales target missed in Branch 1",
-              branch: "branch1" as const,
+              branch: "franko" as const,
               actionRequired: false,
             },
             {

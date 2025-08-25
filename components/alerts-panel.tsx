@@ -219,7 +219,7 @@ export function AlertsPanel() {
                             {alert.branch && alert.branch !== "all" && (
                               <span className="flex items-center space-x-1">
                                 <Building2 className="h-3 w-3" />
-                                <span>{alert.branch === "branch1" ? t("branch1") : t("branch2")}</span>
+                                <span>{alert.branch === "franko" ? t("frankoBranch") : t("mebrathaylBranch")}</span>
                               </span>
                             )}
                             <Badge className={`text-xs ${getSeverityColor(alert.severity)}`}>
@@ -404,7 +404,7 @@ export function AlertsPanel() {
                     <span>
                       {selectedAlert.branch === "all"
                         ? "All Branches"
-                        : selectedAlert.branch === "branch1"
+                        : selectedAlert.branch === "franko"
                           ? "Branch 1"
                           : "Branch 2"}
                     </span>

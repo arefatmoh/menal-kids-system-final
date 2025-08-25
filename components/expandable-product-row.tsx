@@ -328,14 +328,14 @@ export function ExpandableProductRow({
             {isUniformProduct ? (
               <>
                 <p className="text-lg font-bold text-green-700">{Number(product.variations[0].price).toFixed(0)} ብር</p>
-                {product.variations[0].purchase_price && (
+                {product.variations[0].purchase_price !== undefined && product.variations[0].purchase_price !== null && Number(product.variations[0].purchase_price) > 0 && (
                   <p className="text-[10px] text-gray-400 leading-tight">
                     Purchase: {Number(product.variations[0].purchase_price).toFixed(0)} ብር
                   </p>
                 )}
-                {product.variations[0].cost_price && (
+                {product.variations[0].cost_price !== undefined && product.variations[0].cost_price !== null && Number(product.variations[0].cost_price) > 0 && Number(product.variations[0].price) > 0 && (
                   <p className="text-xs text-green-500 font-medium">
-                    Margin: {Number(product.variations[0].price) > 0 ? (((Number(product.variations[0].price) - Number(product.variations[0].cost_price)) / Number(product.variations[0].price)) * 100).toFixed(1) : '0.0'}%
+                    Margin: {(((Number(product.variations[0].price) - Number(product.variations[0].cost_price)) / Number(product.variations[0].price)) * 100).toFixed(1)}%
                   </p>
                 )}
               </>
@@ -454,14 +454,14 @@ export function ExpandableProductRow({
           <TableCell className="py-2">
             <div className="text-center space-y-1">
               <p className="text-lg font-bold text-green-700">{Number(variation.price).toFixed(0)} ብር</p>
-              {variation.purchase_price && (
+              {variation.purchase_price !== undefined && variation.purchase_price !== null && Number(variation.purchase_price) > 0 && (
                 <p className="text-[10px] text-gray-400 leading-tight">
                   Purchase: {Number(variation.purchase_price).toFixed(0)} ብር
                 </p>
               )}
-              {variation.cost_price && (
+              {variation.cost_price !== undefined && variation.cost_price !== null && Number(variation.cost_price) > 0 && Number(variation.price) > 0 && (
                 <p className="text-xs text-green-500 font-medium">
-                  Margin: {Number(variation.price) > 0 ? (((Number(variation.price) - Number(variation.cost_price)) / Number(variation.price)) * 100).toFixed(1) : '0.0'}%
+                  Margin: {(((Number(variation.price) - Number(variation.cost_price)) / Number(variation.price)) * 100).toFixed(1)}%
                 </p>
               )}
             </div>

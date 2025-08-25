@@ -608,7 +608,8 @@ export default function SellProductsPage() {
       }
 
       if (currentBranch !== "all") {
-        params.branch_id = currentBranch
+        const { getBranchIdForDatabase } = await import("@/lib/utils")
+        params.branch_id = getBranchIdForDatabase(currentBranch)
       }
 
       // Advanced search params (same behavior as inventory)
@@ -1031,8 +1032,9 @@ export default function SellProductsPage() {
     setIsProcessing(true)
 
     try {
+      const { getBranchIdForDatabase } = await import("@/lib/utils")
       const saleData = {
-        branch_id: currentBranch,
+        branch_id: currentBranch === "all" ? getBranchIdForDatabase("franko") : getBranchIdForDatabase(currentBranch),
         customer_name: customerName || undefined,
         customer_phone: customerPhone || undefined,
         payment_method: paymentMethod,

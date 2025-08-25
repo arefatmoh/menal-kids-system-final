@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+import { getBranchIdForDatabase } from "@/lib/utils"
 
 import { useState, useEffect, useRef, useMemo, useCallback } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -93,12 +94,15 @@ interface Variation {
 
 interface Product {
   id: string
+  product_id?: string
   name: string
+  product_name?: string
   sku: string
+  product_sku?: string
   price: number
   purchase_price?: number
   cost_price?: number
-  total_stock: number
+  current_stock: number
   category_name: string
   color?: string
   size?: string
@@ -122,7 +126,7 @@ interface ProductWithVariations {
   image_url?: string
   category_name: string
   variations: {
-    id: string
+    id?: string
     variation_id: string
     variation_sku: string
     color?: string
@@ -131,10 +135,10 @@ interface ProductWithVariations {
     cost_price?: number
     purchase_price?: number
     quantity: number
-    min_stock_level: number
-    max_stock_level: number
-    stock_status: string
-    branch_name: string
+    min_stock_level?: number
+    max_stock_level?: number
+    stock_status?: string
+    branch_name?: string
   }[]
 }
 
@@ -178,6 +182,7 @@ interface TransferStats {
 
 export default function TransferPage() {
   const { t } = useLanguage()
+  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams()
   const { currentBranch } = useBranch()
   const { toast } = useToast()
   const router = useRouter()
@@ -213,9 +218,9 @@ export default function TransferPage() {
   const [showFilters, setShowFilters] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [productSearchTerm, setProductSearchTerm] = useState("")
-  const [productSelectedCategories, setProductSelectedCategories] = useState<Set<string>>(new Set())
   const [productQuantities, setProductQuantities] = useState<Record<string, string>>({})
   const [variationQuantities, setVariationQuantities] = useState<Record<string, string>>({})
+  const [productSelectedCategories, setProductSelectedCategories] = useState<Set<string>>(new Set())
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1)
@@ -229,12 +234,12 @@ export default function TransferPage() {
     const completed = transfers.filter(t => t.status === 'completed').length
     const pending = transfers.filter(t => t.status === 'pending').length
     const totalItems = transfers.reduce((sum, t) => 
-      sum + t.items.reduce((itemSum, item) => itemSum + item.quantity, 0), 0
+      sum + (t.items ?? []).reduce((itemSum, item) => itemSum + item.quantity, 0), 0
     )
     
     // Calculate total value based on product prices
     const totalValue = transfers.reduce((sum, t) => {
-      return sum + t.items.reduce((itemSum, item) => {
+      return sum + (t.items ?? []).reduce((itemSum, item) => {
         // Find the product to get its price
         const product = products.find(p => p.id === item.product_id)
         const variationProduct = productsWithVariations.find(p => p.product_id === item.product_id)
@@ -328,10 +333,10 @@ export default function TransferPage() {
   const getAvailableProducts = () => {
     if (isOwner) {
       if (!fromBranch) return []
-      return products.filter((p) => p.total_stock > 0)
+      return products.filter((p) => (p.current_stock || 0) > 0)
     } else {
       // For employees, only show products from their branch
-      return products.filter((p) => p.total_stock > 0)
+      return products.filter((p) => (p.current_stock || 0) > 0)
     }
   }
 
@@ -507,192 +512,159 @@ export default function TransferPage() {
     setCurrentPage(1)
   }, [productSearchTerm, productSelectedCategories])
 
+  // Single consolidated useEffect for fetching transfer data
   useEffect(() => {
     fetchData()
-  }, [currentBranch])
+  }, [currentBranch, fromBranch])
 
-  // Re-fetch products when owner selects a different source branch
+  // Preselect a product when navigated with ?product_id=
   useEffect(() => {
-    if (isOwner) {
-      fetchData()
+    const pid = searchParams.get('product_id')
+    const qty = searchParams.get('qty')
+    if (pid) {
+      setProductQuantities(prev => ({ ...prev, [pid]: prev[pid] || (qty || "1") }))
     }
-  }, [isOwner, fromBranch])
+  }, [])
+
+  // After products load, focus the selected product by setting the search term
+  useEffect(() => {
+    const pid = searchParams.get('product_id')
+    const qty = searchParams.get('qty')
+    if (!pid || products.length === 0) return
+    const p: any = products.find((pr: any) => pr.id === pid || pr.product_id === pid)
+    if (p) {
+      const name = p.name || p.product_name || ''
+      if (name) {
+        setProductSearchTerm(name)
+        setCurrentPage(1)
+      }
+      setProductQuantities(prev => ({ ...prev, [pid]: prev[pid] || (qty || "1") }))
+    }
+  }, [products])
 
   const fetchData = async () => {
     setIsLoading(true)
     try {
-      // Fetch products with inventory data
-      const productsParams: any = {
-        page: 1,
-        limit: 100,
+      // Use optimized single API call instead of multiple calls
+      // Use utility function for branch mapping
+      const { getBranchIdForDatabase } = await import("@/lib/utils")
+
+      const params: any = {
+        from_branch_id: currentBranch !== "all" 
+          ? getBranchIdForDatabase(currentBranch) 
+          : getBranchIdForDatabase(fromBranch || "franko")
       }
 
-      // Determine which branch inventory to load
-      const branchIdForInventory = currentBranch !== "all" ? currentBranch : (fromBranch || undefined)
+      console.log('Current branch:', currentBranch)
+      console.log('From branch:', fromBranch)
+      console.log('User role:', localStorage.getItem("userRole"))
+      console.log('Fetching transfer data with params:', params)
 
-      if (branchIdForInventory) {
-        productsParams.branch_id = branchIdForInventory
-      }
-
-      if (branchIdForInventory) {
-        const productsResponse = await apiClient.getInventory(productsParams)
-        if (productsResponse.success && productsResponse.data) {
-          // Transform inventory data to product format
-          const inventoryData = productsResponse.data as any[]
-          
-          // Group by product_id to handle variations
-          const productGroups = new Map<string, any[]>()
-          inventoryData.forEach(item => {
-            if (!productGroups.has(item.product_id)) {
-              productGroups.set(item.product_id, [])
-            }
-            productGroups.get(item.product_id)!.push(item)
-          })
-
-          // Transform to products - follow the Inventory page pattern
-          // All products get grouped into ProductWithVariations structure
-          const productsWithVariations: ProductWithVariations[] = []
-          const simpleProducts: Product[] = []
-
-          productGroups.forEach((items, productId) => {
-            const firstItem = items[0]
-            
-            if (firstItem.product_type === 'variation') {
-              // This is a variation product - create ProductWithVariations structure
-              const productWithVariations: ProductWithVariations = {
-                product_id: productId,
-                product_name: firstItem.product_name,
-                product_sku: firstItem.product_sku || firstItem.sku,
-                product_type: firstItem.product_type,
-                brand: firstItem.brand,
-                age_range: firstItem.age_range,
-                gender: firstItem.gender,
-                description: firstItem.description,
-                image_url: firstItem.image_url,
-                category_name: firstItem.category_name,
-                variations: items.map(item => ({
-                  id: item.id,
-                  variation_id: item.variation_id || item.id,
-                  variation_sku: item.variation_sku || item.sku,
-                  color: item.color,
-                  size: item.size,
-                  price: item.price,
-                  cost_price: item.cost_price,
-                  purchase_price: item.purchase_price,
-                  quantity: item.quantity,
-                  min_stock_level: item.min_stock_level,
-                  max_stock_level: item.max_stock_level,
-                  stock_status: item.stock_status,
-                  branch_name: item.branch_name
-                }))
-              }
-              productsWithVariations.push(productWithVariations)
-            } else {
-              // This is a uniform product - treat as single-stock item
-              // For uniform products, sum up quantities from all inventory records
-              const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0)
-              
-              const simpleProduct: Product = {
-                id: productId,
-                name: firstItem.product_name,
-                sku: firstItem.sku,
-                price: firstItem.price,
-                purchase_price: firstItem.purchase_price,
-                cost_price: firstItem.cost_price,
-                total_stock: totalQuantity,
-                category_name: firstItem.category_name,
-                color: firstItem.color,
-                size: firstItem.size,
-                brand: firstItem.brand,
-                age_range: firstItem.age_range,
-                gender: firstItem.gender,
-                description: firstItem.description,
-                product_type: firstItem.product_type || 'uniform'
-              }
-              simpleProducts.push(simpleProduct)
-            }
-          })
-
-          setProductsWithVariations(productsWithVariations)
-          setProducts(simpleProducts)
+      const response = await apiClient.getTransferOptimized(params)
+      
+      console.log('Transfer API response:', response)
+      
+      if (response.success && response.data) {
+        const data = response.data as any
+        
+        console.log('Transfer API response data:', data)
+        
+        // Set products (uniform products)
+        if (data.products && Array.isArray(data.products)) {
+          console.log('Setting products:', data.products.length, 'items')
+          setProducts(data.products)
         } else {
+          console.warn('No products data or invalid format:', data.products)
           setProducts([])
+        }
+        
+        // Set transfers
+        if (data.transfers && Array.isArray(data.transfers)) {
+          console.log('Setting transfers:', data.transfers.length, 'items')
+          setTransfers(data.transfers)
+        } else {
+          console.warn('No transfers data or invalid format:', data.transfers)
+          setTransfers([])
+        }
+        
+        // Set branches
+        if (data.branches && Array.isArray(data.branches)) {
+          console.log('Setting branches:', data.branches.length, 'items')
+          setBranches(data.branches)
+        } else {
+          console.warn('No branches data or invalid format:', data.branches)
+          setBranches([])
+        }
+        
+        // Handle variations separately
+        if (data.variations && Array.isArray(data.variations)) {
+          console.log('Processing variations:', data.variations.length, 'items')
+          
+          // Group variations by product
+          const variationsByProduct = new Map<string, any[]>()
+          
+          data.variations.forEach((variation: any) => {
+            if (!variationsByProduct.has(variation.product_id)) {
+              variationsByProduct.set(variation.product_id, [])
+            }
+            variationsByProduct.get(variation.product_id)!.push(variation)
+          })
+          
+          // Create ProductWithVariations objects
+          const productsWithVariations: ProductWithVariations[] = []
+          
+          variationsByProduct.forEach((variations, productId) => {
+            const firstVariation = variations[0]
+            const productWithVariations: ProductWithVariations = {
+              product_id: productId,
+              product_name: firstVariation.product_name,
+              product_sku: firstVariation.product_sku || firstVariation.sku,
+              product_type: firstVariation.product_type,
+              brand: firstVariation.brand,
+              age_range: firstVariation.age_range,
+              gender: firstVariation.gender,
+              description: firstVariation.description,
+              image_url: firstVariation.image_url,
+              category_name: firstVariation.category_name,
+              variations: variations
+            }
+            productsWithVariations.push(productWithVariations)
+          })
+          
+          console.log('Created products with variations:', productsWithVariations.length, 'items')
+          setProductsWithVariations(productsWithVariations)
+        } else {
+          console.warn('No variations data or invalid format:', data.variations)
           setProductsWithVariations([])
         }
       } else {
-        // No branch selected yet (owner view); show empty list
-        setProducts([])
-        setProductsWithVariations([])
-      }
-
-      // Fetch branches
-      const branchesResponse = await apiClient.getBranches()
-      if (branchesResponse.success && branchesResponse.data) {
-        setBranches(branchesResponse.data as Branch[])
-      } else {
-        console.error("Failed to fetch branches:", branchesResponse.error)
-        toast({
-          title: "Error",
-          description: "Failed to load branches",
-          variant: "destructive",
-        })
-      }
-
-      // Fetch transfers
-      try {
-        const transfersResponse = await apiClient.getTransfers({
-          page: 1,
-          limit: 100,
-          // Add branch filtering if needed
-          ...(currentBranch !== "all" && { from_branch_id: currentBranch })
-        })
+        console.warn('Transfer API failed, falling back to individual APIs')
+        // Fallback to individual API calls
+        const [inventoryResponse, transfersResponse, branchesResponse] = await Promise.all([
+          apiClient.getInventory({ branch_id: currentBranch !== "all" ? getBranchIdForDatabase(currentBranch) : (fromBranch ? getBranchIdForDatabase(fromBranch) : undefined) }),
+          apiClient.getTransfers({ from_branch_id: currentBranch !== "all" ? getBranchIdForDatabase(currentBranch) : (fromBranch ? getBranchIdForDatabase(fromBranch) : undefined) }),
+          apiClient.getBranches()
+        ])
+        
+        console.log('Fallback API responses:', { inventoryResponse, transfersResponse, branchesResponse })
+        
+        if (inventoryResponse.success && inventoryResponse.data) {
+          setProducts(inventoryResponse.data as Product[])
+        }
         
         if (transfersResponse.success && transfersResponse.data) {
-          // Handle both array and paginated response
-          const transfersData = Array.isArray(transfersResponse.data) 
-            ? transfersResponse.data 
-            : transfersResponse.data.data || []
-          
-          // Transform the API response to match our interface
-          const transformedTransfers: Transfer[] = (transfersData as any[]).map((transfer: any) => ({
-            id: transfer.id as string,
-            from_branch_id: transfer.from_branch_id as string,
-            to_branch_id: transfer.to_branch_id as string,
-            status: transfer.status as string,
-            reason: transfer.reason as string,
-            requested_at: transfer.requested_at as string,
-            completed_at: transfer.completed_at as string | undefined,
-            from_branch_name: transfer.from_branch_name as string | undefined,
-            to_branch_name: transfer.to_branch_name as string | undefined,
-            requested_by_name: transfer.requested_by_name as string | undefined,
-            approved_by_name: transfer.approved_by_name as string | undefined,
-            items: (transfer.items || []) as TransferItem[]
-          }))
-          
-          setTransfers(transformedTransfers)
-        } else {
-          console.error("Failed to fetch transfers:", transfersResponse.error)
-          setTransfers([])
-          toast({
-            title: "Warning",
-            description: "No transfer history found",
-            variant: "default",
-          })
+          setTransfers(transfersResponse.data.data as unknown as Transfer[])
         }
-      } catch (error) {
-        console.error("Failed to fetch transfers:", error)
-        setTransfers([])
-        toast({
-          title: "Error",
-          description: "Failed to load transfer history",
-          variant: "destructive",
-        })
+        
+        if (branchesResponse.success && branchesResponse.data) {
+          setBranches(branchesResponse.data as Branch[])
+        }
       }
-    } catch (error: any) {
-      console.error("Data fetch error:", error)
+    } catch (error) {
+      console.error('Error fetching transfer data:', error)
       toast({
-        title: "Error",
-        description: error.message || "Failed to load data",
+        title: t("error"),
+        description: t("error"),
         variant: "destructive",
       })
     } finally {
@@ -771,7 +743,7 @@ export default function TransferPage() {
       } else {
         // For uniform products, check against the product's total stock
         const product = products.find(p => p.id === item.product_id)
-        return product && item.quantity > product.total_stock
+        return product && item.quantity > product.current_stock
       }
     })
 
@@ -787,9 +759,12 @@ export default function TransferPage() {
     setIsSubmitting(true)
 
     try {
+      const fromBranchResolved = isOwner ? (fromBranch || currentBranch) : (userBranch || currentBranch)
+      const toBranchResolved = toBranch || (currentBranch === 'franko' ? 'mebrat-hayl' : 'franko')
+
       const transferData = {
-        from_branch_id: isOwner ? fromBranch : userBranch,
-        to_branch_id: toBranch,
+        from_branch_id: getBranchIdForDatabase(fromBranchResolved),
+        to_branch_id: getBranchIdForDatabase(toBranchResolved),
         reason: reason || "Transfer initiated by user",
         items: selectedItems
       }
@@ -800,7 +775,7 @@ export default function TransferPage() {
         if (response.success) {
           toast({
             title: "Transfer Completed Successfully!",
-            description: `Items have been transferred from ${isOwner ? getBranchName(fromBranch) : getBranchName(userBranch!)} to ${getBranchName(toBranch)}`,
+            description: `Items have been transferred from ${getBranchName(fromBranchResolved)} to ${getBranchName(toBranchResolved)}`,
           })
           
           setLastTransfer(response.data as unknown as Transfer)
@@ -825,7 +800,7 @@ export default function TransferPage() {
               if (productDelta > 0) {
                 return {
                   ...p,
-                  total_stock: Math.max(0, (p.total_stock || 0) - productDelta)
+                  current_stock: Math.max(0, (p.current_stock || 0) - productDelta)
                 }
               }
               return p
@@ -935,7 +910,7 @@ export default function TransferPage() {
   const getMaxQuantity = () => {
     if (!selectedProduct) return 0
     const product = products.find((p) => p.id === selectedProduct)
-    return product?.total_stock || 0
+    return product?.current_stock || 0
   }
 
   const getBranchName = (branchId: string) => {
@@ -1277,7 +1252,7 @@ export default function TransferPage() {
                         <div>
                           <p className="text-sm font-medium text-blue-800">{t("fromBranch")}</p>
                           <p className="text-lg font-bold text-blue-900">{getBranchName(userBranch!)}</p>
-                          <p className="text-xs text-blue-600">{t("branch1")}</p>
+                          <p className="text-xs text-blue-600">{t("fromBranch")}</p>
                         </div>
                       </div>
                     </div>
@@ -1672,20 +1647,20 @@ export default function TransferPage() {
                                         {currentProducts.map((productItem) => {
                       if (productItem.type === 'variation') {
                         const product = productItem.data as ProductWithVariations
-                        const productId = product.product_id
-                        const productName = product.product_name
-                        const productSku = product.product_sku
-                        const productType = product.product_type
-                        const categoryName = product.category_name
-                        const brand = product.brand
-                        const ageRange = product.age_range
-                        const gender = product.gender
+                        const productId = product.product_id || ''
+                        const productName = product.product_name || ''
+                        const productSku = product.product_sku || ''
+                        const productType = product.product_type || 'variation'
+                        const categoryName = product.category_name || 'Uncategorized'
+                        const brand = product.brand || ''
+                        const ageRange = product.age_range || ''
+                        const gender = product.gender || ''
                         
                         // Calculate total stock from variations
-                        const totalStock = product.variations.reduce((sum, v) => sum + v.quantity, 0)
+                        const totalStock = product.variations?.reduce((sum, v) => sum + (v.quantity || 0), 0) || 0
                         
                         // Get price from first variation
-                        const price = product.variations[0]?.price || 0
+                        const price = product.variations?.[0]?.price || 0
 
                         return (
                           <div
@@ -2062,20 +2037,20 @@ export default function TransferPage() {
                       } else {
                         // Handle regular Product (Uniform)
                         const product = productItem.data as Product
-                        const productId = product.id
-                        const productName = product.name
-                        const productSku = product.sku
-                        const productType = product.product_type
-                        const categoryName = product.category_name
-                        const brand = product.brand
-                        const ageRange = product.age_range
-                        const gender = product.gender
-                        const totalStock = product.total_stock
-                        const price = product.price
-                        const purchasePrice = product.purchase_price
-                        const color = product.color
-                        const size = product.size
-                        const description = product.description
+                        const productId = product.id || product.product_id || ''
+                        const productName = product.name || product.product_name || ''
+                        const productSku = product.sku || product.product_sku || ''
+                        const productType = product.product_type || 'uniform'
+                        const categoryName = product.category_name || 'Uncategorized'
+                        const brand = product.brand || ''
+                        const ageRange = product.age_range || ''
+                        const gender = product.gender || ''
+                        const totalStock = product.current_stock || 0
+                        const price = product.price || 0
+                        const purchasePrice = product.purchase_price || 0
+                        const color = product.color || ''
+                        const size = product.size || ''
+                        const description = product.description || ''
 
                         return (
                           <div
@@ -2409,7 +2384,7 @@ export default function TransferPage() {
                         {new Date(transfer.requested_at).toLocaleDateString()}
                       </TableCell>
                       <TableCell className="text-xs sm:text-sm">
-                        {transfer.items.map((item) => item.product_name).join(", ")}
+                        {(transfer.items ?? []).map((item) => item.product_name).join(", ")}
                       </TableCell>
                       <TableCell className="text-xs sm:text-sm">
                         <Badge variant="outline" className="bg-blue-50 text-blue-700 text-xs">
@@ -2422,7 +2397,7 @@ export default function TransferPage() {
                         </Badge>
                       </TableCell>
                       <TableCell className="font-medium text-xs sm:text-sm">
-                        {transfer.items.reduce((sum, item) => sum + item.quantity, 0)}
+                        {(transfer.items ?? []).reduce((sum, item) => sum + item.quantity, 0)}
                       </TableCell>
                       <TableCell className="text-xs sm:text-sm">
                         {getStatusBadge(transfer.status)}

@@ -288,7 +288,7 @@ export async function GET(request: NextRequest) {
 
     // Get total count
     const countQuery = `
-      SELECT COUNT(*) as total
+      SELECT COUNT(DISTINCT p.id) as total
       FROM inventory i
       JOIN products p ON i.product_id = p.id
       LEFT JOIN product_variations pv ON i.variation_id = pv.id
@@ -397,20 +397,8 @@ export async function PUT(request: NextRequest) {
           }
         }
 
-        // Record stock movement
-        await query(
-          `INSERT INTO stock_movements (product_id, branch_id, user_id, movement_type, quantity, reason, reference_type)
-           VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-          [
-            validatedData.product_id,
-            validatedData.branch_id,
-            user.id,
-            validatedData.quantity > 0 ? 'in' : 'out',
-            Math.abs(validatedData.quantity),
-            'Manual adjustment',
-            'adjustment'
-          ]
-        )
+        // Stock movements are recorded by database triggers on inventory changes.
+        // No explicit insert here to avoid duplication.
       }
 
       await query('COMMIT')

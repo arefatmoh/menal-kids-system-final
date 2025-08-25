@@ -44,59 +44,160 @@ function resolveSsl(): false | { rejectUnauthorized: boolean } {
 const pool = new Pool({
   connectionString: databaseUrl,
   ssl: resolveSsl(),
-  // Optimize connection pool for better performance
-  max: Number(process.env.DB_POOL_MAX ?? 10), // Reduced from 20 to 10 for better resource management
-  min: Number(process.env.DB_POOL_MIN ?? 2), // Keep minimum connections ready
-  idleTimeoutMillis: Number(process.env.DB_IDLE_TIMEOUT ?? 30000), // 30 seconds
+  // Optimize connection pool for better performance and stability
+  max: Number(process.env.DB_POOL_MAX ?? 25), // Increased for better concurrency
+  min: Number(process.env.DB_POOL_MIN ?? 8), // Increased minimum to keep more connections ready
+  idleTimeoutMillis: Number(process.env.DB_IDLE_TIMEOUT ?? 300000), // 5 minutes - keep connections alive much longer
   // Increase connection timeout for remote DBs like Neon; allow override via env
-  connectionTimeoutMillis: Number(process.env.DB_CONNECT_TIMEOUT_MS ?? 5000), // Reduced from 10s to 5s
+  connectionTimeoutMillis: Number(process.env.DB_CONNECT_TIMEOUT_MS ?? 30000), // 30 seconds for stability
   // Keep TCP connection alive to avoid mid-handshake drops on some networks
   keepAlive: true,
   // Additional performance optimizations
-  allowExitOnIdle: true, // Allow pool to close when idle
-  maxUses: Number(process.env.DB_MAX_USES ?? 7500), // Recycle connections after 7500 uses
+  allowExitOnIdle: false, // Don't close connections when idle - keep them ready
+  maxUses: Number(process.env.DB_MAX_USES ?? 50000), // Much higher - recycle connections after 50000 uses
+  // Add connection keep-alive settings
+  keepAliveInitialDelayMillis: 10000, // Start keep-alive after 10 seconds
+  // Add connection parameters to prevent drops
+  statement_timeout: 30000, // 30 second statement timeout
+  idle_in_transaction_session_timeout: 300000, // 5 minute idle transaction timeout
 })
 
-// Test the connection (less noisy in production)
+// Test the connection (quiet mode)
 pool.on("connect", () => {
-  if (process.env.NODE_ENV !== "production") {
-    console.log("Connected to PostgreSQL database")
-  }
+  // Logging disabled for clean terminal
 })
 
 pool.on("error", (err) => {
-  console.error("Unexpected error on idle client", err)
-  process.exit(-1)
+  // Only log critical errors in production
+  if (process.env.NODE_ENV === "production") {
+    console.error("Database pool error:", err)
+  }
 })
 
-// Database query function with error handling
-export async function query(text: string, params?: any[]): Promise<any> {
-  const client = await pool.connect()
-  try {
-    const result = await client.query(text, params)
-    return result
-  } catch (error) {
-    console.error("Database query error:", error)
-    throw error
-  } finally {
-    client.release()
+// Monitor pool health (quiet mode)
+setInterval(() => {
+  // Logging disabled for clean terminal
+}, 60000)
+
+// Force pool to maintain minimum connections (quiet mode)
+let forcePoolGrowth = setInterval(async () => {
+  const currentTotal = pool.totalCount
+  const targetMin = Number(process.env.DB_POOL_MIN ?? 8)
+  
+  if (currentTotal < targetMin) {
+    try {
+      // Force create connections to reach minimum
+      const connectionsToCreate = targetMin - currentTotal
+      const connectionPromises = []
+      
+      for (let i = 0; i < connectionsToCreate; i++) {
+        connectionPromises.push(
+          pool.connect().then(client => {
+            return client.query('SELECT 1 as test').then(() => {
+              client.release()
+              return true
+            }).catch(() => false)
+          }).catch(() => false)
+        )
+      }
+      
+      await Promise.all(connectionPromises)
+      
+    } catch (error) {
+      // Only log critical errors in production
+      if (process.env.NODE_ENV === "production") {
+        console.error("Pool growth error:", error)
+      }
+    }
+  }
+}, 15000)
+
+// Database query function with error handling and retry logic (quiet mode)
+export async function query(text: string, params?: any[], retries = 3): Promise<any> {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const client = await pool.connect()
+      try {
+        const result = await client.query(text, params)
+        return result
+      } finally {
+        client.release()
+      }
+    } catch (error: any) {
+      // Enhanced error classification for better retry decisions
+      const isConnectionError = 
+        error.code === 'ECONNRESET' || 
+        error.code === 'ENOTFOUND' || 
+        error.code === 'ETIMEDOUT' ||
+        error.code === 'ECONNREFUSED' ||
+        error.code === 'EHOSTUNREACH' ||
+        error.message?.includes('Connection terminated') ||
+        error.message?.includes('timeout') ||
+        error.message?.includes('connection') ||
+        error.message?.includes('network');
+      
+      const isPoolError = 
+        error.code === 'ENOSPC' || // No space left on device
+        error.message?.includes('pool') ||
+        error.message?.includes('too many clients');
+      
+      const isRetryableError = isConnectionError || isPoolError;
+      
+      if (attempt === retries || !isRetryableError) {
+        // Only log critical errors in production
+        if (process.env.NODE_ENV === "production") {
+          console.error("Database query error:", error.message)
+        }
+        throw error
+      }
+      
+      // Silent retry - no logging
+      const delay = attempt * 1000 + Math.random() * 500; // Add jitter to prevent thundering herd
+      await new Promise(resolve => setTimeout(resolve, delay))
+    }
   }
 }
 
-// Transaction helper
-export async function transaction<T>(callback: (client: PoolClient) => Promise<T>): Promise<T> {
-  const client = await pool.connect()
-  try {
-    await client.query("BEGIN")
-    const result = await callback(client)
-    await client.query("COMMIT")
-    return result
-  } catch (error) {
-    await client.query("ROLLBACK")
-    throw error
-  } finally {
-    client.release()
+// Transaction helper with retry logic (quiet mode)
+export async function transaction<T>(callback: (client: PoolClient) => Promise<T>, retries = 3): Promise<T> {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const client = await pool.connect()
+      try {
+        await client.query("BEGIN")
+        const result = await callback(client)
+        await client.query("COMMIT")
+        return result
+      } catch (error) {
+        await client.query("ROLLBACK")
+        throw error
+      } finally {
+        client.release()
+      }
+    } catch (error: any) {
+      // Check if this is a connection-related error that we should retry
+      const isConnectionError = error.code === 'ECONNRESET' || 
+                               error.code === 'ENOTFOUND' || 
+                               error.code === 'ETIMEDOUT' ||
+                               error.message?.includes('Connection terminated') ||
+                               error.message?.includes('timeout');
+      
+      if (attempt === retries || !isConnectionError) {
+        // Only log critical errors in production
+        if (process.env.NODE_ENV === "production") {
+          console.error("Transaction error:", error.message)
+        }
+        throw error
+      }
+      
+      // Silent retry - no logging
+      const delay = attempt * 1000 + Math.random() * 500; // Add jitter to prevent thundering herd
+      await new Promise(resolve => setTimeout(resolve, delay))
+    }
   }
+  
+  // This should never be reached due to the throw in the loop, but TypeScript requires it
+  throw new Error("Transaction failed after all retry attempts")
 }
 
 // Get a client for multiple operations

@@ -948,19 +948,19 @@ export function CrossBranchSearch({ searchTerm, filters = {} }: CrossBranchSearc
                    <TableCell className="py-3">
                       <div className="text-center space-y-1">
                         <p className="text-lg font-bold text-green-700">{Number(product.price).toFixed(0)} ብር</p>
-                       {product.purchase_price && (
+                       {product.purchase_price !== undefined && product.purchase_price !== null && Number(product.purchase_price) > 0 && (
                          <p className="text-[10px] text-gray-400 leading-tight">
                            Purchase: {Number(product.purchase_price).toFixed(0)} ብር
                          </p>
                        )}
-                       {product.cost_price && (
+                       {product.cost_price !== undefined && product.cost_price !== null && Number(product.cost_price) > 0 && (
                          <p className="text-xs text-gray-600">
                            Cost: {Number(product.cost_price).toFixed(0)} ብር
                          </p>
                        )}
-                       {product.cost_price && (
+                       {product.cost_price !== undefined && product.cost_price !== null && Number(product.cost_price) > 0 && Number(product.price) > 0 && (
                          <p className="text-xs text-green-500 font-medium">
-                           Margin: {Number(product.price) > 0 ? (((Number(product.price) - Number(product.cost_price)) / Number(product.price)) * 100).toFixed(1) : '0.0'}%
+                           Margin: {(((Number(product.price) - Number(product.cost_price)) / Number(product.price)) * 100).toFixed(1)}%
                          </p>
                        )}
                      </div>

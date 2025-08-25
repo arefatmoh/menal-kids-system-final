@@ -108,42 +108,37 @@ export default function ReportsPage() {
   const fetchReportsData = async (): Promise<void> => {
     setIsLoading(true)
     try {
-      // Fetch sales report data
-      const salesParams: Record<string, unknown> = {
+      // Use optimized single API call instead of sequential calls
+      const params: Record<string, unknown> = {
         time_range: timeRange,
+        start_date: timeRange === "custom" ? customDateFrom : undefined,
+        end_date: timeRange === "custom" ? customDateTo : undefined,
+        branch_id: currentBranch !== "all" ? currentBranch : undefined
       }
-
-      if (timeRange === "custom" && customDateFrom && customDateTo) {
-        salesParams.start_date = customDateFrom
-        salesParams.end_date = customDateTo
-      }
-
-      if (currentBranch !== "all") {
-        salesParams.branch_id = currentBranch
-      }
-
-      const salesResponse = await apiClient.getSalesReport(salesParams)
-      if (salesResponse.success) {
-        setSalesData((salesResponse.data as SalesReport[]) || [])
-      }
-
-      // Fetch expense report data
-      const expenseParams: Record<string, unknown> = {}
-      if (timeRange === "custom" && customDateFrom && customDateTo) {
-        expenseParams.start_date = customDateFrom
-        expenseParams.end_date = customDateTo
-      }
-
-      if (currentBranch !== "all") {
-        expenseParams.branch_id = currentBranch
-      }
-
-      const expenseResponse = await apiClient.getExpenseReport(expenseParams)
-      if (expenseResponse.success) {
-        setExpenseData((expenseResponse.data as ExpenseReport[]) || [])
+      
+      const response = await apiClient.getReportsOptimized(params)
+      
+      if (response.success && response.data) {
+        const data = response.data as any
+        
+        // Set sales data
+        if (data.sales) {
+          setSalesData(data.sales || [])
+        }
+        
+        // Set expense data
+        if (data.expenses) {
+          setExpenseData(data.expenses || [])
+        }
+        
+        // Set summary data if available
+        if (data.summary) {
+          // You can add a state for summary if needed
+          console.log('Reports summary:', data.summary)
+        }
       }
     } catch (error: unknown) {
-      console.error("Reports fetch error:", error)
+      console.error("Optimized reports fetch error:", error)
       toast({
         title: "Error",
         description: "Failed to load reports data",

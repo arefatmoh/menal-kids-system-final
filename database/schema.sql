@@ -137,6 +137,7 @@ CREATE TABLE sale_items (
 CREATE TABLE stock_movements (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     product_id UUID NOT NULL REFERENCES products(id),
+    variation_id UUID REFERENCES product_variations(id),
     branch_id VARCHAR(50) NOT NULL REFERENCES branches(id),
     user_id UUID NOT NULL REFERENCES users(id),
     movement_type VARCHAR(10) NOT NULL CHECK (movement_type IN ('in', 'out')),

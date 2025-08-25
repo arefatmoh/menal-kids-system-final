@@ -1,5 +1,6 @@
 export default {
   // Dashboard
+  dashboard: "ዳሽቦርድ",
   welcomeMessage: "እንኳን ደህና መጡ! ዛሬ በመናል ኪድስ ሱቅ ውስጥ ያለው እንቅስቃሴ ይህን ይመስላል።",
   totalProducts: "ጠቅላላ ምርቶች",
   lowStockAlerts: "ዝቅተኛ ስቶክ ማንቂያዎች",
@@ -23,6 +24,30 @@ export default {
   recentProductUpdates: "የቅርብ ጊዜ የዕቃ ለውጦች",
   recentProductUpdatesSubtitle: "የመጨረሻ የኢንቨንተሪ ለውጦች",
 
+  // Sales Today Card
+  salesToday: "ዛሬ የተሸጡ",
+  salesTodaySubtitle: "ዛሬ የተሸጡ ጠቅላላ መጠን",
+
+  // Activity types and descriptions
+  stockMovement: "የስቶክ እንቅስቃሴ",
+  stockAdded: "ስቶክ ተጨምሯል",
+  stockSold: "ስቶክ ተሸጧል",
+  stockAdjusted: "ስቶክ ተስተካክሏል",
+  stockIn: "ስቶክ ገብቷል",
+  stockOut: "ስቶክ ወጥቷል",
+  sale: "ሽያጭ",
+  productCreated: "ምርት ተፈጥሯል",
+  variationCreated: "ተለዋዋጭ ተፈጥሯል",
+  inventoryAdjusted: "ኢንቨንተሪ ተስተካክሏል",
+  userActivity: "የተጠቃሚ እንቅስቃሴ",
+  transfer: "ማስተላለፊያ",
+
+  // Product update details
+  stockLevelUpdated: "የስቶክ ደረጃ ተዘምኗል",
+  productUpdated: "ምርት ተዘምኗል",
+  variationUpdated: "ተለዋዋጭ ተዘምኗል",
+  inventoryUpdated: "ኢንቨንተሪ ተዘምኗል",
+
   // Empty states / labels
   noSalesToday: "ዛሬ ሽያጭ የለም",
   noSalesWeek: "በዚህ ሳምንት ሽያጭ የለም",
@@ -37,6 +62,14 @@ export default {
   units: "ክፍሎች",
   netStockChange: "የኔት የስቶክ ለውጥ",
   dayLabel: "ቀን",
+
+  // Branch names
+  frankoBranch: "ፍራንኮ (ዋና)",
+  mebrathaylBranch: "መብራትሃይል",
+  allBranches: "ሁሉም ቅርንጫፎች",
+
+  // Variation info
+  standardVariation: "መደበኛ",
 }
 
 

@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { useBranch } from "@/lib/branch-context";
 import apiClient from "@/lib/api-client";
 import { useLanguage } from "@/lib/language-context";
+import { getBranchIdForDatabase, getFrontendBranchName } from "@/lib/utils";
 
 const CATEGORIES = [
   "Rent",
@@ -23,8 +24,8 @@ const CATEGORIES = [
 ];
 
 const BRANCHES = [
-  { id: "branch1", name: "Franko (Main)" },
-  { id: "branch2", name: "Mebrathayl" },
+  { id: "franko", name: "Franko (Main)" },
+  { id: "mebrat-hayl", name: "Mebrathayl" },
 ];
 
 interface Expense {
@@ -71,7 +72,7 @@ export default function ExpensesPage() {
       const params: any = {};
       // Respect branch context for employees; owners can view All or specific
       const effectiveBranch = filterBranch !== 'all' ? filterBranch : (currentBranch !== 'all' ? currentBranch : undefined)
-      if (effectiveBranch) params.branch_id = effectiveBranch;
+      if (effectiveBranch) params.branch_id = getBranchIdForDatabase(effectiveBranch);
       if (filterCategory && filterCategory !== "all") params.category = filterCategory;
       
       const res = await apiClient.getExpenses(params);
@@ -88,7 +89,8 @@ export default function ExpensesPage() {
   };
 
   const handleEdit = (expense: any) => {
-    setEditExpense({ ...expense });
+    const mappedBranchId = expense.branch_id ? getFrontendBranchName(expense.branch_id) : "";
+    setEditExpense({ ...expense, branch_id: mappedBranchId });
     setIsEditDialogOpen(true);
   };
 
@@ -96,7 +98,7 @@ export default function ExpensesPage() {
     if (!editExpense) return;
     try {
       const res = await apiClient.updateExpense(editExpense.id, {
-        branch_id: editExpense.branch_id,
+        branch_id: editExpense.branch_id ? getBranchIdForDatabase(editExpense.branch_id) : undefined,
         category: editExpense.category,
         amount: parseFloat(editExpense.amount),
         expense_date: editExpense.expense_date,
@@ -197,7 +199,13 @@ export default function ExpensesPage() {
                   <TableRow><TableCell colSpan={6} className="text-center text-xs sm:text-sm">{t("noExpensesFound" as any) || "No expenses found."}</TableCell></TableRow>
                 ) : expenses.map(expense => (
                   <TableRow key={expense.id}>
-                    <TableCell className="text-xs sm:text-sm">{BRANCHES.find(b => b.id === expense.branch_id)?.name || (t("allBranches") || "All Branches")}</TableCell>
+                    <TableCell className="text-xs sm:text-sm">{
+                      (() => {
+                        const frontendId = expense.branch_id ? getFrontendBranchName(expense.branch_id) : "all";
+                        const name = BRANCHES.find(b => b.id === frontendId)?.name;
+                        return name || (t("allBranches") || "All Branches");
+                      })()
+                    }</TableCell>
                     <TableCell className="text-xs sm:text-sm"><Badge className="text-xs">{expense.category}</Badge></TableCell>
                     <TableCell className="text-xs sm:text-sm font-medium">{Number(expense.amount).toLocaleString()} ብር</TableCell>
                     <TableCell className="text-xs sm:text-sm">{expense.expense_date}</TableCell>

@@ -222,15 +222,15 @@ export default function InventoryPage() {
 
   // Helper function to get the other branch for cross-branch search
   const getOtherBranch = () => {
-    if (currentBranch === "branch1") return "branch2"
-    if (currentBranch === "branch2") return "branch1"
-    return "branch1" // Default fallback
+    if (currentBranch === "franko") return "mebrat-hayl"
+    if (currentBranch === "mebrat-hayl") return "franko"
+    return "franko" // Default fallback
   }
 
   // Helper function to get branch display name
   const getBranchDisplayName = (branch: string) => {
-    if (branch === "branch1") return "Franko"
-    if (branch === "branch2") return "Mebrathayl"
+    if (branch === "franko") return "Franko"
+    if (branch === "mebrat-hayl") return "Mebrathayl"
     return "All Branches"
   }
 
@@ -249,7 +249,9 @@ export default function InventoryPage() {
         // Note: No branch_id is sent, allowing API to search across all branches
       } else if (currentBranch && currentBranch !== "all") {
         // Current branch search: search only in the specified branch
-        params.branch_id = currentBranch
+        // Map frontend branch to database branch id
+        const { getBranchIdForDatabase } = await import("@/lib/utils")
+        params.branch_id = getBranchIdForDatabase(currentBranch)
         params.cross_branch = false
       }
 
@@ -301,20 +303,57 @@ export default function InventoryPage() {
       }
 
       console.log('Sending inventory request with params:', params)
+      // Temporarily use regular API until optimized function is fixed
       const response = await apiClient.getInventory(params)
       
       console.log('Inventory API response:', response)
       
       if (response.success && response.data) {
-        // API returns { success: true, data: [...], pagination: {...} }
-        const inventoryData = response.data as InventoryItem[]
-        console.log('Inventory data:', inventoryData)
+        // Regular API returns { success: true, data: [...], pagination: {...} }
+        const rawInventoryData = response.data as any[]
+        console.log('Raw inventory data from API:', rawInventoryData)
+        
+        // Transform the data to match the expected InventoryItem interface
+        const inventoryData: InventoryItem[] = rawInventoryData.map(item => ({
+          id: item.id || item.inventory_id || '',
+          product_id: item.product_id || '',
+          product_name: item.product_name || '',
+          product_sku: item.product_sku || item.sku || '',
+          product_type: item.product_type || '',
+          branch_id: item.branch_id || '',
+          branch_name: item.branch_name || '',
+          quantity: item.quantity || 0,
+          min_stock_level: item.min_stock_level || 0,
+          max_stock_level: item.max_stock_level || 0,
+          stock_status: item.stock_status || 'normal',
+          category_name: item.category_name || '',
+          price: item.price || 0,
+          cost_price: item.cost_price || 0,
+          purchase_price: item.purchase_price || 0,
+          color: item.color || '',
+          size: item.size || '',
+          brand: item.brand || '',
+          age_range: item.age_range || '',
+          gender: item.gender || '',
+          last_restocked: item.last_restocked || '',
+          total_stock: item.quantity || 0, // Use quantity as total_stock for now
+          branch_count: 1, // Default to 1 for single branch view
+          image_url: item.image_url || '',
+          description: item.description || '',
+          variation_id: item.variation_id || '',
+          variation_sku: item.variation_sku || ''
+        }))
+        
+        console.log('Transformed inventory data:', inventoryData)
         setInventory(inventoryData)
+        
         // Handle pagination from the response
         const responseWithPagination = response as any
         if (responseWithPagination.pagination) {
+          console.log('Pagination from API:', responseWithPagination.pagination)
           setPagination(responseWithPagination.pagination)
         } else {
+          console.log('No pagination from API, using default')
           setPagination({
             page: 1,
             limit: 20,
@@ -365,7 +404,73 @@ export default function InventoryPage() {
     } finally {
       setIsLoading(false)
     }
-  }, [currentBranch, toast, selectedBrand, selectedGender, selectedAgeRange, selectedSize, selectedColor, priceRange, stockRange, isCrossBranchSearch])
+  }, [currentBranch, isCrossBranchSearch, toast])
+
+  // Create a stable reference for filter parameters to prevent unnecessary re-renders
+  const filterParams = useMemo(() => ({
+    selectedStatus,
+    selectedCategory,
+    selectedBrand,
+    selectedGender,
+    selectedAgeRange,
+    selectedSize,
+    selectedColor,
+    priceRange,
+    stockRange
+  }), [
+    selectedStatus,
+    selectedCategory,
+    selectedBrand,
+    selectedGender,
+    selectedAgeRange,
+    selectedSize,
+    selectedColor,
+    priceRange,
+    stockRange
+  ])
+
+  // Create a stable reference for search parameters
+  const searchParams = useMemo(() => ({
+    searchTerm: safeDebouncedSearchTerm,
+    status: selectedStatus,
+    category: selectedCategory
+  }), [safeDebouncedSearchTerm, selectedStatus, selectedCategory])
+
+  // Single consolidated useEffect for all inventory fetching scenarios
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      // Determine the search term to use
+      const effectiveSearchTerm = safeDebouncedSearchTerm.trim()
+      
+      // Determine the status and category to use
+      const effectiveStatus = selectedStatus
+      const effectiveCategory = selectedCategory
+      
+      // Fetch inventory with current parameters
+      fetchInventory(1, effectiveSearchTerm, effectiveStatus, effectiveCategory)
+    }, 300)
+
+    return () => clearTimeout(timeoutId)
+  }, [
+    currentBranch,
+    isCrossBranchSearch,
+    safeDebouncedSearchTerm,
+    selectedStatus,
+    selectedCategory,
+    selectedBrand,
+    selectedGender,
+    selectedAgeRange,
+    selectedSize,
+    selectedColor,
+    priceRange,
+    stockRange
+  ])
+
+  // Separate useEffect for initial data loading (categories, brands, etc.)
+  useEffect(() => {
+    fetchCategories()
+    fetchBrandsAndAgeRanges()
+  }, [currentBranch])
 
   // Group inventory items by product for expandable rows
   const groupedProducts = useMemo(() => {
@@ -523,46 +628,6 @@ export default function InventoryPage() {
       console.error("Brands, age ranges, sizes, and colors fetch error:", error)
     }
   }
-
-  // Fetch inventory when component mounts or branch changes
-  useEffect(() => {
-    fetchInventory(1, "", selectedStatus, selectedCategory)
-    fetchCategories()
-    fetchBrandsAndAgeRanges()
-  }, [currentBranch, fetchInventory, selectedStatus, selectedCategory])
-
-  // Handle all filter changes with debouncing
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      // Check if any quick filters are active
-      const hasQuickFilters = selectedBrand !== "all" || 
-                             selectedGender !== "all" || 
-                             selectedAgeRange !== "all" || 
-                             selectedSize !== "all" || 
-                             selectedColor !== "all" || 
-                             priceRange[0] > 0 || 
-                             priceRange[1] < 10000 || 
-                             stockRange[0] > 0 || 
-                             stockRange[1] < 100
-      
-      // Fetch inventory with current filters
-      fetchInventory(1, safeDebouncedSearchTerm, selectedStatus, selectedCategory)
-    }, 300)
-
-    return () => clearTimeout(timeoutId)
-  }, [
-    selectedStatus, 
-    selectedCategory, 
-    selectedBrand, 
-    selectedGender, 
-    selectedAgeRange, 
-    selectedSize, 
-    selectedColor, 
-    priceRange, 
-    stockRange, 
-    safeDebouncedSearchTerm, 
-    fetchInventory
-  ])
 
   const calculateStats = (data: InventoryItem[]) => {
     const stats: InventoryStats = {
@@ -1072,21 +1137,6 @@ export default function InventoryPage() {
     return count;
   };
 
-  useEffect(() => {
-    if (searchTerm.trim()) {
-      fetchInventory(1, searchTerm.trim(), selectedStatus, selectedCategory)
-    } else {
-      fetchInventory(1, "", selectedStatus, selectedCategory)
-    }
-  }, [debouncedSearchTerm, selectedStatus, selectedCategory, fetchInventory])
-
-  // Auto-refresh when cross-branch toggle changes
-  useEffect(() => {
-    if (searchTerm.trim()) {
-      fetchInventory(1, searchTerm.trim(), selectedStatus, selectedCategory)
-    }
-  }, [isCrossBranchSearch, fetchInventory])
-
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-3 sm:space-y-0">
@@ -1171,7 +1221,7 @@ export default function InventoryPage() {
                 {/* Cross-Branch Search Toggle */}
                 <div className="flex items-center space-x-2 bg-gray-50 rounded-lg px-3 py-1 border border-gray-200 w-full sm:w-auto justify-center sm:justify-start">
                   <span className="text-xs font-medium text-gray-700">
-                    {getBranchDisplayName(currentBranch || "branch1")}
+                    {getBranchDisplayName(currentBranch || "franko")}
                   </span>
                   <div className="relative">
                     <input
@@ -1294,7 +1344,7 @@ export default function InventoryPage() {
                 <span className={`text-sm font-medium ${isCrossBranchSearch ? 'text-blue-600' : 'text-gray-600'}`}>
                   {isCrossBranchSearch 
                     ? `Searching in ${getBranchDisplayName(getOtherBranch())} branch` 
-                    : `Searching in ${getBranchDisplayName(currentBranch || "branch1")} branch`
+                    : `Searching in ${getBranchDisplayName(currentBranch || "franko")} branch`
                   }
                 </span>
               </div>
@@ -1879,7 +1929,7 @@ export default function InventoryPage() {
               <span>
                 {isCrossBranchSearch 
                   ? `${t("search")} ${t("inStock")} ${getBranchDisplayName(getOtherBranch())}`
-                  : `${t("inventory")} ${getBranchDisplayName(currentBranch || "branch1")}`
+                  : `${t("inventory")} ${getBranchDisplayName(currentBranch || "franko")}`
                 }
               </span>
               {isCrossBranchSearch && (

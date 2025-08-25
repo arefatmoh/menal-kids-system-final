@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useBranch } from "@/lib/branch-context";
 import apiClient from "@/lib/api-client";
+import { getBranchIdForDatabase } from "@/lib/utils";
 
 const CATEGORIES = [
   "Rent",
@@ -19,8 +20,8 @@ const CATEGORIES = [
 ];
 
 const BRANCHES = [
-  { id: "branch1", name: "Franko (Main)" },
-  { id: "branch2", name: "Mebrathayl" },
+  { id: "franko", name: "Franko (Main)" },
+  { id: "mebrat-hayl", name: "Mebrathayl" },
 ];
 
 export default function AddExpensePage() {
@@ -49,7 +50,7 @@ export default function AddExpensePage() {
     setError("");
     try {
       const res = await apiClient.createExpense({
-        branch_id: currentBranch !== "all" ? currentBranch : branchId,
+        branch_id: currentBranch !== "all" ? getBranchIdForDatabase(currentBranch) : (branchId ? getBranchIdForDatabase(branchId) : undefined),
         category,
         amount: parseFloat(amount),
         expense_date: expenseDate,

@@ -157,3 +157,16 @@ export function isThisWeek(date: Date): boolean {
   const weekEnd = new Date(today.setDate(today.getDate() - today.getDay() + 6))
   return date >= weekStart && date <= weekEnd
 }
+
+// Branch mapping utilities
+export function getBranchIdForDatabase(branch: string): string {
+  if (branch === "franko") return "branch1"
+  if (branch === "mebrat-hayl") return "branch2"
+  return branch
+}
+
+export function getFrontendBranchName(branchId: string): string {
+  if (branchId === "branch1") return "franko"
+  if (branchId === "branch2") return "mebrat-hayl"
+  return branchId
+}

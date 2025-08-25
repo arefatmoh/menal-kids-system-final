@@ -18,12 +18,20 @@ BEGIN
     RETURN QUERY
     SELECT 
         -- Count active products available in branch inventory
+        -- For specific branch: count ONLY products that have inventory in that specific branch
+        -- For all branches: count total unique products across all branches
         (
           SELECT COUNT(DISTINCT p.id)::BIGINT
           FROM products p
           JOIN inventory i ON i.product_id = p.id
           WHERE p.is_active = TRUE
-            AND (p_branch_id IS NULL OR i.branch_id = p_branch_id)
+            AND (
+              -- If specific branch is requested, only count products in that branch
+              (p_branch_id IS NOT NULL AND i.branch_id = p_branch_id)
+              OR 
+              -- If all branches requested, count all products that have inventory anywhere
+              (p_branch_id IS NULL)
+            )
         ) AS total_products,
 
         -- Low stock alerts from inventory

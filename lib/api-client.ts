@@ -492,6 +492,175 @@ class ApiClient {
       body: JSON.stringify(params),
     })
   }
+
+  // ===== OPTIMIZED API METHODS =====
+  
+  // Optimized dashboard - single call for all dashboard data
+  async getDashboardOptimized(branchId?: string, cacheBuster?: number) {
+    try {
+      const params = new URLSearchParams()
+      if (branchId) params.append('branch_id', branchId)
+      if (cacheBuster) params.append('_t', cacheBuster.toString())
+      
+      const response = await this.request(`/dashboard/optimized?${params}`)
+      
+      // If optimized API fails, fall back to individual API calls
+      if (!response.success) {
+        console.warn('Optimized dashboard API failed, falling back to individual APIs')
+        // Fallback to individual API calls (you can implement this if needed)
+        throw new Error('Optimized dashboard API failed')
+      }
+      
+      return response
+    } catch (error) {
+      console.warn('Optimized dashboard API error:', error)
+      throw error
+    }
+  }
+
+  // Optimized inventory - fast inventory with caching
+  async getInventoryOptimized(params: Record<string, unknown> = {}) {
+    try {
+      const searchParams = this.buildSearchParams(params)
+      const response = await this.request(`/inventory/optimized?${searchParams}`)
+      
+      // If optimized API fails, fall back to regular API
+      if (!response.success) {
+        console.warn('Optimized inventory API failed, falling back to regular API')
+        return this.getInventory(params)
+      }
+      
+      return response
+    } catch (error) {
+      console.warn('Optimized inventory API error, falling back to regular API:', error)
+      return this.getInventory(params)
+    }
+  }
+
+  // Optimized reports - combined reports with caching
+  async getReportsOptimized(params: Record<string, unknown> = {}) {
+    try {
+      const searchParams = this.buildSearchParams(params)
+      const response = await this.request(`/reports/optimized?${searchParams}`)
+      
+      // If optimized API fails, fall back to regular APIs
+      if (!response.success) {
+        console.warn('Optimized reports API failed, falling back to regular APIs')
+        // Fallback to individual report APIs
+        const [salesReport, expenseReport] = await Promise.all([
+          this.getSalesReport(params),
+          this.getExpenseReport(params)
+        ])
+        return {
+          success: true,
+          data: {
+            sales: salesReport.success ? salesReport.data : [],
+            expenses: expenseReport.success ? expenseReport.data : []
+          }
+        }
+      }
+      
+      return response
+    } catch (error) {
+      console.warn('Optimized reports API error, falling back to regular APIs:', error)
+      // Fallback to individual report APIs
+      const [salesReport, expenseReport] = await Promise.all([
+        this.getSalesReport(params),
+        this.getExpenseReport(params)
+      ])
+      return {
+        success: true,
+        data: {
+          sales: salesReport.success ? salesReport.data : [],
+          expenses: expenseReport.success ? expenseReport.data : []
+        }
+      }
+    }
+  }
+
+  // Optimized stock management
+  async getStockOptimized(params: Record<string, unknown> = {}) {
+    try {
+      const searchParams = this.buildSearchParams(params)
+      const response = await this.request(`/stock/optimized?${searchParams}`)
+      
+      // If optimized API fails, fall back to regular APIs
+      if (!response.success) {
+        console.warn('Optimized stock API failed, falling back to regular APIs')
+        // Fallback to individual stock APIs
+        const [stockMovements, products] = await Promise.all([
+          this.getStockMovements(params),
+          this.getProducts(params)
+        ])
+        return {
+          success: true,
+          data: {
+            movements: stockMovements.success ? stockMovements.data : [],
+            products: products.success ? products.data : [],
+            branches: []
+          }
+        }
+      }
+      
+      return response
+    } catch (error) {
+      console.warn('Optimized stock API error, falling back to regular APIs:', error)
+      // Fallback to individual stock APIs
+      const [stockMovements, products] = await Promise.all([
+        this.getStockMovements(params),
+        this.getProducts(params)
+      ])
+      return {
+        success: true,
+        data: {
+          movements: stockMovements.success ? stockMovements.data : [],
+          products: products.success ? products.data : [],
+          branches: []
+        }
+      }
+    }
+  }
+
+  // Optimized transfers
+  async getTransferOptimized(params: Record<string, unknown> = {}) {
+    try {
+      const searchParams = this.buildSearchParams(params)
+      const response = await this.request(`/transfer/optimized?${searchParams}`)
+      
+      // If optimized API fails, fall back to regular APIs
+      if (!response.success) {
+        console.warn('Optimized transfer API failed, falling back to regular APIs')
+        // Fallback to individual transfer APIs
+        const [inventory, transfers] = await Promise.all([
+          this.getInventory(params),
+          this.getTransfers(params)
+        ])
+        return {
+          success: true,
+          data: {
+            inventory: inventory.success ? inventory.data : [],
+            transfers: transfers.success ? transfers.data : []
+          }
+        }
+      }
+      
+      return response
+    } catch (error) {
+      console.warn('Optimized transfer API error, falling back to regular APIs:', error)
+      // Fallback to individual transfer APIs
+      const [inventory, transfers] = await Promise.all([
+        this.getInventory(params),
+        this.getTransfers(params)
+      ])
+      return {
+        success: true,
+        data: {
+          inventory: inventory.success ? inventory.data : [],
+          transfers: transfers.success ? transfers.data : []
+        }
+      }
+    }
+  }
 }
 
 // Create singleton instance

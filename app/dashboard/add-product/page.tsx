@@ -24,7 +24,7 @@ import apiClient from "@/lib/api-client"
 import { useToast } from "@/hooks/use-toast"
 import { useBranch } from "@/lib/branch-context"
 import { useRouter } from "next/navigation"
-import { cn } from "@/lib/utils"
+import { cn, getBranchIdForDatabase } from "@/lib/utils"
 import { ProductTypeSelector } from "@/components/product-type-selector"
 import { VariationBuilder } from "@/components/variation-builder"
 
@@ -123,7 +123,7 @@ export default function AddProductPage() {
     try {
       const response = await apiClient.getProducts({
         search: searchTerm.trim(),
-        branch_id: currentBranch,
+        branch_id: getBranchIdForDatabase(currentBranch),
         limit: 10,
         product_type: "variation" // Only show variation products
       })
@@ -187,7 +187,7 @@ export default function AddProductPage() {
     try {
       const response = await apiClient.getProducts({
         search: name.trim(),
-        branch_id: currentBranch,
+        branch_id: getBranchIdForDatabase(currentBranch),
         name_exact: true,
         limit: 1
       })
@@ -430,7 +430,7 @@ export default function AddProductPage() {
         age_range: formData.age_range || undefined,
         gender: formData.gender || undefined,
         product_type: productType,
-        branch_id: currentBranch === "all" ? "branch1" : currentBranch,
+        branch_id: currentBranch === "all" ? getBranchIdForDatabase("franko") : getBranchIdForDatabase(currentBranch),
       }
 
       if (productType === "uniform") {
@@ -471,7 +471,7 @@ export default function AddProductPage() {
         
         toast({
           title: "Product Added Successfully!",
-          description: `The ${productType} product has been added to ${currentBranch === "all" ? "Branch 1" : currentBranch === "branch1" ? "Franko (Main)" : "Mebrathayl"} inventory on ${currentDate}. You can now manage it from the inventory page.`,
+          description: `The ${productType} product has been added to ${currentBranch === "all" ? "All Branches" : currentBranch === "franko" ? "Franko (Main)" : "Mebrathayl"} inventory on ${currentDate}. You can now manage it from the inventory page.`,
         })
         setLastAddedProduct({
           ...(response.data as any), 
@@ -571,7 +571,7 @@ export default function AddProductPage() {
           initial_quantity: variation.initial_quantity,
           min_stock_level: variation.min_stock_level || null,
           max_stock_level: variation.max_stock_level || null,
-          branch_id: currentBranch === "all" ? "branch1" : currentBranch,
+          branch_id: currentBranch === "all" ? getBranchIdForDatabase("franko") : getBranchIdForDatabase(currentBranch),
         }
 
         const response = await apiClient.addVariationToProduct(selectedExistingProduct.id, variationData)
@@ -703,7 +703,7 @@ export default function AddProductPage() {
                     <div className="space-y-1">
                       <span className="text-xs text-gray-500 uppercase tracking-wide">Branch</span>
                       <p className="text-sm font-medium text-gray-800">
-                        {currentBranch === "branch1" ? "Franko (Main)" : currentBranch === "branch2" ? "Mebrathayl" : "All Branches"}
+                        {currentBranch === "franko" ? "Franko (Main)" : currentBranch === "mebrat-hayl" ? "Mebrathayl" : "All Branches"}
                       </p>
                     </div>
                     <div className="space-y-1">

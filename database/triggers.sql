@@ -5,6 +5,10 @@
 CREATE OR REPLACE FUNCTION trigger_inventory_stock_movement()
 RETURNS TRIGGER AS $$
 BEGIN
+    -- If sale trigger asked to skip inventory movement logging, do nothing
+    IF current_setting('app.skip_inventory_trigger', true) = '1' THEN
+        RETURN NEW;
+    END IF;
     -- Only create movement record if quantity actually changed
     IF (TG_OP = 'UPDATE' AND OLD.quantity != NEW.quantity) THEN
         INSERT INTO stock_movements (
@@ -122,6 +126,9 @@ BEGIN
     SELECT branch_id, user_id INTO sale_branch_id, sale_user_id
     FROM sales WHERE id = NEW.sale_id;
     
+    -- Ask inventory trigger to skip logging movement because we log a sale movement here
+    PERFORM set_config('app.skip_inventory_trigger', '1', true);
+
     -- Update inventory (variation-aware, guarded)
     UPDATE inventory 
     SET quantity = quantity - NEW.quantity,
@@ -170,6 +177,9 @@ BEGIN
         'sale',
         NEW.sale_id
     );
+
+    -- Re-enable inventory trigger logging for subsequent operations
+    PERFORM set_config('app.skip_inventory_trigger', '0', true);
     
     RETURN NEW;
 END;
@@ -254,15 +264,31 @@ DECLARE
     spent_amount DECIMAL(12,2);
     percentage_used DECIMAL(5,2);
     branch_name VARCHAR(255);
+    has_budget_amount BOOLEAN;
 BEGIN
     -- Get budget for this category and branch
-    SELECT b.budget_amount INTO budget_amount
-    FROM budgets b
-    WHERE b.category = NEW.category
-        AND (b.branch_id = NEW.branch_id OR b.branch_id IS NULL)
-        AND NEW.expense_date BETWEEN b.period_start AND b.period_end
-    ORDER BY b.branch_id NULLS LAST -- Prefer branch-specific budget
-    LIMIT 1;
+    SELECT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'budgets' AND column_name = 'budget_amount'
+    ) INTO has_budget_amount;
+
+    IF has_budget_amount THEN
+        SELECT b.budget_amount INTO budget_amount
+        FROM budgets b
+        WHERE b.category = NEW.category
+            AND (b.branch_id = NEW.branch_id OR b.branch_id IS NULL)
+            AND NEW.expense_date BETWEEN b.period_start AND b.period_end
+        ORDER BY b.branch_id NULLS LAST -- Prefer branch-specific budget
+        LIMIT 1;
+    ELSE
+        SELECT b.amount INTO budget_amount
+        FROM budgets b
+        WHERE b.category = NEW.category
+            AND (b.branch_id = NEW.branch_id OR b.branch_id IS NULL)
+            AND NEW.expense_date BETWEEN b.period_start AND b.period_end
+        ORDER BY b.branch_id NULLS LAST -- Prefer branch-specific budget
+        LIMIT 1;
+    END IF;
     
     -- If budget exists, check spending
     IF budget_amount IS NOT NULL THEN

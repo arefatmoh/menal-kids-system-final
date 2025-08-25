@@ -154,7 +154,6 @@ export default {
   transferDescriptionSuccess: "Items have been transferred instantly between branches and inventory has been updated",
   transferDetails: "Transfer Details",
   transferred: "Transferred",
-  transferSummary: "Transfer Summary",
   continueTransferring: "Continue Transferring",
   startNewTransfer: "Start New Transfer",
   

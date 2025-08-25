@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
+import { getBranchIdForDatabase } from "@/lib/utils"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
@@ -69,6 +70,7 @@ import {
 import apiClient from "@/lib/api-client"
 import { useToast } from "@/hooks/use-toast"
 import { useBranch } from "@/lib/branch-context"
+import { useRouter } from "next/navigation"
 import { useLanguage } from "@/lib/language-context"
 
 interface StockMovement {
@@ -147,6 +149,7 @@ export default function StockManagementPage() {
   const [stockMovements, setStockMovements] = useState<StockMovement[]>([])
   const [products, setProducts] = useState<Product[]>([])
   const [stockAlerts, setStockAlerts] = useState<StockAlert[]>([])
+  const [serverTotalUnits, setServerTotalUnits] = useState<number | null>(null)
   const [stats, setStats] = useState<StockStats>({
     total_products: 0,
     low_stock_items: 0,
@@ -175,6 +178,11 @@ export default function StockManagementPage() {
   const [variationQuantities, setVariationQuantities] = useState<Record<string, string>>({})
   const [branches, setBranches] = useState<{ id: string; name: string }[]>([])
   const [dialogBranch, setDialogBranch] = useState("")
+
+  // Transfer quantity dialog state
+  const [transferDialogOpen, setTransferDialogOpen] = useState(false)
+  const [transferProductId, setTransferProductId] = useState("")
+  const [transferQty, setTransferQty] = useState("1")
 
   // Bulk operations state
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set())
@@ -237,6 +245,7 @@ export default function StockManagementPage() {
     isUpdating: false,
     isProcessing: false
   })
+  const [downloadMenuOpen, setDownloadMenuOpen] = useState(false)
   const [feedback, setFeedback] = useState({
     showSuccessMessage: false,
     showErrorMessage: false,
@@ -247,6 +256,7 @@ export default function StockManagementPage() {
   const { currentBranch } = useBranch()
   const { toast } = useToast()
   const { t } = useLanguage()
+  const router = useRouter()
 
   // Check role and branch
   const userRole = typeof window !== 'undefined' ? localStorage.getItem("userRole") : null
@@ -303,6 +313,13 @@ export default function StockManagementPage() {
 
   useEffect(() => {
     if (products.length > 0) {
+      // Ensure API client is properly initialized
+      if (typeof window !== 'undefined') {
+        const token = localStorage.getItem("auth_token")
+        if (token) {
+          apiClient.setToken(token)
+        }
+      }
       fetchStockAlerts()
     }
   }, [products, currentBranch])
@@ -337,12 +354,45 @@ export default function StockManagementPage() {
 
   const fetchData = async () => {
     setIsLoading(true)
+    setServerTotalUnits(null)
     try {
-      // Fetch data in sequence to ensure proper dependencies
-      await fetchStockMovements()
-      await fetchProducts() // This will trigger calculateStats and fetchStockAlerts via useEffect
+      // Use optimized single API call instead of multiple calls
+      const params: any = {
+        page: 1,
+        limit: 50,
+        branch_id: currentBranch !== "all" ? getBranchIdForDatabase(currentBranch) : undefined
+      }
+
+      const response = await apiClient.getStockOptimized(params)
+      
+      if (response.success && response.data) {
+        const data = response.data as any
+        
+        // Set products
+        if (data.products) {
+          setProducts(data.products)
+        }
+        
+        // Set stock movements
+        if (data.movements) {
+          setStockMovements(data.movements)
+        }
+        
+        // Set branches
+        if (data.branches) {
+          setBranches(data.branches)
+        }
+        
+        // Set summary stats if available (use server aggregate for Total Stocks)
+        if (data.summary) {
+          setServerTotalUnits(Number(data.summary.total_units) || 0)
+        } else {
+          // Fallback to client calculation
+          calculateStats()
+        }
+      }
     } catch (error) {
-      console.error("Error fetching data:", error)
+      console.error("Error fetching optimized stock data:", error)
       toast({
         title: "Error",
         description: "Failed to load stock data",
@@ -353,6 +403,214 @@ export default function StockManagementPage() {
     }
   }
 
+  const filenamePrefix = useMemo(() => {
+    const dateStr = new Date().toISOString().split("T")[0]
+    const branchLabel = currentBranch === 'all' ? 'all-branches' : currentBranch
+    return `stock_report_${branchLabel}_${dateStr}`
+  }, [currentBranch])
+
+  const getExportProducts = async (): Promise<Product[]> => {
+    try {
+      const params: any = { page: 1, limit: 10000 }
+      if (currentBranch && currentBranch !== 'all') {
+        params.branch_id = getBranchIdForDatabase(currentBranch)
+      } else {
+        params.cross_branch = true
+      }
+      const response = await apiClient.getInventory(params)
+      if (!response.success || !Array.isArray(response.data)) return []
+      const rows = response.data as any[]
+      const grouped: Map<string, Product> = new Map()
+      for (const row of rows) {
+        const productId = row.product_id
+        const variationObj = {
+          id: row.variation_id || row.product_id,
+          variation_id: row.variation_id || "",
+          variation_sku: row.variation_sku || row.product_sku || row.sku || "",
+          color: row.color || undefined,
+          size: row.size || undefined,
+          price: row.price ?? undefined,
+          quantity: row.quantity ?? 0,
+        }
+        const existing = grouped.get(productId)
+        if (!existing) {
+          const minLevel = typeof row.min_stock_level === 'number' ? row.min_stock_level : 0
+          const maxLevel = typeof row.max_stock_level === 'number' ? row.max_stock_level : 0
+          grouped.set(productId, {
+            id: productId,
+            name: row.product_name,
+            sku: row.product_sku || row.sku,
+            current_stock: row.quantity ?? 0,
+            category_name: row.category_name,
+            price: row.price || 0,
+            min_stock_level: minLevel,
+            max_stock_level: maxLevel,
+            branch_id: row.branch_id,
+            branch_name: row.branch_name,
+            stock_status: row.stock_status || getStockStatusFromData(row.quantity ?? 0, minLevel, maxLevel),
+            product_type: row.product_type,
+            variations: row.variation_id ? [variationObj] : [],
+          })
+        } else {
+          existing.current_stock += row.quantity ?? 0
+          if (typeof row.min_stock_level === 'number') {
+            existing.min_stock_level = existing.min_stock_level === 0 ? row.min_stock_level : Math.min(existing.min_stock_level, row.min_stock_level)
+          }
+          if (typeof row.max_stock_level === 'number') {
+            existing.max_stock_level = Math.max(existing.max_stock_level, row.max_stock_level || 0)
+          }
+          if (row.variation_id) {
+            existing.variations = existing.variations || []
+            existing.variations.push(variationObj)
+          }
+        }
+      }
+      return Array.from(grouped.values())
+    } catch {
+      return []
+    }
+  }
+
+  const downloadExcel = async () => {
+    const headers = ['Product Name','SKU','Branch','Quantity','Category','Price']
+    const exportProducts = await getExportProducts()
+    const rows = exportProducts.map(p => [
+      (p.name || '').replace(/\n|\r/g, ' ').trim(),
+      p.sku || '',
+      p.branch_name || '',
+      String(p.current_stock ?? 0),
+      p.category_name || '',
+      String(p.price ?? 0)
+    ])
+    const csv = [headers, ...rows]
+      .map(cols => cols.map(v => /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v).join(','))
+      .join('\n')
+    const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${filenamePrefix}.csv`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+    setDownloadMenuOpen(false)
+  }
+
+  const downloadPDF = async () => {
+    const shopTitle = 'Menal Kids Shop'
+    const dateStr = new Date().toLocaleString()
+    const total = serverTotalUnits ?? stats.total_products
+    const branchTitle = currentBranch === 'all' ? 'All Branches' : (currentBranch || '')
+    const exportProducts = await getExportProducts()
+
+    const byCategory = exportProducts.reduce((acc: Record<string, typeof exportProducts>, p) => {
+      const cat = p.category_name || 'Uncategorized'
+      if (!acc[cat]) acc[cat] = []
+      acc[cat].push(p)
+      return acc
+    }, {})
+
+    const sectionsHtml = Object.keys(byCategory)
+      .sort((a, b) => a.localeCompare(b))
+      .map(cat => {
+        const rowsArr = byCategory[cat]
+        const catTotal = rowsArr.reduce((s, p) => s + (p.current_stock ?? 0), 0)
+        const rows = rowsArr
+          .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+          .map(p => `
+            <tr>
+              <td>${(p.name || '').replace(/&/g,'&amp;').replace(/</g,'&lt;')}</td>
+              <td>${p.sku || ''}</td>
+              <td style=\"text-align:right;\">${p.current_stock ?? 0}</td>
+            </tr>`)
+          .join('')
+        return `
+          <h2 class=\"cat\">${cat} <span class=\"cat-total\">(${catTotal})</span></h2>
+          <table class=\"tbl\">
+            <thead><tr><th>Product</th><th>SKU</th><th style=\"text-align:right;\">Qty</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>`
+      })
+      .join('')
+
+    const html = `<!doctype html><html><head><meta charset=\"utf-8\"><title>${shopTitle} • Stock Report</title>
+      <style>
+        :root{--ink:#0f172a; --muted:#64748b; --line:#e2e8f0; --accent:#1e40af; --accent2:#f59e0b; --bgGrad1:#f0f9ff; --bgGrad2:#fff7ed;}
+        *{box-sizing:border-box}
+        @page { margin: 22mm 18mm 22mm 18mm; }
+        body{font-family: 'Inter', 'Segoe UI', Roboto, Arial, sans-serif; color:var(--ink); margin:0; padding:56px 48px; background:
+            linear-gradient(180deg, var(--bgGrad1), #ffffff 35%) fixed}
+        .container{max-width:820px; margin:40px auto 52px}
+        .brand{
+          display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-radius:14px;
+          background: linear-gradient(135deg, rgba(37,99,235,.08), rgba(245,158,11,.08)); border:1px solid var(--line);
+          box-shadow: 0 6px 18px rgba(2,6,23,.06);
+          margin-bottom:18px
+        }
+        .brand-left{display:flex; align-items:center; gap:14px}
+        .logo-badge{width:44px; height:44px; border-radius:12px; display:grid; place-items:center; background:#fff; border:1px solid var(--line);
+          box-shadow:0 4px 10px rgba(2,6,23,.05)}
+        .sarfus-logo{height:10px; width:auto}
+        .title-wrap{line-height:1.15}
+        .title{font-size:28px; font-weight:900; letter-spacing:.2px; color:var(--accent)}
+        .dev-under{font-size:11px; color:var(--muted); margin-top:2px}
+        .brand-right{display:flex; align-items:center; gap:10px}
+        .dev{font-size:11px; color:var(--muted)}
+
+        .meta{display:flex; flex-wrap:wrap; gap:14px; margin:10px 2px 2px; color:var(--muted); font-size:12px}
+        .kpi{margin:4px 2px 16px; font-size:13px; color:var(--ink); font-weight:700}
+
+        h2.cat{margin:18px 0 8px; font-size:16px; font-weight:900; color:var(--accent); display:flex; align-items:center; gap:8px}
+        h2.cat .cat-total{font-weight:700; color:#0f766e}
+        h2.cat:before{content:''; width:8px; height:8px; border-radius:50%; background:var(--accent); box-shadow:0 0 0 3px rgba(30,64,175,.18)}
+
+        table.tbl{width:88%; border-collapse:separate; border-spacing:0; font-size:12px; margin:0 auto 16px; overflow:hidden; border-radius:10px; border:1px solid var(--line)}
+        .tbl thead th{background:#f8fafc; text-align:left; padding:10px 12px; color:#0b132b; font-weight:800; border-bottom:1px solid var(--line)}
+        .tbl tbody td{padding:9px 12px; border-bottom:1px solid var(--line)}
+        .tbl tbody tr td{border-bottom:1px solid var(--line)}
+        .tbl tbody tr:nth-child(odd){background:#fcfdff}
+        .qty{font-variant-numeric: tabular-nums; text-align:right}
+
+        footer{margin-top:22px; color:var(--muted); font-size:11px; display:flex; align-items:center; justify-content:space-between}
+        .foot-left{display:flex; gap:10px; align-items:center}
+        .badge{display:inline-block; padding:2px 8px; border-radius:999px; background:rgba(37,99,235,.08); color:var(--accent); border:1px solid rgba(37,99,235,.15);
+          font-size:11px; font-weight:600}
+
+        @media print{body{padding:10px} .tbl thead th,.tbl tbody td{padding:6px 8px} .brand{border:none; box-shadow:none}}
+      </style></head><body>
+      <div class=\"container\">
+      <section class=\"brand\">
+        <div class=\"brand-left\">
+          <div class=\"logo-badge\"><img class=\"sarfus-logo\" src=\"/sarfus.png\" alt=\"Sarfus Innovation\" /></div>
+          <div class=\"title-wrap\">
+            <div class=\"title\">${shopTitle}</div>
+            <div class=\"dev-under\">Developed by Sarfus Innovation</div>
+          </div>
+        </div>
+        <div class=\"brand-right\"></div>
+      </section>
+      <div class=\"meta\"><span><strong>Branch:</strong> ${branchTitle}</span><span><strong>Generated:</strong> ${dateStr}</span></div>
+      <div class=\"kpi\">Total Units: <span class=\"badge\">${total}</span></div>
+      ${sectionsHtml}
+      <footer>
+        <div class=\"foot-left\">
+          <span>Menal Kids Shop • Inventory Report</span>
+        </div>
+        <span class=\"badge\">Stock Management</span>
+      </footer>
+      </div>
+      <script>window.onload = () => { window.print(); }</script>
+      </body></html>`
+    const w = window.open('', '_blank')
+    if (w) {
+      w.document.open()
+      w.document.write(html)
+      w.document.close()
+    }
+    setDownloadMenuOpen(false)
+  }
+
   const fetchStockMovements = async () => {
     try {
       const params: any = {
@@ -361,7 +619,7 @@ export default function StockManagementPage() {
       }
 
       if (currentBranch && currentBranch !== "all") {
-        params.branch_id = currentBranch
+        params.branch_id = getBranchIdForDatabase(currentBranch)
       }
 
       const response = await apiClient.getStockMovements(params)
@@ -471,18 +729,27 @@ export default function StockManagementPage() {
 
   const fetchStockAlerts = async () => {
     try {
+      // Check if user is authenticated
+      const token = localStorage.getItem("auth_token")
+      if (!token) {
+        console.warn("No authentication token found. User may need to log in again.")
+        return
+      }
+
       const params: any = { status: 'active' }
       if (currentBranch && currentBranch !== 'all') {
-        params.branch_id = currentBranch
+        params.branch_id = getBranchIdForDatabase(currentBranch)
       }
-      const query = new URLSearchParams(params).toString()
-      const res = await fetch(`/api/alerts?${query}`, { headers: { 'Content-Type': 'application/json' } })
-      const data = await res.json()
-      if (res.ok && data.success && Array.isArray(data.data)) {
-        setStockAlerts(data.data as StockAlert[])
+      const response = await apiClient.getAlerts(params)
+      if (response.success && Array.isArray(response.data)) {
+        setStockAlerts(response.data as StockAlert[])
       }
     } catch (error) {
       console.error("Stock alerts fetch error:", error)
+      // If it's an authentication error, suggest logging in again
+      if (error instanceof Error && error.message.includes('401')) {
+        console.warn("Authentication failed. Please log in again.")
+      }
     }
   }
 
@@ -528,7 +795,7 @@ export default function StockManagementPage() {
     try {
       const movementData: any = {
         product_id: selectedProduct,
-        branch_id: selectedBranch === "all" ? currentBranch : selectedBranch,
+        branch_id: getBranchIdForDatabase(selectedBranch === "all" ? currentBranch : selectedBranch),
         movement_type: movementType as "in" | "out",
         quantity: Number.parseInt(quantity),
         reason,
@@ -609,7 +876,7 @@ export default function StockManagementPage() {
         const product = products.find(p => p.id === productId)
         const movementData: any = {
           product_id: productId,
-          branch_id: selectedBranch === "all" ? currentBranch : selectedBranch,
+          branch_id: getBranchIdForDatabase(selectedBranch === "all" ? currentBranch : selectedBranch),
           movement_type: bulkMovementType as "in" | "out",
           quantity: Number.parseInt(bulkQuantity),
           reason: bulkReason,
@@ -686,8 +953,8 @@ export default function StockManagementPage() {
 
   const getStockStatus = (stock: number, minStock: number, maxStock: number) => {
     if (stock === 0) return { status: "Out of Stock", color: "destructive", icon: XCircle }
-    if (minStock > 0 && stock <= minStock) return { status: "Low Stock", color: "secondary", icon: AlertTriangle }
-    if (maxStock > 0 && stock > maxStock) return { status: "Overstock", color: "default", icon: AlertCircle }
+    if (minStock > 0 && stock <= minStock) return { status: "Low Stock", color: "warning", icon: AlertTriangle }
+    if (maxStock > 0 && stock > maxStock) return { status: "Overstock", color: "secondary", icon: AlertCircle }
     return { status: "In Stock", color: "default", icon: CheckCircle }
   }
 
@@ -771,7 +1038,7 @@ export default function StockManagementPage() {
       const product = products.find(p => p.id === productId)
       const movementData: any = {
         product_id: productId,
-        branch_id: selectedBranch === "all" ? currentBranch : selectedBranch,
+        branch_id: getBranchIdForDatabase(currentBranch !== "all" ? currentBranch : "franko"), // Use current branch or default
         movement_type: action === 'add' ? "in" : "out",
         quantity: quantity,
         reason: `Quick ${action} action`,
@@ -782,7 +1049,10 @@ export default function StockManagementPage() {
 
       // If user clicked quick icon, instead open nicer dialogs instead of default quantity=1
       if (action === 'transfer') {
-        toast({ title: 'Quick Transfer', description: 'Use the Transfer page to move between branches' })
+        // Open system dialog to collect quantity
+        setTransferProductId(productId)
+        setTransferQty("1")
+        setTransferDialogOpen(true)
         setIsSubmitting(false)
         return
       }
@@ -806,17 +1076,28 @@ export default function StockManagementPage() {
         setQuickAdjustOpen(true)
       }
 
+      // For products with variations, open variation adjustment dialog
       if (product && product.variations && product.variations.length > 0) {
         setIsSubmitting(false)
         openVariationAdjust(product, action)
         return
       }
 
+      // For products without variations, open quick adjustment dialog
       if (product && (!product.variations || product.variations.length === 0)) {
         setIsSubmitting(false)
         openQuickAdjust(product, action)
         return
       }
+
+      // If we reach here, something went wrong
+      setIsSubmitting(false)
+      toast({
+        title: "Error",
+        description: "Product not found or invalid product data",
+        variant: "destructive",
+      })
+      return
 
       const response = await apiClient.createStockMovement(movementData)
       
@@ -946,11 +1227,40 @@ export default function StockManagementPage() {
               fetchData().finally(() => setLoadingState('isRefreshing', false))
             }}
             disabled={isLoading || loadingStates.isRefreshing}
-            className="w-full sm:w-auto"
+            className="w-full sm:w-auto sm:min-w-[110px]"
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${(isLoading || loadingStates.isRefreshing) ? 'animate-spin' : ''}`} />
             <span className="hidden sm:inline">{t("refresh")}</span>
           </Button>
+
+          {/* Download Report Button with two options */}
+          <div className="relative w-full sm:w-auto">
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => setDownloadMenuOpen(prev => !prev)}
+              className="w-full sm:w-auto sm:min-w-[160px]"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Download Report
+            </Button>
+            {downloadMenuOpen && (
+              <div className="absolute right-0 mt-2 w-44 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                <button
+                  className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"
+                  onClick={downloadPDF}
+                >
+                  Download PDF
+                </button>
+                <button
+                  className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"
+                  onClick={downloadExcel}
+                >
+                  Download Excel
+                </button>
+              </div>
+            )}
+          </div>
           
 
         </div>
@@ -1003,7 +1313,7 @@ export default function StockManagementPage() {
               </div>
               <div className="flex-1 min-w-0 text-center sm:text-left">
                 <p className={`${uiPreferences.compactMode ? 'text-xs' : 'text-xs sm:text-sm'} font-medium text-blue-700 leading-tight`}>{t("totalStocks")}</p>
-                <p className={`${uiPreferences.compactMode ? 'text-xl' : 'text-lg sm:text-xl lg:text-2xl'} font-bold text-blue-900 leading-tight`}>{stats.total_products}</p>
+                <p className={`${uiPreferences.compactMode ? 'text-xl' : 'text-lg sm:text-xl lg:text-2xl'} font-bold text-blue-900 leading-tight`}>{serverTotalUnits ?? stats.total_products}</p>
               </div>
             </div>
           </CardContent>
@@ -1329,10 +1639,7 @@ export default function StockManagementPage() {
                                   className="bg-blue-500 hover:bg-blue-600 text-white"
                                   onClick={(e) => {
                                     e.stopPropagation()
-                                    // Go to transfer page with preselected product
-                                    const url = new URL(window.location.origin + '/dashboard/transfer')
-                                    url.searchParams.set('product_id', product.id)
-                                    window.location.href = url.toString()
+                                    handleQuickAction('transfer', product.id)
                                   }}
                                   disabled={isSubmitting}
                                 >
@@ -1427,6 +1734,33 @@ export default function StockManagementPage() {
           </div>
         </TabsContent>
 
+        {/* Transfer Quantity Dialog */}
+        <Dialog open={transferDialogOpen} onOpenChange={setTransferDialogOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Transfer Product</DialogTitle>
+              <DialogDescription>Enter the quantity to transfer, then continue.</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3">
+              <div className="space-y-2">
+                <Label>Quantity</Label>
+                <Input type="number" min={1} value={transferQty} onChange={e => setTransferQty(e.target.value)} />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="secondary" onClick={() => setTransferDialogOpen(false)}>Cancel</Button>
+              <Button onClick={() => {
+                const qty = Number.parseInt(transferQty || '0')
+                if (!qty || qty <= 0) return
+                const dbBranch = getBranchIdForDatabase(currentBranch !== 'all' ? currentBranch : 'franko')
+                const target = new URLSearchParams({ product_id: transferProductId, branch_id: dbBranch, qty: String(qty) })
+                router.push(`/dashboard/transfer?${target.toString()}`)
+                setTransferDialogOpen(false)
+              }}>Continue</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
         {/* Quick Adjust Dialog - Uniform products */}
         <Dialog open={quickAdjustOpen} onOpenChange={setQuickAdjustOpen}>
           <DialogContent>
@@ -1470,7 +1804,7 @@ export default function StockManagementPage() {
                 const applyBranch = currentBranch === 'all' ? dialogBranch : currentBranch
                 const payload: any = {
                   product_id: quickAdjustProduct!.id,
-                  branch_id: applyBranch,
+                  branch_id: getBranchIdForDatabase(applyBranch),
                   movement_type: quickAdjustMode === 'add' ? 'in' : 'out',
                   quantity: parsedQty,
                   reason: `Quick ${quickAdjustMode} action`,
@@ -1559,9 +1893,11 @@ export default function StockManagementPage() {
                 }
                 setIsSubmitting(true)
                 try {
+                  const effectiveBranch = currentBranch === "all" ? dialogBranch : currentBranch
+                  const dbBranch = getBranchIdForDatabase(effectiveBranch)
                   const promises = entries.map(e => apiClient.createStockMovement({
                     product_id: quickAdjustProduct!.id,
-                    branch_id: currentBranch === "all" ? dialogBranch : currentBranch,
+                    branch_id: dbBranch,
                     variation_id: e.vid,
                     movement_type: variationAdjustMode === 'add' ? 'in' : 'out',
                     quantity: e.qty,
@@ -2798,3 +3134,4 @@ export default function StockManagementPage() {
     </div>
   )
 }
+

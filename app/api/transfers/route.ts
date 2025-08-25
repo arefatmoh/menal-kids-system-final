@@ -155,6 +155,8 @@ export async function POST(request: NextRequest) {
     await query('BEGIN')
 
     try {
+      // Prevent inventory trigger from creating duplicate stock_movements while we log explicitly
+      await query(`SELECT set_config('app.skip_inventory_trigger', '1', true)`)
       // Check inventory availability for all items
       for (const item of validatedData.items) {
         let inventoryResult
@@ -231,7 +233,7 @@ export async function POST(request: NextRequest) {
         // First try to update an existing destination row
         const upsertDest = await query(`
           UPDATE inventory 
-          SET quantity = quantity + $4, last_restocked = NOW(), updated_at = NOW()
+          SET quantity = quantity + $4, updated_at = NOW()
           WHERE product_id = $1 
             AND branch_id = $2 
             AND (
@@ -244,7 +246,7 @@ export async function POST(request: NextRequest) {
         if (upsertDest.rowCount === 0) {
           // No existing row, insert new one copying min/max from source branch if available
           await query(`
-            INSERT INTO inventory (product_id, branch_id, variation_id, quantity, min_stock_level, max_stock_level, last_restocked)
+            INSERT INTO inventory (product_id, branch_id, variation_id, quantity, min_stock_level, max_stock_level)
             VALUES (
               $1,
               $2,
@@ -255,8 +257,7 @@ export async function POST(request: NextRequest) {
                ) LIMIT 1),
               (SELECT max_stock_level FROM inventory WHERE product_id = $1 AND branch_id = $5 AND (
                  ($3::uuid IS NOT NULL AND variation_id = $3::uuid) OR ($3::uuid IS NULL AND variation_id IS NULL)
-               ) LIMIT 1),
-              NOW()
+               ) LIMIT 1)
             )
           `, [item.product_id, validatedData.to_branch_id, item.variation_id || null, item.quantity, validatedData.from_branch_id])
         }
@@ -267,6 +268,9 @@ export async function POST(request: NextRequest) {
           VALUES ($1, $2, $3, $4, 'in', $5, $6, 'transfer', $7)
         `, [item.product_id, validatedData.to_branch_id, item.variation_id || null, user.id, item.quantity, `Transfer from ${validatedData.from_branch_id}`, transferId])
       }
+
+      // Re-enable inventory trigger logging
+      await query(`SELECT set_config('app.skip_inventory_trigger', '0', true)`)
 
       await query('COMMIT')
 
@@ -324,6 +328,8 @@ export async function POST(request: NextRequest) {
       })
     } catch (error) {
       await query('ROLLBACK')
+      // Best-effort to re-enable inventory trigger logging even on failure
+      try { await query(`SELECT set_config('app.skip_inventory_trigger', '0', true)`) } catch {}
       throw error
     }
   } catch (error) {

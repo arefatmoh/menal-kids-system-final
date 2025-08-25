@@ -9,7 +9,7 @@ import apiClient from "@/lib/api-client"
 import { useLanguage } from "@/lib/language-context"
 import { useToast } from "@/hooks/use-toast"
 import { useBranch } from "@/lib/branch-context"
-import { formatCurrency } from "@/lib/utils"
+import { formatCurrency, getBranchIdForDatabase } from "@/lib/utils"
 
 interface DashboardStats {
   total_products: number
@@ -124,108 +124,82 @@ export default function Dashboard() {
 
       setIsLoading(true)
       try {
-        const branchParam = currentBranch === "all" ? undefined : currentBranch
+        const branchParam = currentBranch === "all" ? undefined : getBranchIdForDatabase(currentBranch)
 
-        const stockTrendParams: any = {}
-        if (branchParam) stockTrendParams.branch_id = branchParam
+        // Use optimized single API call instead of multiple calls
+        // Add cache-busting parameter to ensure fresh data
+        const cacheBuster = Date.now()
+        const dashboardResponse = await apiClient.getDashboardOptimized(branchParam, cacheBuster)
 
-        const salesParams: any = {}
-        if (branchParam) salesParams.branch_id = branchParam
+        if (dashboardResponse.success && dashboardResponse.data) {
+          const data = dashboardResponse.data as any
+          
+          // Set stats
+          if (data.stats) {
+            setStats(data.stats)
+            const todaySales = typeof data.stats.total_sales_today === 'number' 
+              ? data.stats.total_sales_today 
+              : Number((data.stats as any).total_sales_today || 0)
+            setSalesSummary(todaySales)
+          }
 
-        const topSellingTodayParams: any = {}
-        if (branchParam) topSellingTodayParams.branch_id = branchParam
+          // Set recent activities
+          if (data.recent_activities) {
+            setRecentActivities(data.recent_activities)
+            setTotalActivities(data.recent_activities.length)
+          }
 
-        const topSellingWeekParams: any = {}
-        if (branchParam) topSellingWeekParams.branch_id = branchParam
+          // Set stock trend
+          if (data.stock_trend) {
+            setStockTrend(data.stock_trend)
+          }
 
-        const lowStockParams: any = {}
-        if (branchParam) lowStockParams.branch_id = branchParam
+          // Set top selling today
+          if (data.top_selling_today) {
+            setTopSellingToday(data.top_selling_today)
+          }
 
-        const recentUpdatesParams: any = {}
-        if (branchParam) recentUpdatesParams.branch_id = branchParam
+          // Set top selling week
+          if (data.top_selling_week) {
+            setTopSellingWeek(data.top_selling_week)
+          }
 
-        const promises: Array<Promise<any>> = [
-          apiClient.getDashboardStats(branchParam),
-          apiClient.getRecentActivities(branchParam, 50),
-          apiClient.getStockTrend(stockTrendParams),
-          apiClient.getTopSellingToday(topSellingTodayParams),
-          apiClient.getTopSellingWeek(topSellingWeekParams),
-          apiClient.getLowStockProducts(lowStockParams),
-          apiClient.getRecentProductUpdates(recentUpdatesParams),
-        ]
+          // Set low stock products
+          if (data.low_stock_products) {
+            setLowStockProducts(data.low_stock_products)
+          }
 
-        if (userRole === 'owner') {
-          promises.push(apiClient.getSalesTotal(salesParams))
+          // Set recent updates
+          if (data.recent_updates) {
+            setRecentProductUpdates(data.recent_updates)
+          }
         }
 
-        const results = await Promise.allSettled(promises)
+        // All data is now loaded from the single optimized API call above
 
-        const [
-          statsResult,
-          activitiesResult,
-          stockTrendResult,
-          topTodayResult,
-          topWeekResult,
-          lowStockResult,
-          recentUpdatesResult,
-          salesTotalResult,
-        ] = results
+        // Stock trend data is already loaded from the optimized API call
 
-        if (statsResult?.status === 'fulfilled' && statsResult.value?.success) {
-          const s = statsResult.value.data as DashboardStats
-          setStats(s)
-          const todaySales = typeof s.total_sales_today === 'number' ? s.total_sales_today : Number((s as any).total_sales_today || 0)
-          setSalesSummary(todaySales)
-        }
+        // Sales summary is already loaded from the optimized API call
 
-        if (activitiesResult?.status === 'fulfilled' && activitiesResult.value?.success) {
-          const items = (activitiesResult.value.data as unknown as RecentActivity[]) || []
-          setRecentActivities(items)
-          setTotalActivities(items.length)
-        }
+        // Top selling today data is already loaded from the optimized API call
 
-        if (stockTrendResult?.status === 'fulfilled' && stockTrendResult.value?.success && Array.isArray(stockTrendResult.value.data)) {
-          const trendData = stockTrendResult.value.data.map((day: any) => ({
-            name: day.name,
-            stock: day.net_change || 0,
-            stock_in: day.stock_in || 0,
-            stock_out: day.stock_out || 0,
-            total_stock: day.total_stock || 0
-          }))
-          setStockTrend(trendData)
-        } else if (stockTrendResult?.status === 'fulfilled') {
-          setStockTrend([])
-        }
+        // if (topWeekResult?.status === 'fulfilled' && topWeekResult.value?.success) {
+        //   type TopSelling = { product_name: string; quantity_sold: number; total_amount: number; variation_info: string }
+        //   const items = (topWeekResult.value.data as unknown) as TopSelling[]
+        //   setTopSellingWeek(Array.isArray(items) ? items : [])
+        // }
 
-        if (userRole === 'owner' && salesTotalResult?.status === 'fulfilled' && salesTotalResult.value?.success) {
-          type SalesTotalResponse = { total_sales?: number }
-          const data = salesTotalResult.value.data as unknown as SalesTotalResponse
-          setSalesSummary(Number(data?.total_sales ?? 0))
-        }
+        // if (lowStockResult?.status === 'fulfilled' && lowStockResult.value?.success) {
+        //   type LowStock = { product_name: string; current_quantity: number; variation_info: string; category_info: string; days_since_restock: number }
+        //   const items = (lowStockResult.value.data as unknown) as LowStock[]
+        //   setLowStockProducts(Array.isArray(items) ? items : [])
+        // }
 
-        if (topTodayResult?.status === 'fulfilled' && topTodayResult.value?.success) {
-          type TopSelling = { product_name: string; quantity_sold: number; total_amount: number; variation_info: string }
-          const items = (topTodayResult.value.data as unknown) as TopSelling[]
-          setTopSellingToday(Array.isArray(items) ? items : [])
-        }
-
-        if (topWeekResult?.status === 'fulfilled' && topWeekResult.value?.success) {
-          type TopSelling = { product_name: string; quantity_sold: number; total_amount: number; variation_info: string }
-          const items = (topWeekResult.value.data as unknown) as TopSelling[]
-          setTopSellingWeek(Array.isArray(items) ? items : [])
-        }
-
-        if (lowStockResult?.status === 'fulfilled' && lowStockResult.value?.success) {
-          type LowStock = { product_name: string; current_quantity: number; variation_info: string; category_info: string; days_since_restock: number }
-          const items = (lowStockResult.value.data as unknown) as LowStock[]
-          setLowStockProducts(Array.isArray(items) ? items : [])
-        }
-
-        if (recentUpdatesResult?.status === 'fulfilled' && recentUpdatesResult.value?.success) {
-          type RecentUpdate = { product_name: string; update_type: string; updated_at: string; variation_info: string; category_info: string; change_details: string }
-          const items = (recentUpdatesResult.value.data as unknown) as RecentUpdate[]
-          setRecentProductUpdates(Array.isArray(items) ? items : [])
-        }
+        // if (recentUpdatesResult?.status === 'fulfilled' && recentUpdatesResult.value?.success) {
+        //   type RecentUpdate = { product_name: string; update_type: string; updated_at: string; variation_info: string; category_info: string; change_details: string }
+        //   const items = (recentUpdatesResult.value.data as unknown) as RecentUpdate[]
+        //   setRecentProductUpdates(Array.isArray(items) ? items : [])
+        // }
 
       } catch (error: any) {
         console.error("Dashboard data fetch error:", error)
@@ -268,13 +242,20 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
         <Card className="border-0 shadow-lg bg-gradient-to-br from-pink-50 to-pink-100 hover:shadow-xl transition-shadow duration-200">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-pink-700">{t("today") + " " + t("transfer")}</CardTitle>
+            <CardTitle className="text-sm font-medium text-pink-700">{t("salesToday")}</CardTitle>
             <BarChart3 className="h-4 w-4 text-pink-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-pink-900">{salesSummary !== null ? formatCurrency(Math.round(Number(salesSummary) || 0)) : "-"}</div>
             <p className="text-xs text-pink-600 mt-1">
-              {userRole === "owner" ? t("allBranches") : t("branch1")} {t("today")}
+              {userRole === "owner" 
+                ? t("allBranches") 
+                : currentBranch === "franko" 
+                  ? t("frankoBranch") 
+                  : currentBranch === "mebrat-hayl" 
+                    ? t("mebrathaylBranch") 
+                    : t("frankoBranch")
+              } {t("today")}
             </p>
           </CardContent>
         </Card>
@@ -446,8 +427,45 @@ export default function Dashboard() {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 leading-tight">{activity.description}</p>
-                      <p className="text-sm text-gray-500 truncate mt-1">{activity.branch_name} • {activity.user_name}</p>
+                      <p className="text-sm font-medium text-gray-900 leading-tight">
+                        {(() => {
+                          // Translate activity descriptions based on activity_type
+                          switch (activity.activity_type) {
+                            case 'stock_in':
+                              return t("stockAdded")
+                            case 'stock_out':
+                              return t("stockSold")
+                            case 'sale':
+                              return t("sale")
+                            case 'product_created':
+                              return t("productCreated")
+                            case 'variation_created':
+                              return t("variationCreated")
+                            case 'inventory_adjusted':
+                              return t("inventoryAdjusted")
+                            case 'user_activity':
+                              return t("userActivity")
+                            default:
+                              if (activity.activity_type?.startsWith('transfer_')) {
+                                return t("transfer")
+                              }
+                              return activity.description || t("stockMovement")
+                          }
+                        })()}
+                      </p>
+                      <p className="text-sm text-gray-500 truncate mt-1">
+                        {(() => {
+                          // Translate branch names
+                          if (activity.branch_name === 'Branch 1' || activity.branch_name === 'branch1' || activity.branch_name === 'franko') {
+                            return t("frankoBranch")
+                          } else if (activity.branch_name === 'Branch 2' || activity.branch_name === 'branch2' || activity.branch_name === 'mebrat-hayl') {
+                            return t("mebrathaylBranch")
+                          } else if (activity.branch_name === 'All Branches' || activity.branch_name === 'all') {
+                            return t("allBranches")
+                          }
+                          return activity.branch_name
+                        })()} • {activity.user_name}
+                      </p>
                     </div>
                     <div className="text-xs text-gray-400">
                       {new Date(activity.created_at).toLocaleTimeString()}
@@ -471,7 +489,7 @@ export default function Dashboard() {
                   <ChevronLeft className="h-5 w-5" />
                 </button>
                 <span className="text-sm text-gray-700">
-                  Page {currentPage} of {totalPages}
+                  {t("page")} {currentPage} {t("of")} {totalPages}
                 </span>
                 <button
                   onClick={goToNextActivitiesPage}
@@ -503,7 +521,7 @@ export default function Dashboard() {
                   <li key={idx} className="py-2 flex justify-between items-center">
                     <div className="flex-1 min-w-0">
                       <span className="font-medium text-gray-800 truncate block">{prod.product_name}</span>
-                      {prod.variation_info !== 'Standard' && (
+                      {prod.variation_info !== t("standardVariation") && (
                         <span className="text-xs text-gray-500 block">{prod.variation_info}</span>
                       )}
                     </div>
@@ -554,7 +572,7 @@ export default function Dashboard() {
                   <li key={idx} className="py-2 flex justify-between items-center">
                     <div className="flex-1 min-w-0">
                       <span className="font-medium text-gray-800 truncate block">{prod.product_name}</span>
-                      {prod.variation_info !== 'Standard' && (
+                      {prod.variation_info !== t("standardVariation") && (
                         <span className="text-xs text-gray-500 block">{prod.variation_info}</span>
                       )}
                     </div>
@@ -606,7 +624,7 @@ export default function Dashboard() {
                     <div className="flex-1 min-w-0">
                       <span className="font-medium text-gray-800 truncate block">{prod.product_name}</span>
                       <div className="text-xs text-gray-500">
-                        {prod.variation_info !== 'Standard' && <span>{prod.variation_info} • </span>}
+                        {prod.variation_info !== t("standardVariation") && <span>{prod.variation_info} • </span>}
                         <span>{prod.category_info}</span>
                       </div>
                     </div>
@@ -658,12 +676,28 @@ export default function Dashboard() {
                     <div className="flex-1 min-w-0">
                       <span className="font-medium text-gray-800 truncate block">{update.product_name}</span>
                       <div className="text-xs text-gray-500">
-                        {update.variation_info !== 'Standard' && <span>{update.variation_info} • </span>}
+                        {update.variation_info !== t("standardVariation") && <span>{update.variation_info} • </span>}
                         <span>{update.category_info}</span>
                       </div>
                     </div>
                     <div className="text-right">
-                      <span className="text-purple-600 font-semibold">{update.update_type}</span>
+                      <span className="text-purple-600 font-semibold">
+                        {(() => {
+                          // Translate update types
+                          switch (update.update_type) {
+                            case 'stock_update':
+                              return t("stockLevelUpdated")
+                            case 'product_update':
+                              return t("productUpdated")
+                            case 'variation_update':
+                              return t("variationUpdated")
+                            case 'inventory_update':
+                              return t("inventoryUpdated")
+                            default:
+                              return update.update_type || t("stockLevelUpdated")
+                          }
+                        })()}
+                      </span>
                       <div className="text-xs text-gray-400">{new Date(update.updated_at).toLocaleDateString()}</div>
                     </div>
                   </li>

@@ -1,5 +1,6 @@
 export default {
   // Dashboard
+  dashboard: "Dashboard",
   welcomeMessage: "Welcome back! Here's what's happening at Menal Kids Shop today.",
   totalProducts: "Total Products",
   lowStockAlerts: "Low Stock Alerts",
@@ -23,6 +24,30 @@ export default {
   recentProductUpdates: "Recent Product Updates",
   recentProductUpdatesSubtitle: "Latest inventory changes",
 
+  // Sales Today Card
+  salesToday: "Sales Today",
+  salesTodaySubtitle: "Today's total sales amount",
+
+  // Activity types and descriptions
+  stockMovement: "Stock Movement",
+  stockAdded: "Stock added",
+  stockSold: "Stock sold",
+  stockAdjusted: "Stock adjusted",
+  stockIn: "Stock In",
+  stockOut: "Stock Out",
+  sale: "Sale",
+  productCreated: "Product Created",
+  variationCreated: "Variation Created",
+  inventoryAdjusted: "Inventory Adjusted",
+  userActivity: "User Activity",
+  transfer: "Transfer",
+
+  // Product update details
+  stockLevelUpdated: "Stock level updated",
+  productUpdated: "Product updated",
+  variationUpdated: "Variation updated",
+  inventoryUpdated: "Inventory updated",
+
   // Empty states / labels
   noSalesToday: "No sales today",
   noSalesWeek: "No sales this week",
@@ -37,6 +62,14 @@ export default {
   units: "units",
   netStockChange: "Net Stock Change",
   dayLabel: "Day",
+
+  // Branch names
+  frankoBranch: "Franko (Main)",
+  mebrathaylBranch: "Mebrathayl",
+  allBranches: "All Branches",
+
+  // Variation info
+  standardVariation: "Standard",
 }
 
 
