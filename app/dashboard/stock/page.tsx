@@ -183,6 +183,9 @@ export default function StockManagementPage() {
   const [transferDialogOpen, setTransferDialogOpen] = useState(false)
   const [transferProductId, setTransferProductId] = useState("")
   const [transferQty, setTransferQty] = useState("1")
+  
+  // Mobile quick actions state
+  const [clickedProductId, setClickedProductId] = useState<string | null>(null)
 
   // Bulk operations state
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set())
@@ -351,6 +354,21 @@ export default function StockManagementPage() {
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [selectedProducts.size, products.length])
+
+  // Click outside handler for mobile quick actions
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (clickedProductId && window.innerWidth < 640) {
+        const target = event.target as Element
+        if (!target.closest('.product-card')) {
+          setClickedProductId(null)
+        }
+      }
+    }
+
+    document.addEventListener('click', handleClickOutside)
+    return () => document.removeEventListener('click', handleClickOutside)
+  }, [clickedProductId])
 
   const fetchData = async () => {
     setIsLoading(true)
@@ -1557,12 +1575,18 @@ export default function StockManagementPage() {
                         return (
                           <div
                             key={product.id}
-                            className={`p-4 border rounded-lg transition-all duration-200 hover:shadow-md cursor-pointer relative group ${
+                            className={`product-card p-4 border rounded-lg transition-all duration-200 hover:shadow-md cursor-pointer relative group ${
                               stockStatus.status === "Out of Stock" ? 'border-red-200 bg-red-50' :
                               stockStatus.status === "Low Stock" ? 'border-yellow-200 bg-yellow-50' :
                               stockStatus.status === "Overstock" ? 'border-orange-200 bg-orange-50' :
                               'border-gray-200 bg-white'
                             }`}
+                            onClick={() => {
+                              // On mobile, toggle quick actions on click
+                              if (window.innerWidth < 640) { // sm breakpoint
+                                setClickedProductId(clickedProductId === product.id ? null : product.id)
+                              }
+                            }}
                           >
                             <div className="flex items-center space-x-3">
                               <StatusIcon className={`h-5 w-5 ${
@@ -1580,6 +1604,10 @@ export default function StockManagementPage() {
                                   <Badge variant="outline" className={`text-xs border-${categoryColor}-200 text-${categoryColor}-700`}>
                                     {stockCategory}
                                   </Badge>
+                                </div>
+                                {/* Mobile hint - only show on small screens */}
+                                <div className="sm:hidden mt-2 text-xs text-gray-500 text-center">
+                                  Tap to show actions
                                 </div>
                                 {product.variations && product.variations.length > 0 && (
                                   <div className="mt-2 flex flex-wrap gap-1">
@@ -1606,44 +1634,47 @@ export default function StockManagementPage() {
                               </div>
                             </div>
 
-                            {/* Quick Actions Overlay - Only show on hover */}
+                            {/* Quick Actions Overlay - Show on hover for desktop, click for mobile */}
                             {(
-                              <div className="absolute inset-0 bg-black bg-opacity-50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center space-x-2">
+                              <div className={`absolute inset-0 bg-black bg-opacity-50 rounded-lg transition-opacity duration-200 flex items-center justify-center space-x-2 ${
+                                // Show on hover for desktop, show on mobile when clicked
+                                clickedProductId === product.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 sm:group-hover:opacity-100'
+                              }`}>
                                 <Button
                                   size="sm"
                                   variant="secondary"
-                                  className="bg-green-500 hover:bg-green-600 text-white"
+                                  className="bg-green-500 hover:bg-green-600 text-white sm:h-8 sm:w-8 h-10 w-10"
                                   onClick={(e) => {
                                     e.stopPropagation()
                                     handleQuickAction('add', product.id, 1)
                                   }}
                                   disabled={isSubmitting}
                                 >
-                                  <Plus className="h-3 w-3" />
+                                  <Plus className="h-4 w-4 sm:h-3 sm:w-3" />
                                 </Button>
                                 <Button
                                   size="sm"
                                   variant="secondary"
-                                  className="bg-red-500 hover:bg-red-600 text-white"
+                                  className="bg-red-500 hover:bg-red-600 text-white sm:h-8 sm:w-8 h-10 w-10"
                                   onClick={(e) => {
                                     e.stopPropagation()
                                     handleQuickAction('reduce', product.id, 1)
                                   }}
                                   disabled={isSubmitting}
                                 >
-                                  <Minus className="h-3 w-3" />
+                                  <Minus className="h-4 w-4 sm:h-3 sm:w-3" />
                                 </Button>
                                 <Button
                                   size="sm"
                                   variant="secondary"
-                                  className="bg-blue-500 hover:bg-blue-600 text-white"
+                                  className="bg-blue-500 hover:bg-blue-600 text-white sm:h-8 sm:w-8 h-10 w-10"
                                   onClick={(e) => {
                                     e.stopPropagation()
                                     handleQuickAction('transfer', product.id)
                                   }}
                                   disabled={isSubmitting}
                                 >
-                                  <Truck className="h-3 w-3" />
+                                  <Truck className="h-4 w-4 sm:h-4 sm:w-4" />
                                 </Button>
                               </div>
                             )}
