@@ -1555,11 +1555,11 @@ export default function SellProductsPage() {
                         <SelectValue placeholder="Status" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">All Status</SelectItem>
-                        <SelectItem value="normal">In Stock</SelectItem>
-                        <SelectItem value="low_stock">Low Stock</SelectItem>
-                        <SelectItem value="out_of_stock">Out of Stock</SelectItem>
-                        <SelectItem value="overstock">Overstock</SelectItem>
+                        <SelectItem value="all">{t("allStatus" as any)}</SelectItem>
+                        <SelectItem value="normal">{t("inStock" as any)}</SelectItem>
+                        <SelectItem value="low_stock">{t("lowStock" as any)}</SelectItem>
+                        <SelectItem value="out_of_stock">{t("outOfStock" as any)}</SelectItem>
+                        <SelectItem value="overstock">{t("overstock" as any)}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -1696,11 +1696,11 @@ export default function SellProductsPage() {
                         <SelectValue placeholder="Status" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">All Status</SelectItem>
-                        <SelectItem value="normal">In Stock</SelectItem>
-                        <SelectItem value="low_stock">Low Stock</SelectItem>
-                        <SelectItem value="out_of_stock">Out of Stock</SelectItem>
-                        <SelectItem value="overstock">Overstock</SelectItem>
+                        <SelectItem value="all">{t("allStatus" as any)}</SelectItem>
+                        <SelectItem value="normal">{t("inStock" as any)}</SelectItem>
+                        <SelectItem value="low_stock">{t("lowStock" as any)}</SelectItem>
+                        <SelectItem value="out_of_stock">{t("outOfStock" as any)}</SelectItem>
+                        <SelectItem value="overstock">{t("overstock" as any)}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -1987,11 +1987,11 @@ export default function SellProductsPage() {
                               product.displayStock === 0 ? 'text-red-600' :
                               product.displayStock <= 5 ? 'text-yellow-600' : 'text-green-600'
                             } font-medium`}>
-                              {product.displayStock === 0 ? 'Out of Stock' :
-                               product.displayStock <= 5 ? 'Low Stock' : 'In Stock'}
+                              {product.displayStock === 0 ? t("outOfStock" as any) :
+                               product.displayStock <= 5 ? t("lowStock" as any) : t("inStock" as any)}
                             </span>
                             <span className={`${viewMode === 'grid' ? 'text-[10px]' : 'text-xs'} text-gray-500`}>
-                              ({product.displayStock} available)
+                              ({product.displayStock} {t("available" as any).toLowerCase()})
                             </span>
                           </div>
 
@@ -2177,7 +2177,7 @@ export default function SellProductsPage() {
               </div>
               {cart.length > 0 && (
                 <div className="text-right">
-                  <p className="text-sm text-green-100">Total</p>
+                  <p className="text-sm text-green-100">{t("total" as any)}</p>
                   <p className="text-xl font-bold">{getTotalAmount().toFixed(0)} ብር</p>
                 </div>
               )}
@@ -2266,7 +2266,7 @@ export default function SellProductsPage() {
                                 onClick={() => startEditingPrice(item)}
                               >
                                 <p className="text-xs font-medium text-gray-700">
-                                  {(Number(item.current_price)).toFixed(0)} ብር each
+                                  {(Number(item.current_price)).toFixed(0)} ብር {t("each" as any)}
                                 </p>
                               </div>
                             )}
@@ -2470,16 +2470,27 @@ export default function SellProductsPage() {
                   </div>
                 </div>
                 {cart.length > 0 && (
-                  <div className="text-right">
-                    <p className="text-sm text-green-100">Total</p>
-                    <p className="text-xl font-bold">{getTotalAmount().toFixed(0)} ብር</p>
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                      <p className="text-sm text-green-100">{t("total" as any)}</p>
+                      <p className="text-xl font-bold">{getTotalAmount().toFixed(0)} ብር</p>
+                    </div>
+                    <Button
+                      variant="secondary"
+                      size="icon"
+                      className="h-8 w-8 bg-white/20 hover:bg-white/30 text-white"
+                      onClick={() => setIsMobileCartOpen(false)}
+                      aria-label="Close cart"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
                   </div>
                 )}
               </div>
             </div>
 
             {/* Items */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            <div className={`flex-1 overflow-y-auto p-4 space-y-3 ${editingPriceId ? 'pb-28' : 'pb-24'}`}>
               {cart.length === 0 ? (
                 <div className="flex h-full items-center justify-center">
                   <div className="text-center py-8">
@@ -2541,7 +2552,7 @@ export default function SellProductsPage() {
                             </div>
                           ) : (
                             <div className="cursor-pointer hover:bg-gray-100 px-1 py-0.5 rounded text-xs" onClick={() => startEditingPrice(item)}>
-                              <p className="text-xs font-medium text-gray-700">{(Number(item.current_price)).toFixed(0)} ብር each</p>
+                              <p className="text-xs font-medium text-gray-700">{(Number(item.current_price)).toFixed(0)} ብር {t("each" as any)}</p>
                             </div>
                           )}
                         </div>

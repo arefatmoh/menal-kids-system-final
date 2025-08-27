@@ -172,7 +172,7 @@ export default {
   // Expense Categories
   rent: "ኪራይ",
   salaries: "ደሞዝ",
-  utilities: "የአገልግሎት ክፍያክፍያ",
+  utilities: "የአገልግሎት ክፍያ",
   marketing: "ማርኬቲንግ",
   supplies: "ግብአቶች",
   other: "ሌላ",
