@@ -15,12 +15,12 @@ import { useLanguage } from "@/lib/language-context";
 import { getBranchIdForDatabase, getFrontendBranchName } from "@/lib/utils";
 
 const CATEGORIES = [
-  "Rent",
-  "Salaries",
-  "Utilities",
-  "Marketing",
-  "Supplies",
-  "Other",
+  "rent",
+  "salaries",
+  "utilities",
+  "marketing",
+  "supplies",
+  "other",
 ];
 
 const BRANCHES = [
@@ -170,7 +170,7 @@ export default function ExpensesPage() {
                 <SelectContent>
                   <SelectItem value="all">{t("allCategories") || "All Categories"}</SelectItem>
                   {CATEGORIES.map(cat => (
-                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                    <SelectItem key={cat} value={cat}>{t(cat as any)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -206,7 +206,7 @@ export default function ExpensesPage() {
                         return name || (t("allBranches") || "All Branches");
                       })()
                     }</TableCell>
-                    <TableCell className="text-xs sm:text-sm"><Badge className="text-xs">{expense.category}</Badge></TableCell>
+                    <TableCell className="text-xs sm:text-sm"><Badge className="text-xs">{t(expense.category as any)}</Badge></TableCell>
                     <TableCell className="text-xs sm:text-sm font-medium">{Number(expense.amount).toLocaleString()} ብር</TableCell>
                     <TableCell className="text-xs sm:text-sm">{expense.expense_date}</TableCell>
                     <TableCell className="text-xs sm:text-sm max-w-[150px] truncate">{expense.description}</TableCell>
@@ -253,7 +253,7 @@ export default function ExpensesPage() {
                   </SelectTrigger>
                   <SelectContent>
                     {CATEGORIES.map(cat => (
-                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                      <SelectItem key={cat} value={cat}>{t(cat as any)}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

@@ -555,50 +555,44 @@ export default function TransferPage() {
           : getBranchIdForDatabase(fromBranch || "franko")
       }
 
-      console.log('Current branch:', currentBranch)
-      console.log('From branch:', fromBranch)
-      console.log('User role:', localStorage.getItem("userRole"))
-      console.log('Fetching transfer data with params:', params)
+      
 
       const response = await apiClient.getTransferOptimized(params)
       
-      console.log('Transfer API response:', response)
+      
       
       if (response.success && response.data) {
         const data = response.data as any
         
-        console.log('Transfer API response data:', data)
+
         
         // Set products (uniform products)
         if (data.products && Array.isArray(data.products)) {
-          console.log('Setting products:', data.products.length, 'items')
+  
           setProducts(data.products)
         } else {
-          console.warn('No products data or invalid format:', data.products)
           setProducts([])
         }
         
         // Set transfers
         if (data.transfers && Array.isArray(data.transfers)) {
-          console.log('Setting transfers:', data.transfers.length, 'items')
+  
           setTransfers(data.transfers)
         } else {
-          console.warn('No transfers data or invalid format:', data.transfers)
           setTransfers([])
         }
         
         // Set branches
         if (data.branches && Array.isArray(data.branches)) {
-          console.log('Setting branches:', data.branches.length, 'items')
+  
           setBranches(data.branches)
         } else {
-          console.warn('No branches data or invalid format:', data.branches)
           setBranches([])
         }
         
         // Handle variations separately
         if (data.variations && Array.isArray(data.variations)) {
-          console.log('Processing variations:', data.variations.length, 'items')
+  
           
           // Group variations by product
           const variationsByProduct = new Map<string, any[]>()
@@ -631,14 +625,12 @@ export default function TransferPage() {
             productsWithVariations.push(productWithVariations)
           })
           
-          console.log('Created products with variations:', productsWithVariations.length, 'items')
+  
           setProductsWithVariations(productsWithVariations)
         } else {
-          console.warn('No variations data or invalid format:', data.variations)
           setProductsWithVariations([])
         }
-      } else {
-        console.warn('Transfer API failed, falling back to individual APIs')
+              } else {
         // Fallback to individual API calls
         const [inventoryResponse, transfersResponse, branchesResponse] = await Promise.all([
           apiClient.getInventory({ branch_id: currentBranch !== "all" ? getBranchIdForDatabase(currentBranch) : (fromBranch ? getBranchIdForDatabase(fromBranch) : undefined) }),
@@ -646,7 +638,7 @@ export default function TransferPage() {
           apiClient.getBranches()
         ])
         
-        console.log('Fallback API responses:', { inventoryResponse, transfersResponse, branchesResponse })
+
         
         if (inventoryResponse.success && inventoryResponse.data) {
           setProducts(inventoryResponse.data as Product[])
@@ -1667,8 +1659,8 @@ export default function TransferPage() {
                             key={productId}
                         className={`group relative ${
                           viewMode === 'grid' 
-                            ? 'p-3 border border-gray-200 rounded-lg hover:border-green-300 hover:shadow-md transition-all duration-200 cursor-pointer bg-white' 
-                            : 'p-3 border border-gray-200 rounded-lg hover:border-green-300 transition-all duration-200 cursor-pointer bg-white flex items-center space-x-4'
+                            ? 'p-4 border border-gray-200 rounded-lg hover:border-green-300 hover:shadow-md transition-all duration-200 cursor-pointer bg-white' 
+                            : 'p-4 border border-gray-200 rounded-lg hover:border-green-300 transition-all duration-200 cursor-pointer bg-white flex items-center space-x-4'
                         } ${
                               productQuantities[productId] && Number.parseInt(productQuantities[productId]) > 0
                             ? 'border-green-500 bg-green-50 shadow-lg' 
@@ -1708,10 +1700,16 @@ export default function TransferPage() {
                         <div className={viewMode === 'grid' ? 'mb-3' : 'flex-shrink-0'}>
                           <div className={`relative ${
                             viewMode === 'grid' 
-                              ? 'w-full h-16 rounded-lg bg-gradient-to-r from-pink-100 to-purple-100 flex items-center justify-center mb-2' 
-                              : 'w-14 h-14 rounded-lg bg-gradient-to-r from-pink-100 to-purple-100 flex items-center justify-center'
+                              ? 'w-full h-12 rounded-lg bg-gradient-to-r from-pink-100 to-purple-100 flex items-center justify-center mb-2' 
+                              : 'w-12 h-12 rounded-lg bg-gradient-to-r from-pink-100 to-purple-100 flex items-center justify-center'
                           }`}>
-                            <Package className={`${viewMode === 'grid' ? 'h-6 w-6' : 'h-5 w-5'} text-pink-500`} />
+                            <Package className={`${viewMode === 'grid' ? 'h-4 w-4' : 'h-3 w-3'} text-pink-500`} />
+                            {/* Category badge (top-left) */}
+                            <div className="absolute top-1 left-1">
+                              <Badge variant="outline" className={`${viewMode === 'grid' ? 'text-[10px] px-1 py-0.5' : 'text-xs px-1.5 py-0.5'} bg-white/80 backdrop-blur-sm`}>
+                                {categoryName}
+                              </Badge>
+                            </div>
                             {/* Variation Count Badge - Only for variation products */}
                             {productType === 'variation' && (
                               <div className="absolute -top-2 -right-2">
@@ -1731,85 +1729,71 @@ export default function TransferPage() {
                         </div>
 
                         {/* Product Info */}
-                        <div className={`${viewMode === 'grid' ? 'space-y-3' : 'flex-1'}`}>
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
-                                <h3 className={`font-medium text-gray-900 ${viewMode === 'grid' ? 'text-sm' : 'text-base'} truncate`}>
-                                      {productName}
-                                </h3>
-    
-                              </div>
-                                  <p className="text-sm text-gray-500 mt-1">SKU: {productSku}</p>
+                        <div className={`${viewMode === 'grid' ? 'space-y-1' : 'flex-1'}`}>
+                          {/* Header Row - Product Name, SKU, and Stock Status */}
+                          <div className="flex items-start justify-between mb-1">
+                            <div className="flex-1 min-w-0 pr-2">
+                              <h3 className={`font-medium text-gray-900 ${viewMode === 'grid' ? 'text-sm' : 'text-base'} truncate leading-tight`}>
+                                {productName}
+                              </h3>
                             </div>
-                            <div className="flex flex-col items-end space-y-1">
-                              <div className="flex items-center gap-2">
-                                <Badge variant="outline" className="text-xs">
-                                      {categoryName}
-                                </Badge>
-                                    {productType === 'variation' && (
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm" 
-                                    className="h-7 w-7 p-0 rounded-md border-purple-300 bg-purple-50 hover:bg-purple-100 hover:border-purple-400 shadow-sm"
-                                    onClick={(e) => {
-                                      e.stopPropagation()
-                                      // For single variations, auto-select on click
-                                      if (product.variations.length === 1) {
-                                        const singleVariation = product.variations[0]
-                                        setSelectedVariation(singleVariation.variation_id)
-                                      }
-                                      // Always toggle expansion for both single and multiple variations
-                                      const newExpanded = new Set(expandedProducts)
-                                      if (newExpanded.has(productId)) {
-                                        newExpanded.delete(productId)
-                                      } else {
-                                        newExpanded.add(productId)
-                                      }
-                                      setExpandedProducts(newExpanded)
-                                    }}
-                                  >
-                                        {expandedProducts.has(productId) ? (
-                                      <ChevronUp className="h-4 w-4 text-purple-700 font-bold" />
-                                    ) : (
-                                      <ChevronDown className="h-4 w-4 text-purple-700 font-bold" />
-                                    )}
-                                  </Button>
-                                )}
-                              </div>
-                              <div className="text-right">
-                                    {productType !== 'variation' && (
-                                      <p className="font-bold text-lg text-green-600">{Number(price).toFixed(0)} ብር</p>
-                                    )}
-                              </div>
+                            <div className="flex flex-shrink-0 text-right">
+                              {productType !== 'variation' && (
+                                <p className="font-bold text-lg text-green-600 leading-none">{Number(price).toFixed(0)} ብር</p>
+                              )}
+                              {productType === 'variation' && (
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  className="h-6 w-6 p-0 rounded-md border-purple-300 bg-purple-50 hover:bg-purple-100 hover:border-purple-400 shadow-sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    // For single variations, auto-select on click
+                                    if (product.variations.length === 1) {
+                                      const singleVariation = product.variations[0]
+                                      setSelectedVariation(singleVariation.variation_id)
+                                    }
+                                    // Always toggle expansion for both single and multiple variations
+                                    const newExpanded = new Set(expandedProducts)
+                                    if (newExpanded.has(productId)) {
+                                      newExpanded.delete(productId)
+                                    } else {
+                                      newExpanded.add(productId)
+                                    }
+                                    setExpandedProducts(newExpanded)
+                                  }}
+                                >
+                                  {expandedProducts.has(productId) ? (
+                                    <ChevronUp className="h-3 w-3 text-purple-700 font-bold" />
+                                  ) : (
+                                    <ChevronDown className="h-3 w-3 text-purple-700 font-bold" />
+                                  )}
+                                </Button>
+                              )}
                             </div>
                           </div>
 
-                            {/* Product Details */}
-                          <div className={`${viewMode === 'grid' ? 'space-y-2' : 'flex items-center space-x-4 mt-2'}`}>
-                            {/* Stock Status - Only for uniform products */}
+                          {/* SKU and Stock - under price */}
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-gray-500">SKU: {productSku}</span>
                             {productType !== 'variation' && (
-                            <div className="flex items-center space-x-2">
-                              <div className={`w-2 h-2 rounded-full ${
-                                      totalStock === 0 ? 'bg-red-500' :
-                                      totalStock <= 5 ? 'bg-yellow-500' : 'bg-green-500'
-                              }`} />
-                              <span className={`text-xs ${
-                                      totalStock === 0 ? 'text-red-600' :
-                                      totalStock <= 5 ? 'text-yellow-600' : 'text-green-600'
-                              } font-medium`}>
-                                      {totalStock === 0 ? 'Out of Stock' :
-                                       totalStock <= 5 ? 'Low Stock' : 'In Stock'}
-                              </span>
-                              <span className="text-xs text-gray-500">
-                                      ({totalStock} available)
-                              </span>
-                            </div>
+                              <>
+                                <span className="text-xs text-gray-400">•</span>
+                                <span className={`text-xs ${
+                                  totalStock === 0 ? 'text-red-600' :
+                                  totalStock <= 5 ? 'text-yellow-600' : 'text-green-600'
+                                } font-medium`}>
+                                  {totalStock} available
+                                </span>
+                              </>
                             )}
+                          </div>
 
+                          {/* Product Details */}
+                          <div className={`${viewMode === 'grid' ? 'space-y-1' : 'flex items-center space-x-4 mt-1'}`}>
                             {/* Product Tags - Only for uniform products */}
                             {productType !== 'variation' && (
-                            <div className="flex flex-wrap gap-1">
+                            <div className="flex flex-wrap gap-1 mb-1">
                                 {brand && (
                                 <Badge variant="secondary" className="text-xs">
                                     {brand}
@@ -1820,7 +1804,7 @@ export default function TransferPage() {
                             
                             {/* Variation Info - Only for variation products */}
                             {productType === 'variation' && (
-                            <div className="flex flex-wrap gap-1">
+                            <div className="flex flex-wrap gap-1 mb-1">
                                 {brand && (
                                 <Badge variant="secondary" className="text-xs">
                                     {brand}
@@ -1851,7 +1835,7 @@ export default function TransferPage() {
 
                           {/* Quantity Input - Only show when selected */}
                               {selectedProduct === productId && (
-                            <div className={`${viewMode === 'grid' ? 'mt-3' : 'ml-4'}`}>
+                            <div className={`${viewMode === 'grid' ? 'mt-4 pt-3 border-t border-gray-100' : 'ml-4'}`}>
                               <div className="space-y-2">
                                 <Label className="text-xs font-medium text-green-700">Transfer Quantity</Label>
                                 <div className="flex items-center space-x-2">
@@ -1896,7 +1880,7 @@ export default function TransferPage() {
 
                                                     {/* Select Button - Only show when not selected and not a variation product */}
                           {selectedProduct !== productId && productType !== 'variation' && (
-                            <div className={`${viewMode === 'grid' ? 'mt-3' : 'ml-4'}`}>
+                            <div className={`${viewMode === 'grid' ? 'mt-4 pt-3 border-t border-gray-100' : 'ml-4'}`}>
                               <Button
                                 size="sm"
                                 variant="outline"
@@ -1914,7 +1898,7 @@ export default function TransferPage() {
                           
                                                     {/* Variation Products - Show when expanded */}
                           {productType === 'variation' && expandedProducts.has(productId) && (
-                            <div className="mt-3 space-y-2 border-t border-purple-200 pt-3">
+                            <div className="mt-4 space-y-2 border-t border-purple-200 pt-3">
                               <h4 className="text-sm font-medium text-purple-700 flex items-center">
                                 <Layers className="h-3 w-3 mr-1" />
                                 Variations
@@ -2057,8 +2041,8 @@ export default function TransferPage() {
                             key={productId}
                             className={`group relative ${
                               viewMode === 'grid' 
-                                ? 'p-3 border border-gray-200 rounded-lg hover:border-green-300 hover:shadow-md transition-all duration-200 cursor-pointer bg-white' 
-                                : 'p-3 border border-gray-200 rounded-lg hover:border-green-300 transition-all duration-200 cursor-pointer bg-white flex items-center space-x-4'
+                                ? 'p-4 border border-gray-200 rounded-lg hover:border-green-300 hover:shadow-md transition-all duration-200 cursor-pointer bg-white' 
+                                : 'p-4 border border-gray-200 rounded-lg hover:border-green-300 transition-all duration-200 cursor-pointer bg-white flex items-center space-x-4'
                             } ${
                               productQuantities[productId] && Number.parseInt(productQuantities[productId]) > 0
                                 ? 'border-green-500 bg-green-50 shadow-lg' 
@@ -2077,61 +2061,30 @@ export default function TransferPage() {
                             <div className={viewMode === 'grid' ? 'mb-3' : 'flex-shrink-0'}>
                               <div className={`${
                                 viewMode === 'grid' 
-                                  ? 'w-full h-16 rounded-lg bg-gradient-to-r from-pink-100 to-purple-100 flex items-center justify-center mb-2' 
-                                  : 'w-14 h-14 rounded-lg bg-gradient-to-r from-pink-100 to-purple-100 flex items-center justify-center'
+                                  ? 'w-full h-12 rounded-lg bg-gradient-to-r from-pink-100 to-purple-100 flex items-center justify-center mb-2' 
+                                  : 'w-12 h-12 rounded-lg bg-gradient-to-r from-pink-100 to-purple-100 flex items-center justify-center'
                               }`}>
-                                <Package className={`${viewMode === 'grid' ? 'h-6 w-6' : 'h-5 w-5'} text-pink-500`} />
+                                <Package className={`${viewMode === 'grid' ? 'h-4 w-4' : 'h-3 w-3'} text-pink-500`} />
+                                {/* Category badge (top-left) */}
+                                <div className="absolute top-1 left-1">
+                                  <Badge variant="outline" className={`${viewMode === 'grid' ? 'text-[10px] px-1 py-0.5' : 'text-xs px-1.5 py-0.5'} bg-white/80 backdrop-blur-sm`}>
+                                    {categoryName}
+                                  </Badge>
+                                </div>
                               </div>
                             </div>
 
                             {/* Product Info */}
-                            <div className={`${viewMode === 'grid' ? 'space-y-3' : 'flex-1'}`}>
-                              {/* Header with Name and Category */}
-                              <div className="flex items-start justify-between">
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <h3 className={`font-semibold text-gray-900 ${viewMode === 'grid' ? 'text-sm' : 'text-base'} truncate`}>
-                                      {productName}
-                                    </h3>
-                                  </div>
-                                  <div className="flex items-center gap-2 mb-2">
-                                    <Badge variant="outline" className="text-xs bg-blue-50 text-blue-600 border-blue-200">
-                                      {categoryName}
-                                    </Badge>
-                                    {gender && (
-                                      <Badge variant="outline" className="text-xs bg-purple-50 text-purple-600 border-purple-200 capitalize">
-                                        {gender}
-                                      </Badge>
-                                    )}
-                                  </div>
-                                </div>
-                                <div className="flex flex-col items-end space-y-1">
-                                  <div className="text-right">
-                                    <p className="font-bold text-lg text-green-600">{Number(price).toFixed(0)} ብር</p>
-                                    {purchasePrice && (
-                                      <p className="text-xs text-gray-500 font-medium">
-                                         {Number(purchasePrice).toFixed(0)} ብር
-                                      </p>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Product Details Grid */}
-                              <div className="space-y-2">
-                                {/* SKU and Stock Status Row */}
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-xs text-gray-500 font-medium">SKU:</span>
-                                    <span className="text-xs text-gray-700 font-mono bg-gray-50 px-2 py-1 rounded">
-                                      {productSku}
-                                    </span>
-                                  </div>
-                                  <div className="flex items-center space-x-2">
-                                    <div className={`w-2 h-2 rounded-full ${
-                                      totalStock === 0 ? 'bg-red-500' :
-                                      totalStock <= 5 ? 'bg-yellow-500' : 'bg-green-500'
-                                    }`} />
+                            <div className={`${viewMode === 'grid' ? 'space-y-1' : 'flex-1'}`}>
+                              {/* Header Row - Product Name, SKU, and Stock Status */}
+                              <div className="flex items-start justify-between mb-1">
+                                <div className="flex-1 min-w-0 pr-2">
+                                  <h3 className={`font-semibold text-gray-900 ${viewMode === 'grid' ? 'text-sm' : 'text-base'} truncate leading-tight`}>
+                                    {productName}
+                                  </h3>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <span className="text-xs text-gray-500">SKU: {productSku}</span>
+                                    <span className="text-xs text-gray-400">•</span>
                                     <span className={`text-xs ${
                                       totalStock === 0 ? 'text-red-600' :
                                       totalStock <= 5 ? 'text-yellow-600' : 'text-green-600'
@@ -2140,6 +2093,22 @@ export default function TransferPage() {
                                     </span>
                                   </div>
                                 </div>
+                                <div className="flex flex-shrink-0 text-right">
+                                  <p className="font-bold text-lg text-green-600 leading-none">{Number(price).toFixed(0)} ብር</p>
+                                </div>
+                              </div>
+
+                              {/* Second Row - Gender */}
+                              <div className="flex items-center gap-2 mb-1">
+                                {gender && (
+                                  <Badge variant="outline" className="text-xs bg-purple-50 text-purple-600 border-purple-200 capitalize">
+                                    {gender}
+                                  </Badge>
+                                )}
+                              </div>
+
+                              {/* Product Details Grid */}
+                              <div className="space-y-1">
 
                                 {/* Attributes Row */}
                                 <div className="flex flex-wrap gap-2">

@@ -1932,7 +1932,7 @@ export default function SellProductsPage() {
                       <div className={`${viewMode === 'grid' ? 'space-y-2' : 'flex-1'}`}>
                         <div className="flex items-start justify-between">
                           <div className="flex-1 min-w-0">
-                            <h3 className={`font-medium text-gray-900 ${viewMode === 'grid' ? 'text-xs' : 'text-base'} truncate`}>
+                            <h3 className={`font-medium text-gray-900 ${viewMode === 'grid' ? 'text-xs line-clamp-2' : 'text-base truncate'}`}>
                               {product.displayName}
                             </h3>
                             <p className={`${viewMode === 'grid' ? 'text-[11px]' : 'text-sm'} text-gray-500 mt-1`}>{product.displaySku}</p>

@@ -4,17 +4,17 @@ import { query } from "@/lib/db";
 import { z } from "zod";
 
 const CATEGORIES = [
-  "Rent",
-  "Salaries",
-  "Utilities",
-  "Marketing",
-  "Supplies",
-  "Other",
+  "rent",
+  "salaries",
+  "utilities",
+  "marketing",
+  "supplies",
+  "other",
 ];
 
 const expenseSchema = z.object({
   branch_id: z.string().optional(),
-  category: z.enum(["Rent", "Salaries", "Utilities", "Marketing", "Supplies", "Other"]),
+  category: z.enum(["rent", "salaries", "utilities", "marketing", "supplies", "other"]),
   amount: z.number().positive(),
   description: z.string().optional(),
   expense_date: z.string(), // ISO date

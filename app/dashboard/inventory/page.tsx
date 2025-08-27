@@ -302,67 +302,43 @@ export default function InventoryPage() {
         if (stockRange[1] < 100) params.stock_max = stockRange[1]
       }
 
-      console.log('Sending inventory request with params:', params)
-      // Temporarily use regular API until optimized function is fixed
-      const response = await apiClient.getInventory(params)
+      const response = await apiClient.getInventoryOptimized(params)
       
-      console.log('Inventory API response:', response)
-      
-      if (response.success && response.data) {
-        // Regular API returns { success: true, data: [...], pagination: {...} }
+      if (response.success) {
         const rawInventoryData = response.data as any[]
-        console.log('Raw inventory data from API:', rawInventoryData)
         
-        // Transform the data to match the expected InventoryItem interface
-        const inventoryData: InventoryItem[] = rawInventoryData.map(item => ({
-          id: item.id || item.inventory_id || '',
-          product_id: item.product_id || '',
-          product_name: item.product_name || '',
-          product_sku: item.product_sku || item.sku || '',
-          product_type: item.product_type || '',
-          branch_id: item.branch_id || '',
-          branch_name: item.branch_name || '',
-          quantity: item.quantity || 0,
-          min_stock_level: item.min_stock_level || 0,
-          max_stock_level: item.max_stock_level || 0,
-          stock_status: item.stock_status || 'normal',
-          category_name: item.category_name || '',
-          price: item.price || 0,
-          cost_price: item.cost_price || 0,
-          purchase_price: item.purchase_price || 0,
-          color: item.color || '',
-          size: item.size || '',
-          brand: item.brand || '',
-          age_range: item.age_range || '',
-          gender: item.gender || '',
-          last_restocked: item.last_restocked || '',
-          total_stock: item.quantity || 0, // Use quantity as total_stock for now
-          branch_count: 1, // Default to 1 for single branch view
-          image_url: item.image_url || '',
-          description: item.description || '',
-          variation_id: item.variation_id || '',
-          variation_sku: item.variation_sku || ''
+        // Transform data into desired structure
+        const inventoryData = rawInventoryData.map(row => ({
+          id: row.product_id,
+          product_id: row.product_id,
+          product_name: row.product_name,
+          product_sku: row.product_sku,
+          product_type: row.product_type,
+          branch_id: row.branch_id,
+          branch_name: row.branch_name,
+          quantity: row.quantity,
+          min_stock_level: row.min_stock_level,
+          max_stock_level: row.max_stock_level,
+          stock_status: row.stock_status,
+          category_name: row.category_name,
+          price: row.price,
+          cost_price: row.cost_price,
+          purchase_price: row.purchase_price,
+          color: row.color,
+          size: row.size,
+          brand: row.brand,
+          age_range: row.age_range,
+          gender: row.gender,
         }))
         
-        console.log('Transformed inventory data:', inventoryData)
-        setInventory(inventoryData)
-        
-        // Handle pagination from the response
-        const responseWithPagination = response as any
+        const responseWithPagination: any = response
         if (responseWithPagination.pagination) {
-          console.log('Pagination from API:', responseWithPagination.pagination)
           setPagination(responseWithPagination.pagination)
         } else {
-          console.log('No pagination from API, using default')
-          setPagination({
-            page: 1,
-            limit: 20,
-            total: inventoryData.length,
-            total_pages: 1,
-            has_next: false,
-            has_prev: false,
-          })
+          setPagination({ page: 1, limit: 20, total: 0, total_pages: 0, has_next: false, has_prev: false })
         }
+
+        setInventory(inventoryData)
         calculateStats(inventoryData)
         
         // Clear selections when data changes

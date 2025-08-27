@@ -55,6 +55,7 @@ export default {
   details: "Details",
   stockLevel: "Stock Level",
   branch: "Branch",
+  allBranches: "All Branches",
   sellingPrice: "Selling Price",
   
   // Filter and search
@@ -78,6 +79,7 @@ export default {
   // Status labels
   completed: "Completed",
   pending: "Pending",
+  loading: "Loading...",
   
   // Role labels
   owner: "Owner",
@@ -160,11 +162,20 @@ export default {
   // Expense page specific
   expenses: "Expenses",
   addExpense: "Add Expense",
+  editExpense: "Edit Expense",
   noExpensesFound: "No expenses found.",
   descriptionLabel: "Description",
   amount: "Amount",
   date: "Date",
   selectCategory: "Select Category",
+  
+  // Expense Categories
+  rent: "Rent",
+  salaries: "Salaries",
+  utilities: "Utilities",
+  marketing: "Marketing",
+  supplies: "Supplies",
+  other: "Other",
 }
 
 

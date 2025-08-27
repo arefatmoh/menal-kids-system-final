@@ -19,15 +19,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Access denied to this branch" }, { status: 403 })
     }
 
-    console.log('Transfer optimized API called with from_branch_id:', fromBranchId)
-
     // Use optimized transfer function
     const result = await query(
       "SELECT get_transfer_fast_simple($1)",
       [fromBranchId || null]
     )
-
-    console.log('Database function result:', result.rows[0])
 
     if (!result.rows[0] || !result.rows[0].get_transfer_fast_simple) {
       console.error('No data returned from get_transfer_fast_simple function')
@@ -55,8 +51,6 @@ export async function GET(request: NextRequest) {
       transfers: Array.isArray(transferData.transfers) ? transferData.transfers : [],
       branches: Array.isArray(transferData.branches) ? transferData.branches : []
     }
-
-    console.log('Processed transfer data:', safeData)
 
     return NextResponse.json({
       success: true,

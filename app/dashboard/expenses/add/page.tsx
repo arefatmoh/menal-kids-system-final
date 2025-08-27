@@ -7,16 +7,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useBranch } from "@/lib/branch-context";
+import { useLanguage } from "@/lib/language-context";
 import apiClient from "@/lib/api-client";
 import { getBranchIdForDatabase } from "@/lib/utils";
 
 const CATEGORIES = [
-  "Rent",
-  "Salaries",
-  "Utilities",
-  "Marketing",
-  "Supplies",
-  "Other",
+  "rent",
+  "salaries",
+  "utilities",
+  "marketing",
+  "supplies",
+  "other",
 ];
 
 const BRANCHES = [
@@ -25,6 +26,7 @@ const BRANCHES = [
 ];
 
 export default function AddExpensePage() {
+  const { t } = useLanguage();
   const { currentBranch } = useBranch();
   const [category, setCategory] = useState("");
   const [amount, setAmount] = useState("");
@@ -104,7 +106,7 @@ export default function AddExpensePage() {
                 </SelectTrigger>
                 <SelectContent>
                   {CATEGORIES.map(cat => (
-                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                    <SelectItem key={cat} value={cat}>{t(cat as any)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

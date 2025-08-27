@@ -58,8 +58,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Access denied to this branch" }, { status: 403 })
     }
 
-    console.log('Inventory API - User:', user.role, 'Branch:', user.branch_id, 'CrossBranch:', crossBranchSearch, 'EffectiveBranchId:', effectiveBranchId, 'SearchMode:', crossBranchSearch ? 'Cross-Branch' : 'Current Branch')
-
     const offset = (page - 1) * limit
 
     let whereClause = "WHERE p.is_active = true"
@@ -247,7 +245,7 @@ export async function GET(request: NextRequest) {
 
     const inventoryQuery = `
       SELECT 
-        i.*,
+        i.*, 
         p.id as product_id,
         p.name as product_name,
         p.sku as product_sku,

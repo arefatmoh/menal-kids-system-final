@@ -55,6 +55,7 @@ export default {
   details: "ዝርዝሮች",
   stockLevel: "የስቶክ ደረጃ",
   branch: "ቅርንጫፍ",
+  allBranches: "ሁሉም ቅርንጫፎች",
   sellingPrice: "የመሸጫ ዋጋ",
   
   // Filter and search
@@ -78,6 +79,7 @@ export default {
   // Status labels
   completed: "ተጠናቅቋል",
   pending: "በመጠበቅ ላይ",
+  loading: "የሚጫን...",
   
   // Role labels
   owner: "ዋና አስተዳደሪ",
@@ -159,12 +161,21 @@ export default {
   
   // Expense page specific
   expenses: "ወጪዎች",
-  addExpense: "ወጪ ጨምር",
+  addExpense: "አዲስ ወጪ ጨምር",
+  editExpense: "ወጪ ያስተካክሉ",
   noExpensesFound: "ምንም ወጪዎች አልተገኙም።",
-  descriptionLabel: "ማብራሪያማብራሪያ",
+  descriptionLabel: "ማብራሪያ",
   amount: "መጠን",
   date: "ቀን",
   selectCategory: "ምድብ ይምረጡ",
+  
+  // Expense Categories
+  rent: "ኪራይ",
+  salaries: "ደሞዝ",
+  utilities: "የአገልግሎት ክፍያክፍያ",
+  marketing: "ማርኬቲንግ",
+  supplies: "ግብአቶች",
+  other: "ሌላ",
 }
 
 

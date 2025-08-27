@@ -28,8 +28,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Access denied to this branch" }, { status: 403 })
     }
 
-    console.log('Optimized Inventory API - User:', user.role, 'Branch:', user.branch_id, 'CrossBranch:', crossBranchSearch, 'EffectiveBranchId:', effectiveBranchId)
-
     // Use optimized inventory function
     const result = await query(
       "SELECT * FROM get_inventory_fast($1, $2, $3, $4, $5)",
