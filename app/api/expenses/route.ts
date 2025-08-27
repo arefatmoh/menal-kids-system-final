@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromRequest, hasPermissionForBranch } from "@/lib/auth";
 import { query } from "@/lib/db";
+import { logActivity } from "@/lib/activity-log";
 import { z } from "zod";
 
 const CATEGORIES = [
@@ -113,7 +114,20 @@ export async function POST(request: NextRequest) {
         ]
       );
     }
-    return NextResponse.json({ success: true, data: result.rows[0] });
+    const created = result.rows[0];
+    // Fire-and-forget activity log
+    logActivity({
+      type: 'expense_add',
+      title: 'Expense recorded',
+      description: `${created.category}: ${created.amount}`,
+      branch_id: created.branch_id || null,
+      user_id: (user.id as string) || null,
+      related_entity_type: 'expense',
+      related_entity_id: created.id,
+      delta: { amount: created.amount, category: created.category }
+    }).catch(() => {})
+
+    return NextResponse.json({ success: true, data: created });
   } catch (error) {
     console.error('Create expense error:', error);
     return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });

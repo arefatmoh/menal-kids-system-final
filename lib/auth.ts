@@ -117,15 +117,28 @@ export function isOwner(user: User): boolean {
 export async function getUserFromRequest(request: Request): Promise<User | null> {
   try {
     const authHeader = request.headers.get("authorization") || request.headers.get("Authorization")
-    
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    let token: string | null = null
+
+    // Try Bearer header first
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      token = authHeader.substring(7)
+    }
+
+    // Fallback to HttpOnly cookie set by login
+    if (!token) {
+      const cookieHeader = request.headers.get('cookie') || ''
+      const match = cookieHeader.match(/(?:^|;)\s*token=([^;]+)/)
+      if (match) {
+        token = decodeURIComponent(match[1])
+      }
+    }
+
+    if (!token) {
       if (process.env.NODE_ENV !== "production") {
-        console.log('getUserFromRequest: No valid Authorization header found')
+        console.log('getUserFromRequest: No token found')
       }
       return null
     }
-
-    const token = authHeader.substring(7)
     
     try {
       const decoded = verifyToken(token)

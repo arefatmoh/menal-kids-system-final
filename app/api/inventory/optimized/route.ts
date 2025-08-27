@@ -28,11 +28,24 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Access denied to this branch" }, { status: 403 })
     }
 
-    // Use optimized inventory function
-    const result = await query(
-      "SELECT * FROM get_inventory_fast($1, $2, $3, $4, $5)",
-      [page, limit, search, effectiveBranchId || null, crossBranchSearch]
-    )
+    // Use optimized inventory function with safe types
+    let result
+    try {
+      result = await query(
+        "SELECT * FROM get_inventory_fast($1, $2, $3, $4::varchar, $5)",
+        [page, limit, search || null, effectiveBranchId || null, crossBranchSearch]
+      )
+    } catch (err: any) {
+      // Fallback to standard inventory endpoint when optimized function fails (e.g., operator mismatch)
+      console.error("Optimized inventory error:", err)
+      const base = new URL(request.url)
+      base.pathname = "/api/inventory"
+      // forward essential params
+      const fallbackUrl = `${base.toString()}`
+      const fallbackRes = await fetch(fallbackUrl, { headers: { authorization: request.headers.get("authorization") || "" } })
+      const fallbackJson = await fallbackRes.json()
+      return NextResponse.json(fallbackJson, { status: fallbackRes.status })
+    }
 
     if (!result.rows || result.rows.length === 0) {
       return NextResponse.json({

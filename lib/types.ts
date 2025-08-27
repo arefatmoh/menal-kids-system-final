@@ -410,3 +410,20 @@ export interface InventoryReport {
     stock_status: string
   }[]
 }
+
+// Activity log types
+export interface Activity {
+  id: string
+  type: 'sell' | 'stock_add' | 'stock_reduce' | 'product_create' | 'product_update' | 'expense_add' | 'transfer' | 'refund' | 'restore' | 'edit_correction'
+  title?: string
+  description?: string
+  status: 'completed' | 'reversed'
+  branch_id?: string
+  user_id?: string
+  related_entity_type?: string
+  related_entity_id?: string
+  delta?: any
+  metadata?: any
+  parent_activity_id?: string
+  created_at: Date
+}

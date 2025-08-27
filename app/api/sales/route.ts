@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { getUserFromRequest, hasPermissionForBranch } from "@/lib/auth"
 import { query, transaction } from "@/lib/db"
+import { logActivity } from "@/lib/activity-log"
 import { z } from "zod"
 
 const createSaleSchema = z.object({
@@ -229,6 +230,22 @@ export async function POST(request: NextRequest) {
 
       return { sale, items: saleItems }
     })
+
+    // Fire-and-forget activity log
+    logActivity({
+      type: 'sell',
+      title: 'Sale completed',
+      description: `Items: ${result.items.length}, Total: ${result.sale.total_amount}`,
+      branch_id: result.sale.branch_id,
+      user_id: result.sale.user_id,
+      related_entity_type: 'sale',
+      related_entity_id: result.sale.id,
+      delta: {
+        total_amount: result.sale.total_amount,
+        discount: result.sale.discount,
+        items: result.items.map((it: any) => ({ product_id: it.product_id, variation_id: it.variation_id, quantity: it.quantity, unit_price: it.unit_price }))
+      }
+    }).catch(() => {})
 
     return NextResponse.json(
       {

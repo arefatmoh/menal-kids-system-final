@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { getUserFromRequest, hasPermissionForBranch } from "@/lib/auth"
 import { query } from "@/lib/db"
+import { logActivity } from "@/lib/activity-log"
 import { z } from "zod"
 
 // GET /api/transfers - Get transfers
@@ -204,23 +205,61 @@ export async function POST(request: NextRequest) {
           VALUES ($1, $2, $3, $4)
         `, [transferId, item.product_id, item.variation_id || null, item.quantity])
 
-        // Update source branch inventory (decrease) with safety check
-        const updateSource = await query(`
-          UPDATE inventory 
-          SET quantity = quantity - $1, updated_at = NOW()
-          WHERE product_id = $2 
-            AND branch_id = $3 
-            AND (
-              ($4::uuid IS NOT NULL AND variation_id = $4::uuid)
-              OR ($4::uuid IS NULL AND variation_id IS NULL)
-            )
-            AND quantity >= $1
-          RETURNING quantity
-        `, [item.quantity, item.product_id, validatedData.from_branch_id, item.variation_id || null])
-
-        if (updateSource.rowCount === 0) {
-          await query('ROLLBACK')
-          return NextResponse.json({ success: false, error: `Insufficient stock for product ${item.product_id}` }, { status: 400 })
+        // Update source branch inventory (decrease). If no specific variation is provided
+        // and the base row lacks enough quantity, distribute the deduction across variation rows.
+        let updated = 0
+        if (item.variation_id) {
+          const updateSourceVar = await query(`
+            UPDATE inventory 
+            SET quantity = quantity - $1, updated_at = NOW()
+            WHERE product_id = $2 
+              AND branch_id = $3 
+              AND variation_id = $4::uuid
+              AND quantity >= $1
+            RETURNING quantity
+          `, [item.quantity, item.product_id, validatedData.from_branch_id, item.variation_id])
+          updated = updateSourceVar.rowCount
+        } else {
+          // Try base row first
+          const updateBase = await query(`
+            UPDATE inventory 
+            SET quantity = quantity - $1, updated_at = NOW()
+            WHERE product_id = $2 
+              AND branch_id = $3 
+              AND variation_id IS NULL
+              AND quantity >= $1
+            RETURNING quantity
+          `, [item.quantity, item.product_id, validatedData.from_branch_id])
+          updated = updateBase.rowCount
+          if (updated === 0) {
+            // Distribute across variations and/or base
+            let remaining = item.quantity
+            const rowsRes = await query(`
+              SELECT id, variation_id, quantity 
+              FROM inventory 
+              WHERE product_id = $1 AND branch_id = $2 AND quantity > 0
+              ORDER BY (variation_id IS NULL) DESC, quantity DESC
+            `, [item.product_id, validatedData.from_branch_id])
+            for (const row of rowsRes.rows) {
+              if (remaining <= 0) break
+              const take = Math.min(remaining, Number(row.quantity) || 0)
+              if (take <= 0) continue
+              const resUpd = await query(`
+                UPDATE inventory 
+                SET quantity = quantity - $1, updated_at = NOW()
+                WHERE id = $2 AND quantity >= $1
+                RETURNING id
+              `, [take, row.id])
+              if (resUpd.rowCount > 0) {
+                remaining -= take
+              }
+            }
+            if (remaining > 0) {
+              await query('ROLLBACK')
+              return NextResponse.json({ success: false, error: `Insufficient stock for product ${item.product_id}` }, { status: 400 })
+            }
+            updated = 1
+          }
         }
 
         // Record stock movement for source branch (out)
@@ -317,6 +356,21 @@ export async function POST(request: NextRequest) {
         LEFT JOIN product_variations pv ON ti.variation_id = pv.id
         WHERE ti.transfer_id = $1
       `, [transferId])
+
+      // Fire-and-forget activity log
+      logActivity({
+        type: 'transfer',
+        title: 'Stock transferred',
+        description: `From ${validatedData.from_branch_id} to ${validatedData.to_branch_id}`,
+        branch_id: validatedData.from_branch_id,
+        user_id: user.id,
+        related_entity_type: 'transfer',
+        related_entity_id: transferId,
+        delta: {
+          items: validatedData.items.map(i => ({ product_id: i.product_id, variation_id: i.variation_id, quantity: i.quantity })),
+          to_branch_id: validatedData.to_branch_id
+        }
+      }).catch(() => {})
 
       return NextResponse.json({
         success: true,

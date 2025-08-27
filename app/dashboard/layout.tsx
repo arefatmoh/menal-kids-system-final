@@ -22,6 +22,7 @@ import {
   ShoppingBag,
   ArrowRightLeft,
   DollarSign,
+  History as HistoryIcon,
 } from "lucide-react"
 import { LanguageSwitcher } from "@/components/language-switcher"
 import { BranchSwitcher } from "@/components/branch-switcher"
@@ -36,6 +37,7 @@ const navigation = [
   { name: "stockManagement", href: "/dashboard/stock", icon: Settings, roles: ["owner", "employee"] },
   { name: "transfer", href: "/dashboard/transfer", icon: ArrowRightLeft, roles: ["owner", "employee"] },
   { name: "expenses", href: "/dashboard/expenses", icon: DollarSign, roles: ["owner", "employee"] },
+  { name: "history", href: "/dashboard/history", icon: HistoryIcon, roles: ["owner", "employee"] },
   { name: "reports", href: "/dashboard/reports", icon: BarChart3, roles: ["owner"] }, // Only owner
 ]
 
