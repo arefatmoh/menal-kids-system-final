@@ -88,8 +88,14 @@ export default function LoginPage() {
     }
 
     const handleFocusOut = () => {
-      // Delay to allow focus to move between inputs without flicker
-      setTimeout(() => setIsKeyboardOpen(false), 100)
+      // Delay slightly, then only close if no input remains focused
+      setTimeout(() => {
+        const active = document.activeElement as HTMLElement | null
+        const stillOnField = !!active && ["INPUT", "TEXTAREA"].includes(active.tagName)
+        if (!stillOnField) {
+          setIsKeyboardOpen(false)
+        }
+      }, 100)
     }
 
     document.addEventListener("focusin", handleFocusIn)
@@ -119,7 +125,7 @@ export default function LoginPage() {
   }, [])
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 flex flex-col justify-center items-center p-4 overflow-hidden">
+    <div className={`relative min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 flex flex-col justify-center items-center p-4 overflow-hidden ${isKeyboardOpen ? 'pb-24' : ''}`}>
       {/* Floating Blobs */}
       <motion.div animate={{ y: [0, 20, 0] }} transition={{ duration: 6, repeat: Infinity }}
         className="absolute top-20 left-20 w-32 h-32 bg-pink-300 opacity-20 rounded-full z-0" />
