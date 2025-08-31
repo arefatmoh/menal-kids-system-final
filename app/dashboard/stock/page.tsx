@@ -201,7 +201,7 @@ export default function StockManagementPage() {
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1)
-  const [pageSize, setPageSize] = useState(12) // Show 12 items per page for grid view
+  const [pageSize, setPageSize] = useState<number | "all">("all") // Set to "all" by default to show all products
   
   // History pagination
   const [historyPage, setHistoryPage] = useState(1)
@@ -377,7 +377,7 @@ export default function StockManagementPage() {
       // Use optimized single API call instead of multiple calls
       const params: any = {
         page: 1,
-        limit: 50,
+        limit: 10000, // Increased from 50 to 10000 to show all products
         branch_id: currentBranch !== "all" ? getBranchIdForDatabase(currentBranch) : undefined
       }
 
@@ -633,7 +633,7 @@ export default function StockManagementPage() {
     try {
       const params: any = {
         page: 1,
-        limit: 50,
+        limit: 1000, // Increased from 50 to 1000 to show more stock movements
       }
 
       if (currentBranch && currentBranch !== "all") {
@@ -1006,15 +1006,19 @@ export default function StockManagementPage() {
 
   // Paginated products
   const paginatedProducts = useMemo(() => {
+    // If pageSize is "all", show all products
+    if (pageSize === "all") {
+      return filteredProducts
+    }
     const startIndex = (currentPage - 1) * pageSize
     const endIndex = startIndex + pageSize
     return filteredProducts.slice(startIndex, endIndex)
   }, [filteredProducts, currentPage, pageSize])
 
   // Pagination info
-  const totalPages = Math.ceil(filteredProducts.length / pageSize)
-  const hasNextPage = currentPage < totalPages
-  const hasPrevPage = currentPage > 1
+  const totalPages = pageSize === "all" ? 1 : Math.ceil(filteredProducts.length / pageSize)
+  const hasNextPage = pageSize === "all" ? false : currentPage < totalPages
+  const hasPrevPage = pageSize === "all" ? false : currentPage > 1
 
   // Reset to first page when filters change
   useEffect(() => {
@@ -1474,7 +1478,11 @@ export default function StockManagementPage() {
                       <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-2 w-full sm:w-auto">
                         <span className="text-sm text-gray-600">Show:</span>
                         <Select value={pageSize.toString()} onValueChange={(value) => {
-                          setPageSize(Number(value))
+                          if (value === "all") {
+                            setPageSize("all")
+                          } else {
+                            setPageSize(Number(value))
+                          }
                           setCurrentPage(1) // Reset to first page when changing page size
                         }}>
                           <SelectTrigger className="w-full sm:w-20">
@@ -1485,6 +1493,10 @@ export default function StockManagementPage() {
                             <SelectItem value="12">12 per page</SelectItem>
                             <SelectItem value="24">24 per page</SelectItem>
                             <SelectItem value="48">48 per page</SelectItem>
+                            <SelectItem value="100">100 per page</SelectItem>
+                            <SelectItem value="200">200 per page</SelectItem>
+                            <SelectItem value="500">500 per page</SelectItem>
+                            <SelectItem value="all">Show All</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -1540,7 +1552,11 @@ export default function StockManagementPage() {
                         <div className="flex flex-col space-y-2">
                           <span className="text-sm text-gray-600">Show:</span>
                           <Select value={pageSize.toString()} onValueChange={(value) => {
-                            setPageSize(Number(value))
+                            if (value === "all") {
+                              setPageSize("all")
+                            } else {
+                              setPageSize(Number(value))
+                            }
                             setCurrentPage(1) // Reset to first page when changing page size
                           }}>
                             <SelectTrigger className="w-full h-8">
@@ -1551,6 +1567,10 @@ export default function StockManagementPage() {
                               <SelectItem value="12">12 per page</SelectItem>
                               <SelectItem value="24">24 per page</SelectItem>
                               <SelectItem value="48">48 per page</SelectItem>
+                              <SelectItem value="100">100 per page</SelectItem>
+                              <SelectItem value="200">200 per page</SelectItem>
+                              <SelectItem value="500">500 per page</SelectItem>
+                              <SelectItem value="all">Show All</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -1706,11 +1726,20 @@ export default function StockManagementPage() {
                     </div>
                   )}
 
-                  {/* Pagination Controls */}
-                  {filteredProducts.length > 0 && !isLoading && (
+                  {/* Show All Products Info */}
+                  {filteredProducts.length > 0 && !isLoading && pageSize === "all" && (
                     <div className="flex items-center justify-between mt-6">
                       <div className="text-sm text-gray-500">
-                        Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, filteredProducts.length)} of {filteredProducts.length} products
+                        Showing all {filteredProducts.length} products
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Pagination Controls */}
+                  {filteredProducts.length > 0 && !isLoading && pageSize !== "all" && (
+                    <div className="flex items-center justify-between mt-6">
+                      <div className="text-sm text-gray-500">
+                        Showing {((currentPage - 1) * (pageSize as number)) + 1} to {Math.min(currentPage * (pageSize as number), filteredProducts.length)} of {filteredProducts.length} products
                       </div>
                       <div className="flex items-center space-x-2">
                         <Button
