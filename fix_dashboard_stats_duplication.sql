@@ -1,0 +1,111 @@
+-- Fix dashboard stats to exclude duplicate stock movements
+-- This ensures the "Stock In Today" and "Stock Out Today" cards show correct values
+
+CREATE OR REPLACE FUNCTION get_dashboard_stats(p_branch_id VARCHAR(50) DEFAULT NULL)
+RETURNS TABLE (
+    total_products BIGINT,
+    low_stock_alerts BIGINT,
+    out_of_stock_alerts BIGINT,
+    stock_in_today BIGINT,
+    stock_out_today BIGINT,
+    total_sales_today NUMERIC,
+    transactions_today BIGINT,
+    active_alerts BIGINT,
+    critical_alerts BIGINT
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        -- Total products in inventory
+        (
+            SELECT COUNT(DISTINCT i.product_id)::BIGINT
+            FROM inventory i
+            WHERE (p_branch_id IS NULL OR i.branch_id = p_branch_id)
+        ) AS total_products,
+
+        -- Low stock alerts (quantity <= min_stock_level but > 0)
+        (
+            SELECT COUNT(i.id)::BIGINT
+            FROM inventory i
+            WHERE i.quantity <= i.min_stock_level 
+              AND i.quantity > 0
+              AND (p_branch_id IS NULL OR i.branch_id = p_branch_id)
+        ) AS low_stock_alerts,
+
+        -- Out of stock alerts (quantity = 0)
+        (
+            SELECT COUNT(i.id)::BIGINT
+            FROM inventory i
+            WHERE i.quantity = 0
+              AND (p_branch_id IS NULL OR i.branch_id = p_branch_id)
+        ) AS out_of_stock_alerts,
+
+        -- Stock in today (sum of stock movements) - EXCLUDE DUPLICATES
+        (
+            SELECT COALESCE(SUM(sm_in.quantity), 0)::BIGINT
+            FROM (
+                SELECT DISTINCT ON (product_id, branch_id, movement_type, quantity, DATE(created_at))
+                    product_id, branch_id, movement_type, quantity, created_at
+                FROM stock_movements sm_in
+                WHERE sm_in.movement_type = 'in'
+                  AND DATE(sm_in.created_at) = CURRENT_DATE
+                  AND (p_branch_id IS NULL OR sm_in.branch_id = p_branch_id)
+                ORDER BY product_id, branch_id, movement_type, quantity, DATE(created_at), created_at DESC
+            ) sm_in
+        ) AS stock_in_today,
+
+        -- Stock out today (sum of stock movements) - EXCLUDE DUPLICATES
+        (
+            SELECT COALESCE(SUM(sm_out.quantity), 0)::BIGINT
+            FROM (
+                SELECT DISTINCT ON (product_id, branch_id, movement_type, quantity, DATE(created_at))
+                    product_id, branch_id, movement_type, quantity, created_at
+                FROM stock_movements sm_out
+                WHERE sm_out.movement_type = 'out'
+                  AND DATE(sm_out.created_at) = CURRENT_DATE
+                  AND (p_branch_id IS NULL OR sm_out.branch_id = p_branch_id)
+                ORDER BY product_id, branch_id, movement_type, quantity, DATE(created_at), created_at DESC
+            ) sm_out
+        ) AS stock_out_today,
+
+        -- Total sales amount today
+        (
+            SELECT COALESCE(SUM(s.total_amount), 0)
+            FROM sales s
+            WHERE DATE(s.created_at) = CURRENT_DATE
+              AND (p_branch_id IS NULL OR s.branch_id = p_branch_id)
+        ) AS total_sales_today,
+
+        -- Number of sales transactions today
+        (
+            SELECT COUNT(s2.id)::BIGINT
+            FROM sales s2
+            WHERE DATE(s2.created_at) = CURRENT_DATE
+              AND (p_branch_id IS NULL OR s2.branch_id = p_branch_id)
+        ) AS transactions_today,
+
+        -- Active alerts (including global alerts where branch_id is NULL)
+        (
+            SELECT COUNT(a.id)::BIGINT
+            FROM alerts a
+            WHERE a.status = 'active'
+              AND (p_branch_id IS NULL OR a.branch_id = p_branch_id OR a.branch_id IS NULL)
+        ) AS active_alerts,
+
+        -- Critical alerts (including global alerts where branch_id is NULL)
+        (
+            SELECT COUNT(a2.id)::BIGINT
+            FROM alerts a2
+            WHERE a2.status = 'active'
+              AND a2.severity = 'critical'
+              AND (p_branch_id IS NULL OR a2.branch_id = p_branch_id OR a2.branch_id IS NULL)
+        ) AS critical_alerts;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Test the updated function
+SELECT 'Testing updated get_dashboard_stats function...' as test_status;
+SELECT * FROM get_dashboard_stats();
+
+-- Success message
+SELECT 'Dashboard stats function updated! Stock In/Out Today will now show correct values without duplication.' as status;

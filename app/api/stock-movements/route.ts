@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic'
 import { type NextRequest, NextResponse } from "next/server"
 import { getUserFromRequest, hasPermissionForBranch } from "@/lib/auth"
-import { query } from "@/lib/db"
+import { query, transaction } from "@/lib/db"
 
 // GET /api/stock-movements - Get stock movements
 export async function GET(request: NextRequest) {
@@ -133,92 +133,84 @@ export async function POST(request: NextRequest) {
       }, { status: 404 })
     }
 
-    // Perform inventory change with trigger suppressed and log a single movement manually
-    await query('BEGIN')
-    try {
-      await query(`SELECT set_config('app.skip_inventory_trigger', '1', true)`)    
-
-      if (movement_type === 'in') {
-        // Add stock
-        if (variation_id) {
-          // Update variation inventory (upsert)
+    // Perform inventory change using direct SQL - triggers will handle logging automatically
+    if (movement_type === 'in') {
+      // Add stock - same as add stock flow
+      if (variation_id) {
+        // Update variation inventory (upsert)
+        await query(`
+          INSERT INTO inventory (product_id, variation_id, branch_id, quantity, min_stock_level, max_stock_level)
+          VALUES ($1, $2, $3, $4, 0, 1000)
+          ON CONFLICT (product_id, variation_id, branch_id)
+          DO UPDATE SET quantity = inventory.quantity + EXCLUDED.quantity,
+                        updated_at = NOW()
+        `, [product_id, variation_id, branch_id, quantity])
+      } else {
+        // Uniform products: upsert NULL-variation row
+        const updated = await query(`
+          UPDATE inventory 
+          SET quantity = quantity + $2, updated_at = NOW()
+          WHERE product_id = $1 AND variation_id IS NULL AND branch_id = $3
+        `, [product_id, quantity, branch_id])
+        if (updated.rowCount === 0) {
           await query(`
             INSERT INTO inventory (product_id, variation_id, branch_id, quantity, min_stock_level, max_stock_level)
-            VALUES ($1, $2, $3, $4, 0, 1000)
-            ON CONFLICT (product_id, variation_id, branch_id)
-            DO UPDATE SET quantity = inventory.quantity + EXCLUDED.quantity,
-                          updated_at = NOW()
-          `, [product_id, variation_id, branch_id, quantity])
-        } else {
-          // Uniform products: upsert NULL-variation row
-          const updated = await query(`
-            UPDATE inventory 
-            SET quantity = quantity + $2, updated_at = NOW()
-            WHERE product_id = $1 AND variation_id IS NULL AND branch_id = $3
-          `, [product_id, quantity, branch_id])
-          if (updated.rowCount === 0) {
-            await query(`
-              INSERT INTO inventory (product_id, variation_id, branch_id, quantity, min_stock_level, max_stock_level)
-              VALUES ($1, NULL, $2, $3, 0, 1000)
-            `, [product_id, branch_id, quantity])
-          }
+            VALUES ($1, NULL, $2, $3, 0, 1000)
+          `, [product_id, branch_id, quantity])
         }
-
-        // Log one stock movement manually
-        await query(
-          `INSERT INTO stock_movements (product_id, branch_id, variation_id, user_id, movement_type, quantity, reason, reference_type)
-           VALUES ($1, $2, $3, $4, 'in', $5, $6, 'manual')`,
-          [product_id, branch_id, variation_id || null, user.id, quantity, reason]
-        )
-      } else {
-        // Reduce stock
-        if (variation_id) {
-          // Ensure enough stock on the specific variation row
-          const res = await query(`
-            UPDATE inventory 
-            SET quantity = quantity - $3, updated_at = NOW()
-            WHERE product_id = $1 AND variation_id = $2 AND branch_id = $4 AND quantity >= $3
-          `, [product_id, variation_id, quantity, branch_id])
-          if (res.rowCount === 0) {
-            await query(`SELECT set_config('app.skip_inventory_trigger', '0', true)`)
-            await query('ROLLBACK')
-            return NextResponse.json({ success: false, error: "Insufficient stock" }, { status: 400 })
-          }
-        } else {
-          // Uniform products: require an existing NULL-variation row with enough quantity
-          const res = await query(`
-            UPDATE inventory 
-            SET quantity = quantity - $2, updated_at = NOW()
-            WHERE product_id = $1 AND variation_id IS NULL AND branch_id = $3 AND quantity >= $2
-          `, [product_id, quantity, branch_id])
-          if (res.rowCount === 0) {
-            await query(`SELECT set_config('app.skip_inventory_trigger', '0', true)`)
-            await query('ROLLBACK')
-            return NextResponse.json({ success: false, error: "Insufficient stock" }, { status: 400 })
-          }
-        }
-        // Log one stock movement manually
-        await query(
-          `INSERT INTO stock_movements (product_id, branch_id, variation_id, user_id, movement_type, quantity, reason, reference_type)
-           VALUES ($1, $2, $3, $4, 'out', $5, $6, 'manual')`,
-          [product_id, branch_id, variation_id || null, user.id, quantity, reason]
-        )
       }
-
-      await query(`SELECT set_config('app.skip_inventory_trigger', '0', true)`)
-      await query('COMMIT')
-
-      return NextResponse.json({
-        success: true,
-        data: { ok: true },
-        message: `Stock ${movement_type === 'in' ? 'added' : 'reduced'} successfully`
-      })
-    } catch (e) {
-      await query(`SELECT set_config('app.skip_inventory_trigger', '0', true)`)
-      await query('ROLLBACK')
-      throw e
+    } else {
+      // Reduce stock - EXACTLY same pattern as add stock, just with subtraction
+      if (variation_id) {
+        // Check if we have enough stock first
+        const currentStock = await query(`
+          SELECT quantity FROM inventory 
+          WHERE product_id = $1 AND variation_id = $2 AND branch_id = $3
+        `, [product_id, variation_id, branch_id])
+        
+        if (currentStock.rows.length === 0 || currentStock.rows[0].quantity < quantity) {
+          const err: any = new Error('INSUFFICIENT_STOCK')
+          err.code = 'INSUFFICIENT_STOCK'
+          throw err
+        }
+        
+        // Update variation inventory (same pattern as add)
+        await query(`
+          UPDATE inventory 
+          SET quantity = quantity - $3, updated_at = NOW()
+          WHERE product_id = $1 AND variation_id = $2 AND branch_id = $4
+        `, [product_id, variation_id, quantity, branch_id])
+      } else {
+        // Check if we have enough stock first
+        const currentStock = await query(`
+          SELECT quantity FROM inventory 
+          WHERE product_id = $1 AND variation_id IS NULL AND branch_id = $2
+        `, [product_id, branch_id])
+        
+        if (currentStock.rows.length === 0 || currentStock.rows[0].quantity < quantity) {
+          const err: any = new Error('INSUFFICIENT_STOCK')
+          err.code = 'INSUFFICIENT_STOCK'
+          throw err
+        }
+        
+        // Uniform products: same pattern as add
+        await query(`
+          UPDATE inventory 
+          SET quantity = quantity - $2, updated_at = NOW()
+          WHERE product_id = $1 AND variation_id IS NULL AND branch_id = $3
+        `, [product_id, quantity, branch_id])
+      }
     }
-  } catch (error) {
+
+    return NextResponse.json({
+      success: true,
+      data: { ok: true },
+      message: `Stock ${movement_type === 'in' ? 'added' : 'reduced'} successfully`
+    })
+  } catch (error: any) {
+    if (error?.code === 'INSUFFICIENT_STOCK') {
+      return NextResponse.json({ success: false, error: 'Insufficient stock' }, { status: 400 })
+    }
     console.error("Stock movement creation error:", error)
     return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 })
   }
