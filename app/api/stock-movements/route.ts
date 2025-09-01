@@ -160,7 +160,7 @@ export async function POST(request: NextRequest) {
         }
       }
     } else {
-      // Reduce stock - EXACTLY same pattern as add stock, just with subtraction
+      // Reduce stock - allow reduction as long as final quantity >= 0
       if (variation_id) {
         // Check if we have enough stock first
         const currentStock = await query(`
@@ -168,13 +168,23 @@ export async function POST(request: NextRequest) {
           WHERE product_id = $1 AND variation_id = $2 AND branch_id = $3
         `, [product_id, variation_id, branch_id])
         
-        if (currentStock.rows.length === 0 || currentStock.rows[0].quantity < quantity) {
+        if (currentStock.rows.length === 0) {
+          // No inventory record exists, create one with 0 quantity
+          await query(`
+            INSERT INTO inventory (product_id, variation_id, branch_id, quantity, min_stock_level, max_stock_level)
+            VALUES ($1, $2, $3, 0, 0, 1000)
+          `, [product_id, variation_id, branch_id])
+        }
+        
+        // Check if reduction would result in negative stock
+        const finalQuantity = (currentStock.rows[0]?.quantity || 0) - quantity
+        if (finalQuantity < 0) {
           const err: any = new Error('INSUFFICIENT_STOCK')
           err.code = 'INSUFFICIENT_STOCK'
           throw err
         }
         
-        // Update variation inventory (same pattern as add)
+        // Update variation inventory
         await query(`
           UPDATE inventory 
           SET quantity = quantity - $3, updated_at = NOW()
@@ -187,13 +197,23 @@ export async function POST(request: NextRequest) {
           WHERE product_id = $1 AND variation_id IS NULL AND branch_id = $2
         `, [product_id, branch_id])
         
-        if (currentStock.rows.length === 0 || currentStock.rows[0].quantity < quantity) {
+        if (currentStock.rows.length === 0) {
+          // No inventory record exists, create one with 0 quantity
+          await query(`
+            INSERT INTO inventory (product_id, variation_id, branch_id, quantity, min_stock_level, max_stock_level)
+            VALUES ($1, NULL, $2, 0, 0, 1000)
+          `, [product_id, branch_id])
+        }
+        
+        // Check if reduction would result in negative stock
+        const finalQuantity = (currentStock.rows[0]?.quantity || 0) - quantity
+        if (finalQuantity < 0) {
           const err: any = new Error('INSUFFICIENT_STOCK')
           err.code = 'INSUFFICIENT_STOCK'
           throw err
         }
         
-        // Uniform products: same pattern as add
+        // Update uniform products
         await query(`
           UPDATE inventory 
           SET quantity = quantity - $2, updated_at = NOW()
@@ -209,7 +229,23 @@ export async function POST(request: NextRequest) {
     })
   } catch (error: any) {
     if (error?.code === 'INSUFFICIENT_STOCK') {
-      return NextResponse.json({ success: false, error: 'Insufficient stock' }, { status: 400 })
+      // Get current stock for better error message
+      let currentStock = 0
+      try {
+        const stockQuery = variation_id 
+          ? `SELECT quantity FROM inventory WHERE product_id = $1 AND variation_id = $2 AND branch_id = $3`
+          : `SELECT quantity FROM inventory WHERE product_id = $1 AND variation_id IS NULL AND branch_id = $2`
+        const stockParams = variation_id ? [product_id, variation_id, branch_id] : [product_id, branch_id]
+        const stockResult = await query(stockQuery, stockParams)
+        currentStock = stockResult.rows[0]?.quantity || 0
+      } catch (e) {
+        // Ignore error in error handling
+      }
+      
+      return NextResponse.json({ 
+        success: false, 
+        error: `Insufficient stock. Current stock: ${currentStock}, Attempted to reduce: ${quantity}` 
+      }, { status: 400 })
     }
     console.error("Stock movement creation error:", error)
     return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 })

@@ -371,6 +371,11 @@ class ApiClient {
     return this.request(`/dashboard/recent-product-updates?${searchParams}`)
   }
 
+  async getDailySummary(params: Record<string, unknown> = {}) {
+    const searchParams = this.buildSearchParams(params)
+    return this.request(`/dashboard/daily-summary?${searchParams}`)
+  }
+
   async getExpenseReport(params: Record<string, unknown> = {}) {
     const searchParams = this.buildSearchParams(params)
     return this.request(`/reports/expenses?${searchParams}`)

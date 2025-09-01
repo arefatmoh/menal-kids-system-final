@@ -159,7 +159,7 @@ export interface Sale {
   user_id: string
   customer_name?: string
   customer_phone?: string
-  payment_method: "cash" | "card" | "mobile" | "bank_transfer"
+  payment_method: "cash" | "pos" | "telebirr" | "mobile_transfer"
   total_amount: number
   discount: number
   notes?: string
@@ -183,7 +183,7 @@ export interface CreateSaleData {
   user_id: string
   customer_name?: string
   customer_phone?: string
-  payment_method: "cash" | "card" | "mobile" | "bank_transfer"
+  payment_method: "cash" | "pos" | "telebirr" | "mobile_transfer"
   discount?: number
   notes?: string
   items: {

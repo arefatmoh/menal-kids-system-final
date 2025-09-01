@@ -1029,6 +1029,11 @@ export default function SellProductsPage() {
       return
     }
 
+    // Ensure payment method is set to cash if not selected
+    if (!paymentMethod) {
+      setPaymentMethod("cash")
+    }
+
     setIsProcessing(true)
 
     try {
@@ -1037,7 +1042,7 @@ export default function SellProductsPage() {
         branch_id: currentBranch === "all" ? getBranchIdForDatabase("franko") : getBranchIdForDatabase(currentBranch),
         customer_name: customerName || undefined,
         customer_phone: customerPhone || undefined,
-        payment_method: paymentMethod,
+        payment_method: paymentMethod || "cash", // Ensure cash is default if no method selected
         items: itemsToSend,
       }
 
@@ -2342,22 +2347,22 @@ export default function SellProductsPage() {
                               Cash
                             </div>
                           </SelectItem>
-                          <SelectItem value="card">
+                          <SelectItem value="pos">
                             <div className="flex items-center">
                               <CreditCard className="h-3 w-3 mr-2" />
-                              Card
+                              POS
                             </div>
                           </SelectItem>
-                          <SelectItem value="mobile">
+                          <SelectItem value="telebirr">
                             <div className="flex items-center">
                               <Smartphone className="h-3 w-3 mr-2" />
-                              Mobile
+                              Telebirr
                             </div>
                           </SelectItem>
-                          <SelectItem value="bank_transfer">
+                          <SelectItem value="mobile_transfer">
                             <div className="flex items-center">
                               <Building2 className="h-3 w-3 mr-2" />
-                              Bank Transfer
+                              Mobile Transfer
                             </div>
                           </SelectItem>
                         </SelectContent>
@@ -2593,9 +2598,9 @@ export default function SellProductsPage() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="cash"><div className="flex items-center"><DollarSign className="h-3 w-3 mr-2" />Cash</div></SelectItem>
-                        <SelectItem value="card"><div className="flex items-center"><CreditCard className="h-3 w-3 mr-2" />Card</div></SelectItem>
-                        <SelectItem value="mobile"><div className="flex items-center"><Smartphone className="h-3 w-3 mr-2" />Mobile</div></SelectItem>
-                        <SelectItem value="bank_transfer"><div className="flex items-center"><Building2 className="h-3 w-3 mr-2" />Bank Transfer</div></SelectItem>
+                                                    <SelectItem value="pos"><div className="flex items-center"><CreditCard className="h-3 w-3 mr-2" />POS</div></SelectItem>
+                            <SelectItem value="telebirr"><div className="flex items-center"><Smartphone className="h-3 w-3 mr-2" />Telebirr</div></SelectItem>
+                            <SelectItem value="mobile_transfer"><div className="flex items-center"><Building2 className="h-3 w-3 mr-2" />Mobile Transfer</div></SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

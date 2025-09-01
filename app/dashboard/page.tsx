@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Package, AlertTriangle, TrendingUp, TrendingDown, Calendar, Activity, ShoppingBag, Loader2, BarChart3, Trophy, Settings, Target, Users, Truck, ChevronLeft, ChevronRight } from "lucide-react"
+import { Package, AlertTriangle, TrendingUp, TrendingDown, Calendar, Activity, ShoppingBag, Loader2, BarChart3, Trophy, Settings, Target, Users, Truck, ChevronLeft, ChevronRight, DollarSign, TrendingUp as TrendingUpIcon, TrendingDown as TrendingDownIcon, Package as PackageIcon, AlertCircle, FileText, ArrowUpDown, Clock, CheckCircle, XCircle, CreditCard } from "lucide-react"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 import apiClient from "@/lib/api-client"
 import { useLanguage } from "@/lib/language-context"
@@ -32,6 +32,86 @@ interface RecentActivity {
   reference_id: string
 }
 
+interface DailySummary {
+  date: string
+  sales_summary: {
+    total_sales: number
+    total_transactions: number
+    average_sale: number
+    payment_methods: {
+      cash: number
+      pos: number
+      telebirr: number
+      mobile_transfer: number
+    }
+    top_selling_products: Array<{
+      product_name: string
+      quantity_sold: number
+      total_amount: number
+      variation_info: string
+      payment_breakdown: {
+        cash: number
+        pos: number
+        telebirr: number
+        mobile_transfer: number
+      }
+    }>
+  }
+  stock_summary: {
+    stock_in: number
+    stock_out: number
+    stock_adjustments: number
+    total_movements: number
+    recent_movements: Array<{
+      product_name: string
+      movement_type: string
+      quantity: number
+      reference_type: string
+      created_at: string
+      user_name: string
+    }>
+  }
+  transfers_summary: {
+    total_transfers: number
+    total_items_transferred: number
+    recent_transfers: Array<{
+      from_branch: string
+      to_branch: string
+      total_items: number
+      product_name: string
+      status: string
+      created_at: string
+    }>
+  }
+  expenses_summary: {
+    total_expenses: number
+    expense_count: number
+    categories: Array<{
+      category: string
+      amount: number
+      count: number
+    }>
+  }
+  alerts_summary: {
+    total_alerts: number
+    critical_alerts: number
+    high_alerts: number
+    medium_alerts: number
+    low_alerts: number
+    recent_alerts: Array<{
+      message: string
+      severity: string
+      created_at: string
+    }>
+  }
+  profit_calculation: {
+    gross_revenue: number
+    total_expenses: number
+    net_profit: number
+    profit_margin: number
+  }
+}
+
 export default function Dashboard() {
   const { t } = useLanguage()
   const today = new Date()
@@ -50,6 +130,7 @@ export default function Dashboard() {
   const [topSellingWeek, setTopSellingWeek] = useState<{ product_name: string; quantity_sold: number; total_amount: number; variation_info: string }[]>([])
   const [lowStockProducts, setLowStockProducts] = useState<{ product_name: string; current_quantity: number; variation_info: string; category_info: string; days_since_restock: number }[]>([])
   const [recentProductUpdates, setRecentProductUpdates] = useState<{ product_name: string; update_type: string; updated_at: string; variation_info: string; category_info: string; change_details: string }[]>([])
+  const [dailySummary, setDailySummary] = useState<DailySummary | null>(null)
 
   // Pagination state for all cards
   const [topSellingTodayPage, setTopSellingTodayPage] = useState(1)
@@ -173,6 +254,15 @@ export default function Dashboard() {
           if (data.recent_updates) {
             setRecentProductUpdates(data.recent_updates)
           }
+        }
+
+        // Fetch daily summary data
+        const dailySummaryResponse = await apiClient.getDailySummary({ 
+          branch_id: branchParam,
+          date: todayStr 
+        })
+        if (dailySummaryResponse.success) {
+          setDailySummary(dailySummaryResponse.data as DailySummary)
         }
 
         // All data is now loaded from the single optimized API call above
@@ -498,6 +588,366 @@ export default function Dashboard() {
                 >
                   <ChevronRight className="h-5 w-5" />
                 </button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Daily Summary Card */}
+      <div className="mt-6">
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 to-indigo-50">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center space-x-2 text-2xl font-bold text-gray-800">
+              <FileText className="h-6 w-6 text-blue-600" />
+              <span>{t("dailySummary")}</span>
+              <span className="text-sm font-normal text-gray-500 ml-2">
+                {new Date(todayStr).toLocaleDateString('en-US', { 
+                  weekday: 'long', 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric' 
+                })}
+              </span>
+            </CardTitle>
+            <CardDescription className="text-gray-600">
+              {t("dailySummaryDescription")}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {dailySummary ? (
+              <div className="space-y-6">
+                {/* Financial Summary */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">{t("grossRevenue")}</p>
+                        <p className="text-2xl font-bold text-green-600">
+                          ${formatCurrency(dailySummary.profit_calculation.gross_revenue)}
+                        </p>
+                      </div>
+                      <DollarSign className="h-8 w-8 text-green-500" />
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">{t("totalExpenses")}</p>
+                        <p className="text-2xl font-bold text-red-600">
+                          ${formatCurrency(dailySummary.profit_calculation.total_expenses)}
+                        </p>
+                      </div>
+                      <TrendingDownIcon className="h-8 w-8 text-red-500" />
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">{t("netProfit")}</p>
+                        <p className={`text-2xl font-bold ${dailySummary.profit_calculation.net_profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          ${formatCurrency(dailySummary.profit_calculation.net_profit)}
+                        </p>
+                      </div>
+                      <TrendingUpIcon className={`h-8 w-8 ${dailySummary.profit_calculation.net_profit >= 0 ? 'text-green-500' : 'text-red-500'}`} />
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">{t("profitMargin")}</p>
+                        <p className={`text-2xl font-bold ${dailySummary.profit_calculation.profit_margin >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {dailySummary.profit_calculation.profit_margin.toFixed(1)}%
+                        </p>
+                      </div>
+                      <BarChart3 className={`h-8 w-8 ${dailySummary.profit_calculation.profit_margin >= 0 ? 'text-green-500' : 'text-red-500'}`} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Activity Summary */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                  <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">{t("totalTransactions")}</p>
+                        <p className="text-2xl font-bold text-blue-600">
+                          {dailySummary.sales_summary.total_transactions}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          ${formatCurrency(dailySummary.sales_summary.average_sale)} {t("average")}
+                        </p>
+                      </div>
+                      <ShoppingBag className="h-8 w-8 text-blue-500" />
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">{t("stockMovements")}</p>
+                        <p className="text-2xl font-bold text-purple-600">
+                          {dailySummary.stock_summary.total_movements}
+                        </p>
+                        <div className="text-xs text-gray-500 space-y-1">
+                          <div className="flex justify-between">
+                            <span>{t("in")}:</span>
+                            <span className="text-green-600">+{dailySummary.stock_summary.stock_in}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>{t("out")}:</span>
+                            <span className="text-red-600">-{dailySummary.stock_summary.stock_out}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <ArrowUpDown className="h-8 w-8 text-purple-500" />
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">{t("transfers")}</p>
+                        <p className="text-2xl font-bold text-orange-600">
+                          {dailySummary.transfers_summary.total_transfers}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {dailySummary.transfers_summary.total_items_transferred} {t("items")}
+                        </p>
+                      </div>
+                      <Truck className="h-8 w-8 text-orange-500" />
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">{t("alerts")}</p>
+                        <p className="text-2xl font-bold text-yellow-600">
+                          {dailySummary.alerts_summary.total_alerts}
+                        </p>
+                        <div className="text-xs text-gray-500 space-y-1">
+                          <div className="flex justify-between">
+                            <span>{t("critical")}:</span>
+                            <span className="text-red-600">{dailySummary.alerts_summary.critical_alerts}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>{t("high")}:</span>
+                            <span className="text-orange-600">{dailySummary.alerts_summary.high_alerts}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <AlertCircle className="h-8 w-8 text-yellow-500" />
+                    </div>
+                  </div>
+                  
+                  {/* Payment Methods Summary */}
+                  <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">{t("paymentMethods")}</p>
+                        <div className="text-xs text-gray-500 space-y-1">
+                          <div className="flex justify-between">
+                            <span>💵 {t("cash")}:</span>
+                            <span className="text-green-600">${formatCurrency(dailySummary.sales_summary.payment_methods.cash)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>💳 POS:</span>
+                            <span className="text-blue-600">${formatCurrency(dailySummary.sales_summary.payment_methods.pos)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>📱 Telebirr:</span>
+                            <span className="text-purple-600">${formatCurrency(dailySummary.sales_summary.payment_methods.telebirr)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>🏦 Mobile Transfer:</span>
+                            <span className="text-orange-600">${formatCurrency(dailySummary.sales_summary.payment_methods.mobile_transfer)}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <CreditCard className="h-8 w-8 text-indigo-500" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Detailed Sections */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Sold Products Today */}
+                  <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+                      <ShoppingBag className="h-5 w-5 text-green-500 mr-2" />
+                      {t("soldProductsToday")}
+                    </h3>
+                    {dailySummary.sales_summary.top_selling_products && dailySummary.sales_summary.top_selling_products.length > 0 ? (
+                      <div className="space-y-2 max-h-64 overflow-y-auto">
+                        {dailySummary.sales_summary.top_selling_products.map((product, idx) => (
+                          <div key={idx} className="py-2 border-b border-gray-100 last:border-b-0">
+                            <div className="flex justify-between items-center">
+                              <div className="flex-1">
+                                <span className="font-medium text-gray-800">{product.product_name}</span>
+                                {product.variation_info !== 'Standard' && (
+                                  <span className="text-xs text-gray-500 ml-1">({product.variation_info})</span>
+                                )}
+                              </div>
+                              <div className="flex flex-wrap items-center gap-2 mx-4">
+                                {product.payment_breakdown.cash > 0 && (
+                                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    {t("cash")} ${formatCurrency(product.payment_breakdown.cash)}
+                                  </span>
+                                )}
+                                {product.payment_breakdown.pos > 0 && (
+                                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    POS ${formatCurrency(product.payment_breakdown.pos)}
+                                  </span>
+                                )}
+                                {product.payment_breakdown.telebirr > 0 && (
+                                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                    Telebirr ${formatCurrency(product.payment_breakdown.telebirr)}
+                                  </span>
+                                )}
+                                {product.payment_breakdown.mobile_transfer > 0 && (
+                                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                    Mobile Transfer ${formatCurrency(product.payment_breakdown.mobile_transfer)}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-right">
+                                <p className="font-medium text-gray-600">{product.quantity_sold} {t("sold")}</p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-gray-500 text-center py-4">{t("noSalesToday")}</p>
+                    )}
+                  </div>
+
+                  {/* Recent Stock Movements */}
+                  <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+                      <PackageIcon className="h-5 w-5 text-blue-500 mr-2" />
+                      {t("recentStockMovements")}
+                    </h3>
+                    {dailySummary.stock_summary.recent_movements && dailySummary.stock_summary.recent_movements.length > 0 ? (
+                      <div className="space-y-2">
+                        {dailySummary.stock_summary.recent_movements.slice(0, 5).map((movement, idx) => (
+                          <div key={idx} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
+                            <div className="flex-1">
+                              <p className="font-medium text-gray-800">{movement.product_name}</p>
+                              <p className="text-xs text-gray-500">{movement.user_name}</p>
+                            </div>
+                            <div className="text-right">
+                              <div className={`flex items-center space-x-1 ${
+                                movement.movement_type === 'in' ? 'text-green-600' : 
+                                movement.movement_type === 'out' ? 'text-red-600' : 'text-yellow-600'
+                              }`}>
+                                {movement.movement_type === 'in' ? (
+                                  <TrendingUpIcon className="h-3 w-3" />
+                                ) : movement.movement_type === 'out' ? (
+                                  <TrendingDownIcon className="h-3 w-3" />
+                                ) : (
+                                  <Settings className="h-3 w-3" />
+                                )}
+                                <span className="font-medium">
+                                  {movement.movement_type === 'in' ? '+' : movement.movement_type === 'out' ? '-' : '±'}{movement.quantity}
+                                </span>
+                              </div>
+                              <p className="text-xs text-gray-500">{movement.reference_type}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-gray-500 text-center py-4">{t("noStockMovements")}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Recent Transfers and Alerts */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Recent Transfers */}
+                  <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+                      <Truck className="h-5 w-5 text-orange-500 mr-2" />
+                      {t("recentTransfers")}
+                    </h3>
+                    {dailySummary.transfers_summary.recent_transfers && dailySummary.transfers_summary.recent_transfers.length > 0 ? (
+                      <div className="space-y-2">
+                        {dailySummary.transfers_summary.recent_transfers.slice(0, 3).map((transfer, idx) => (
+                          <div key={idx} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
+                            <div className="flex-1">
+                              <p className="font-medium text-gray-800">{transfer.product_name}</p>
+                              <p className="text-xs text-gray-500">
+                                {transfer.from_branch} → {transfer.to_branch}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <div className={`flex items-center space-x-1 ${
+                                transfer.status === 'completed' ? 'text-green-600' : 
+                                transfer.status === 'pending' ? 'text-yellow-600' : 'text-red-600'
+                              }`}>
+                                {transfer.status === 'completed' ? (
+                                  <CheckCircle className="h-3 w-3" />
+                                ) : transfer.status === 'pending' ? (
+                                  <Clock className="h-3 w-3" />
+                                ) : (
+                                  <XCircle className="h-3 w-3" />
+                                )}
+                                <span className="text-xs font-medium">{transfer.status}</span>
+                              </div>
+                              <p className="text-xs text-gray-500">{transfer.total_items} {t("items")}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-gray-500 text-center py-4">{t("noTransfers")}</p>
+                    )}
+                  </div>
+
+                  {/* Recent Alerts */}
+                  <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+                      <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
+                      {t("recentAlerts")}
+                    </h3>
+                    {dailySummary.alerts_summary.recent_alerts && dailySummary.alerts_summary.recent_alerts.length > 0 ? (
+                      <div className="space-y-2">
+                        {dailySummary.alerts_summary.recent_alerts.slice(0, 3).map((alert, idx) => (
+                          <div key={idx} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
+                            <div className="flex-1">
+                              <p className="font-medium text-gray-800 truncate">{alert.message}</p>
+                              <p className="text-xs text-gray-500">
+                                {new Date(alert.created_at).toLocaleTimeString()}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                alert.severity === 'critical' ? 'bg-red-100 text-red-800' :
+                                alert.severity === 'high' ? 'bg-orange-100 text-orange-800' :
+                                alert.severity === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-blue-100 text-blue-800'
+                              }`}>
+                                {alert.severity}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-gray-500 text-center py-4">{t("noAlerts")}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Loader2 className="h-8 w-8 mx-auto mb-2 text-gray-400 animate-spin" />
+                <p className="text-gray-500">{t("loadingDailySummary")}</p>
               </div>
             )}
           </CardContent>

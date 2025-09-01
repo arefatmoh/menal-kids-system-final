@@ -8,7 +8,7 @@ const createSaleSchema = z.object({
   branch_id: z.string().min(1, "Branch ID is required"),
   customer_name: z.string().optional(),
   customer_phone: z.string().optional(),
-  payment_method: z.enum(["cash", "card", "mobile", "bank_transfer"]),
+  payment_method: z.enum(["cash", "pos", "telebirr", "mobile_transfer"]),
   discount: z.number().min(0).default(0),
   notes: z.string().optional(),
   items: z

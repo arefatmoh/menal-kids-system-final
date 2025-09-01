@@ -70,6 +70,41 @@ export default {
 
   // Variation info
   standardVariation: "Standard",
+
+  // Daily Summary translations
+  dailySummary: "Daily Summary",
+  dailySummaryDescription: "Complete overview of today's business activities",
+  grossRevenue: "Gross Revenue",
+  totalExpenses: "Total Expenses",
+  netProfit: "Net Profit",
+  profitMargin: "Profit Margin",
+  totalTransactions: "Total Transactions",
+  average: "Average",
+  stockMovements: "Stock Movements",
+  in: "In",
+  out: "Out",
+  transfers: "Transfers",
+  alerts: "Alerts",
+  critical: "Critical",
+  high: "High",
+  medium: "Medium",
+  low: "Low",
+  soldProductsToday: "Sold Products Today",
+  recentStockMovements: "Recent Stock Movements",
+  recentTransfers: "Recent Transfers",
+  recentAlerts: "Recent Alerts",
+  noStockMovements: "No stock movements today",
+  noTransfers: "No transfers today",
+  noAlerts: "No alerts today",
+  loadingDailySummary: "Loading daily summary...",
+  items: "items",
+
+  // Payment Methods
+  cash: "Cash",
+  card: "POS",
+  mobile: "Telebirr",
+  bankTransfer: "Mobile Transfer",
+  paymentMethods: "Payment Methods",
 }
 
 
