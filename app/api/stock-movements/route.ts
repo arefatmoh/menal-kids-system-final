@@ -77,6 +77,13 @@ export async function GET(request: NextRequest) {
 
 // POST /api/stock-movements - Create stock movement
 export async function POST(request: NextRequest) {
+  // Declare request-scoped variables so catch can safely reference them even if parsing fails
+  let product_id: string | undefined
+  let branch_id: string | undefined
+  let movement_type: 'in' | 'out' | undefined
+  let quantity: number | undefined
+  let reason: string | undefined
+  let variation_id: string | null | undefined
   try {
     const user = await getUserFromRequest(request)
     if (!user) {
@@ -84,7 +91,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { product_id, branch_id, movement_type, quantity, reason, variation_id } = body
+    ;({ product_id, branch_id, movement_type, quantity, reason, variation_id } = body)
 
     // Validate required fields
     if (!product_id || !branch_id || !movement_type || !quantity || !reason) {
@@ -162,34 +169,51 @@ export async function POST(request: NextRequest) {
     } else {
       // Reduce stock - allow reduction as long as final quantity >= 0
       if (variation_id) {
-        // Check if we have enough stock first
-        const currentStock = await query(`
-          SELECT quantity FROM inventory 
+        // Try to find variation-specific row first
+        let stockRow = await query(`
+          SELECT id, quantity, variation_id FROM inventory 
           WHERE product_id = $1 AND variation_id = $2 AND branch_id = $3
         `, [product_id, variation_id, branch_id])
-        
-        if (currentStock.rows.length === 0) {
-          // No inventory record exists, create one with 0 quantity
+
+        // Fallback for uniform products: if variation row missing, use NULL-variation row
+        if (stockRow.rows.length === 0) {
+          stockRow = await query(`
+            SELECT id, quantity, variation_id FROM inventory 
+            WHERE product_id = $1 AND variation_id IS NULL AND branch_id = $2
+          `, [product_id, branch_id])
+        }
+
+        // If still missing, create the requested variation row at 0 to avoid negative
+        if (stockRow.rows.length === 0) {
           await query(`
             INSERT INTO inventory (product_id, variation_id, branch_id, quantity, min_stock_level, max_stock_level)
             VALUES ($1, $2, $3, 0, 0, 1000)
           `, [product_id, variation_id, branch_id])
         }
-        
-        // Check if reduction would result in negative stock
-        const finalQuantity = (currentStock.rows[0]?.quantity || 0) - quantity
+
+        const availableQty = stockRow.rows[0]?.quantity || 0
+        const finalQuantity = availableQty - quantity
         if (finalQuantity < 0) {
           const err: any = new Error('INSUFFICIENT_STOCK')
           err.code = 'INSUFFICIENT_STOCK'
           throw err
         }
-        
-        // Update variation inventory
-        await query(`
-          UPDATE inventory 
-          SET quantity = quantity - $3, updated_at = NOW()
-          WHERE product_id = $1 AND variation_id = $2 AND branch_id = $4
-        `, [product_id, variation_id, quantity, branch_id])
+
+        // Update whichever row we picked
+        const targetVariationId = stockRow.rows[0]?.variation_id || null
+        if (targetVariationId) {
+          await query(`
+            UPDATE inventory 
+            SET quantity = quantity - $3, updated_at = NOW()
+            WHERE product_id = $1 AND variation_id = $2 AND branch_id = $4
+          `, [product_id, targetVariationId, quantity, branch_id])
+        } else {
+          await query(`
+            UPDATE inventory 
+            SET quantity = quantity - $2, updated_at = NOW()
+            WHERE product_id = $1 AND variation_id IS NULL AND branch_id = $3
+          `, [product_id, quantity, branch_id])
+        }
       } else {
         // Check if we have enough stock first
         const currentStock = await query(`
@@ -228,25 +252,31 @@ export async function POST(request: NextRequest) {
       message: `Stock ${movement_type === 'in' ? 'added' : 'reduced'} successfully`
     })
   } catch (error: any) {
+    // Always return JSON and avoid referencing possibly undefined variables
     if (error?.code === 'INSUFFICIENT_STOCK') {
-      // Get current stock for better error message
       let currentStock = 0
       try {
-        const stockQuery = variation_id 
-          ? `SELECT quantity FROM inventory WHERE product_id = $1 AND variation_id = $2 AND branch_id = $3`
-          : `SELECT quantity FROM inventory WHERE product_id = $1 AND variation_id IS NULL AND branch_id = $2`
-        const stockParams = variation_id ? [product_id, variation_id, branch_id] : [product_id, branch_id]
-        const stockResult = await query(stockQuery, stockParams)
-        currentStock = stockResult.rows[0]?.quantity || 0
+        // Only attempt lookup if required identifiers exist
+        if (product_id && branch_id) {
+          const hasVariation = typeof variation_id !== 'undefined' && variation_id !== null
+          const stockQuery = hasVariation
+            ? `SELECT quantity FROM inventory WHERE product_id = $1 AND variation_id = $2 AND branch_id = $3`
+            : `SELECT quantity FROM inventory WHERE product_id = $1 AND variation_id IS NULL AND branch_id = $2`
+          const stockParams = hasVariation ? [product_id, variation_id, branch_id] : [product_id, branch_id]
+          const stockResult = await query(stockQuery, stockParams)
+          currentStock = stockResult.rows[0]?.quantity || 0
+        }
       } catch (e) {
-        // Ignore error in error handling
+        // Swallow lookup errors; we still return a safe response
       }
-      
-      return NextResponse.json({ 
-        success: false, 
-        error: `Insufficient stock. Current stock: ${currentStock}, Attempted to reduce: ${quantity}` 
+
+      const attempted = Number.isFinite(Number(quantity)) ? Number(quantity) : 'unknown'
+      return NextResponse.json({
+        success: false,
+        error: `Insufficient stock. Current stock: ${currentStock}, Attempted to reduce: ${attempted}`
       }, { status: 400 })
     }
+
     console.error("Stock movement creation error:", error)
     return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 })
   }
