@@ -141,9 +141,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Perform inventory change using direct SQL - triggers will handle logging automatically
+    // Detect if product is uniform (no variations). If so, always operate on NULL-variation row
+    const variationCountRes = await query(
+      `SELECT COUNT(*)::int AS cnt FROM product_variations WHERE product_id = $1`,
+      [product_id]
+    )
+    const isUniformProduct = (variationCountRes.rows[0]?.cnt || 0) === 0
     if (movement_type === 'in') {
       // Add stock - same as add stock flow
-      if (variation_id) {
+      if (variation_id && !isUniformProduct) {
         // Update variation inventory (upsert)
         await query(`
           INSERT INTO inventory (product_id, variation_id, branch_id, quantity, min_stock_level, max_stock_level)
@@ -168,81 +174,88 @@ export async function POST(request: NextRequest) {
       }
     } else {
       // Reduce stock - allow reduction as long as final quantity >= 0
-      if (variation_id) {
+      if (variation_id && !isUniformProduct) {
         // Try to find variation-specific row first
         let stockRow = await query(`
           SELECT id, quantity, variation_id FROM inventory 
           WHERE product_id = $1 AND variation_id = $2 AND branch_id = $3
         `, [product_id, variation_id, branch_id])
 
-        // Fallback for uniform products: if variation row missing, use NULL-variation row
-        if (stockRow.rows.length === 0) {
-          stockRow = await query(`
-            SELECT id, quantity, variation_id FROM inventory 
+        // If missing or insufficient, try NULL-variation row (legacy uniform stock)
+        let targetId: string | null = stockRow.rows[0]?.id || null
+        let availableQty = stockRow.rows[0]?.quantity || 0
+        if (!targetId || availableQty < quantity) {
+          const nullRow = await query(`
+            SELECT id, quantity FROM inventory
             WHERE product_id = $1 AND variation_id IS NULL AND branch_id = $2
           `, [product_id, branch_id])
+          if (nullRow.rows.length > 0 && nullRow.rows[0].quantity >= quantity) {
+            targetId = nullRow.rows[0].id
+            availableQty = nullRow.rows[0].quantity
+          }
         }
 
-        // If still missing, create the requested variation row at 0 to avoid negative
-        if (stockRow.rows.length === 0) {
-          await query(`
-            INSERT INTO inventory (product_id, variation_id, branch_id, quantity, min_stock_level, max_stock_level)
-            VALUES ($1, $2, $3, 0, 0, 1000)
-          `, [product_id, variation_id, branch_id])
-        }
-
-        const availableQty = stockRow.rows[0]?.quantity || 0
-        const finalQuantity = availableQty - quantity
-        if (finalQuantity < 0) {
-          const err: any = new Error('INSUFFICIENT_STOCK')
-          err.code = 'INSUFFICIENT_STOCK'
-          throw err
-        }
-
-        // Update whichever row we picked
-        const targetVariationId = stockRow.rows[0]?.variation_id || null
-        if (targetVariationId) {
-          await query(`
-            UPDATE inventory 
-            SET quantity = quantity - $3, updated_at = NOW()
-            WHERE product_id = $1 AND variation_id = $2 AND branch_id = $4
-          `, [product_id, targetVariationId, quantity, branch_id])
-        } else {
-          await query(`
-            UPDATE inventory 
-            SET quantity = quantity - $2, updated_at = NOW()
-            WHERE product_id = $1 AND variation_id IS NULL AND branch_id = $3
-          `, [product_id, quantity, branch_id])
-        }
-      } else {
-        // Check if we have enough stock first
-        const currentStock = await query(`
-          SELECT quantity FROM inventory 
-          WHERE product_id = $1 AND variation_id IS NULL AND branch_id = $2
-        `, [product_id, branch_id])
-        
-        if (currentStock.rows.length === 0) {
-          // No inventory record exists, create one with 0 quantity
-          await query(`
-            INSERT INTO inventory (product_id, variation_id, branch_id, quantity, min_stock_level, max_stock_level)
-            VALUES ($1, NULL, $2, 0, 0, 1000)
+        // If still insufficient, pick the row with the highest quantity
+        if (!targetId || availableQty < quantity) {
+          const bestRow = await query(`
+            SELECT id, quantity, variation_id FROM inventory
+            WHERE product_id = $1 AND branch_id = $2
+            ORDER BY quantity DESC
+            LIMIT 1
           `, [product_id, branch_id])
+          if (bestRow.rows.length > 0 && bestRow.rows[0].quantity >= quantity) {
+            targetId = bestRow.rows[0].id
+          }
         }
-        
-        // Check if reduction would result in negative stock
-        const finalQuantity = (currentStock.rows[0]?.quantity || 0) - quantity
-        if (finalQuantity < 0) {
+
+        if (!targetId) {
           const err: any = new Error('INSUFFICIENT_STOCK')
           err.code = 'INSUFFICIENT_STOCK'
           throw err
         }
-        
-        // Update uniform products
+
+        // Update the chosen row by id
         await query(`
           UPDATE inventory 
           SET quantity = quantity - $2, updated_at = NOW()
-          WHERE product_id = $1 AND variation_id IS NULL AND branch_id = $3
-        `, [product_id, quantity, branch_id])
+          WHERE id = $1
+        `, [targetId, quantity])
+      } else {
+        // Try NULL-variation row first
+        let nullRow = await query(`
+          SELECT id, quantity FROM inventory 
+          WHERE product_id = $1 AND variation_id IS NULL AND branch_id = $2
+        `, [product_id, branch_id])
+
+        let targetId: string | null = nullRow.rows[0]?.id || null
+        let availableQty = nullRow.rows[0]?.quantity || 0
+
+        // If NULL row missing or insufficient, pick the highest-quantity row for this product/branch
+        if (!targetId || availableQty < quantity) {
+          const bestRow = await query(`
+            SELECT id, quantity FROM inventory
+            WHERE product_id = $1 AND branch_id = $2
+            ORDER BY quantity DESC
+            LIMIT 1
+          `, [product_id, branch_id])
+          if (bestRow.rows.length > 0 && bestRow.rows[0].quantity >= quantity) {
+            targetId = bestRow.rows[0].id
+            availableQty = bestRow.rows[0].quantity
+          }
+        }
+
+        if (!targetId) {
+          const err: any = new Error('INSUFFICIENT_STOCK')
+          err.code = 'INSUFFICIENT_STOCK'
+          throw err
+        }
+
+        // Update the chosen row by id
+        await query(`
+          UPDATE inventory
+          SET quantity = quantity - $2, updated_at = NOW()
+          WHERE id = $1
+        `, [targetId, quantity])
       }
     }
 
